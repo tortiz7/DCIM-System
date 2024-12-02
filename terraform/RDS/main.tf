@@ -1,21 +1,20 @@
-resource "aws_db_instance" "postgres_db" {
-  identifier           = "ecommerce-db"
-  engine               = "postgres"
-  engine_version       = "14.13"
+resource "aws_db_instance" "mysql_db" {
+  identifier           = "ralphng"
+  engine               = "mysql"
+  engine_version       = "5.7"
   instance_class       = var.db_instance_class
   allocated_storage    = 20
   storage_type         = "standard"
   db_name              = var.db_name
   username             = var.db_username
   password             = var.db_password
-  parameter_group_name = "default.postgres14"
   skip_final_snapshot  = true
 
   db_subnet_group_name   = aws_db_subnet_group.rds_subnet_group.name
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
 
   tags = {
-    Name = "Ecommerce Postgres DB"
+    Name = "Ralph Mysql DB"
   }
 }
 
@@ -47,9 +46,10 @@ resource "aws_security_group" "rds_sg" {
 
 resource "aws_security_group_rule" "rds_ingress" {
   type                     = "ingress"
-  from_port                = 5432
-  to_port                  = 5432
+  from_port                = 3306
+  to_port                  = 3306
   protocol                 = "tcp"
   security_group_id        = aws_security_group.rds_sg.id  
   source_security_group_id = var.app_sg_id            
 }
+

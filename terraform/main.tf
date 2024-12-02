@@ -57,7 +57,7 @@ module "ALB"{
   app_count = var.app_count
   bastion_count = var.bastion_count
   app_server_ids = module.EC2.app_server_ids
-  bastion_server_ids = module.EC2.bastion_server_ids
+  #bastion_server_ids = module.EC2.bastion_server_ids
   public_subnet = module.VPC.public_subnet
   vpc_id = module.VPC.vpc_id
 

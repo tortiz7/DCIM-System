@@ -12,8 +12,8 @@ variable "alb_name"{
 variable "bastion_count"{
 }
 
-variable "bastion_server_ids"{
-}
+# variable "bastion_server_ids"{
+# }
 
 variable "app_server_ids"{
 }

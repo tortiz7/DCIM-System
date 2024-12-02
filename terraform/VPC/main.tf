@@ -3,7 +3,7 @@ resource "aws_vpc" "main" {
   instance_tenancy = "default"
 
   tags = {
-    Name = "wl6vpc"
+    Name = "costomVPC"
   }
 }
 
@@ -93,11 +93,11 @@ resource "aws_route_table_association" "private_assn" {
 
 resource "aws_vpc_peering_connection" "peer" {
   vpc_id        = aws_vpc.main.id                     
-  peer_vpc_id   = "vpc-04776a218231f7c14"             
+  peer_vpc_id   = "vpc-0fdbc34334e54389c"             
   auto_accept   = true                                
 
   tags = {
-    Name = "WL6-Default-VPC-Peer"
+    Name = "Project-Default-VPC-Peer"
   }
 }
 
@@ -114,7 +114,7 @@ resource "aws_route" "private_peer_route" {
 }
 
 resource "aws_route" "default_peer_route" {
-  route_table_id         = "rtb-0adb5c3fb76733aae"             
+  route_table_id         = "rtb-0a033adfd201f6265"             
   destination_cidr_block = aws_vpc.main.cidr_block    
   vpc_peering_connection_id = aws_vpc_peering_connection.peer.id
 }

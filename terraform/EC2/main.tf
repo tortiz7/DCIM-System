@@ -6,8 +6,8 @@
 # 5. security group for app: alb_sg
 # 6. load balancer to app server
 locals{
-  pub_key = file("kura_public_key.txt")
-  backend_private_ips = aws_instance.app_server[*].private_ip
+  # pub_key = file("kura_public_key.txt")
+  app_private_ips = aws_instance.app_server[*].private_ip
 }
 
 # instance for app
@@ -19,7 +19,7 @@ resource "aws_instance" "app_server" {
   # Attach an existing security group to the instance.
   # Security groups control the inbound and outbound traffic to your EC2 instance.
   vpc_security_group_ids = [aws_security_group.app_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
-  key_name = "terraform"                # The key pair name for SSH access to the instance.
+  key_name = "keypair-cloudega-k"                # The key pair name for SSH access to the instance.
   subnet_id = var.private_subnet[count.index % length(var.private_subnet)]
 # user_data = base64encode(templatefile("${path.root}/deploy.sh", {
 #     rds_endpoint = var.rds_endpoint,
@@ -51,15 +51,15 @@ resource "aws_instance" "bastion_host" {
   # Attach an existing security group to the instance.
   # Security groups control the inbound and outbound traffic to your EC2 instance.
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
-  key_name = "WL6"                # The key pair name for SSH access to the instance.
+  key_name = "keypair-cloudega-k"                # The key pair name for SSH access to the instance.
   subnet_id = var.public_subnet[count.index % length(var.public_subnet)]
 #  user_data = templatefile("kura_key_upload.sh", {
 #        pub_key = local.pub_key
 #   })
 #   # Tagging the resource with a Name label. Tags help in identifying and organizing resources in AWS.
-#   tags = {
-#     "Name" : "ecommerce_bastion_az${count.index +1}"         
-#   }
+   tags = {
+     "Name" : "bastion_az${count.index +1}"         
+   }
 
    depends_on = [
     var.postgres_db,
@@ -132,7 +132,7 @@ resource "aws_security_group" "app_sg" { # in order to use securtiy group resouc
     from_port   = 8000
     to_port     = 8000
     protocol    = "tcp"
-    security_groups = [var.alb_sg_id]
+    # security_groups = [var.alb_sg_id]
     }
 
   ingress {
@@ -166,8 +166,8 @@ resource "aws_security_group" "app_sg" { # in order to use securtiy group resouc
 
   resource "aws_security_group_rule" "backend_to_rds_ingress" {
   type                     = "ingress"
-  from_port                = 5432
-  to_port                  = 5432
+  from_port                = 3306
+  to_port                  = 3306
   protocol                 = "tcp"
   security_group_id        = aws_security_group.app_sg.id
   source_security_group_id = var.rds_sg_id
