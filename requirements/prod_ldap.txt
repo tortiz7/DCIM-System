@@ -1,0 +1,2 @@
+-r prod.txt
+django-auth-ldap==1.6.1

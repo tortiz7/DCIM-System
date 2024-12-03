@@ -1,0 +1,41 @@
+{
+  "name": "ralph",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "fontawesome": "~4.5.0",
+    "fastclick": "~1.0.6",
+    "jquery.cookie": "~1.4.1",
+    "jquery": "~2.2.3",
+    "modernizr": "~2.8.3",
+    "angular-cookies": "~1.4.0",
+    "angular-latest": "~1.4.0",
+    "angular-resource": "~1.4.0",
+    "angular-route": "~1.4.0",
+    "angular-ui-router": "~0.2.15",
+    "angular-breadcrumb": "~0.4.0",
+    "foundation": "~5.5.3",
+    "foundation-datepicker": "~1.5.6",
+    "angular-loading-bar": "~0.8.0",
+    "iron-ajax": "PolymerElements/iron-ajax#1.1.x",
+    "paper-input": "PolymerElements/paper-input#1.1.x",
+    "paper-item": "PolymerElements/paper-item#1.1.x",
+    "paper-menu": "PolymerElements/paper-menu#1.2.x",
+    "paper-tooltip": "PolymerElements/paper-tooltip#1.1.x",
+    "polymer": "Polymer/polymer#^1.2.4",
+    "iron-flex-layout": "PolymerElements/iron-flex-layout#1.2.x",
+    "iron-form": "PolymerElements/iron-form#1.0.x",
+    "chartist": "~0.9.5"
+  },
+  "devDependencies": {
+    "qunit": "~1.18.0",
+    "sinon": "http://sinonjs.org/releases/sinon-1.16.1.js",
+    "sinon-qunit": "~2.0.0"
+  }
+}

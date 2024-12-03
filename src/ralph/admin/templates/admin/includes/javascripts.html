@@ -1,0 +1,116 @@
+{% load staticfiles ralph_tags %}
+
+<script type="text/javascript">window.__admin_utc_offset__ = "{% filter escapejs %}{% now "Z" %}{% endfilter %}";</script>
+<script type="text/javascript" src="{% static 'admin/js/core.js' %}"></script>
+<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+<script type="text/javascript" src="{% static 'admin/js/jquery.init.js' %}"></script>
+<script type="text/javascript" src="{% static 'admin/js/actions.js' %}"></script>
+<script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+<script type="text/javascript" src="{% static 'admin/js/admin/RelatedObjectLookups.js' %}"></script>
+<script type="text/javascript" src="{% static 'vendor/js/jquery.js' %}"></script>
+<script type="text/javascript" src="{% static 'src/js/ralph.init.js' %}"></script>
+<script type="text/javascript" src="{% static "auto-complete-helpers.js" %}"></script>
+<script type="text/javascript" src="{% static 'vendor/js/foundation.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'vendor/js/modernizr.js' %}"></script>
+<script type="text/javascript" src="{% static 'src/js/fill-fields.js' %}"></script>
+
+<script>
+    (function($){
+        $(document).ready(function() {
+            $('#filter-button').bind('click', function() {
+                /**
+                * Because Django change_list uses the form to actions and bulk_edit
+                * and sends the data via POST. All filters work through the GET
+                * method.
+                * We have created an additional form which is responsible for
+                * generating GET parameters for filters.
+                *
+                * Cloned data from #filter-container and insert to #filter-form,
+                * then click submit.
+                */
+
+                var $form = $('#filter-form');
+                $form.empty();
+                var $orginal = $('.filter-container');
+                var $clone = $orginal.clone();
+
+                var $original_selects = $orginal.find('select');
+                // We have to select the <select> because jQuery.clone() does not copy it.
+                $clone.find('select').each(function(index, item) {
+                  $(item).val($original_selects.eq(index).val());
+                });
+                $('input, select', $clone).each(function(i, item) {
+                  var $item = $(item);
+                  if($item.val())
+                    $item.appendTo($form);
+                });
+                $form[0].submit();
+            });
+
+            // If you press "enter" in the filter form field
+            // run submit on this form. (Default is not working)
+            $('.filter-container').on('keypress', function(event) {
+                if(event.keyCode == 13) {  // For "enter" key
+                    event.preventDefault();
+                    $('#filter-button').click();
+                    return false;
+                }
+            });
+
+            $("tr input.action-select").actions();
+            var initPopupButtons = function() {
+                $('.add-related').click(function(e) {
+                    e.preventDefault();
+                    showAddAnotherPopup(this);
+                });
+                $('.related-lookup').click(function(e) {
+                    e.preventDefault();
+                    showRelatedObjectLookupPopup(this);
+                });
+                $('.change-related').click(function(e) {
+                    e.preventDefault();
+                    showRelatedObjectPopup(this);
+                });
+            }
+            initPopupButtons();
+            $('.add-row a').click(function() {
+                initPopupButtons();
+            });
+
+            $('.inline-related').each(function() {
+                var group_id = $(this).data('group-id'),
+                    prefix = $(this).data('prefix'),
+                    add_text = $(this).data('add-text'),
+                    delete_text = $(this).data('delete-text'),
+                    selector = "#" + group_id + "-group .tabular.inline-related tbody tr";
+                (function($) {
+                  $(selector).tabularFormset(selector, {
+                      prefix: prefix,
+                      addText: add_text,
+                      deleteText: delete_text
+                    });
+                })(django.jQuery);
+            });
+        });
+    })(django.jQuery);
+
+    (function($) {
+        $(document).ready(function() {
+            $('li.has-dropdown').on('mouseover', function() {
+                  var $this = $(this);
+                  var parent = $(".top-bar");
+                  var $thisdrop = $this.find(".dropdown").first();
+                  $thisdrop.css('visibility', 'visible')
+                           .css('width', 'auto');
+                  var dropdowns = parent.find("li.has-dropdown .dropdown");
+                  dropdowns.each(function() {
+                      var $drop = $(this);
+                      if(!$drop.is($thisdrop)) {
+                          $drop.css('visibility', 'hidden');
+                      }
+                  });
+            });
+            $(document).foundation();
+        });
+    })(ralph.jQuery);
+</script>

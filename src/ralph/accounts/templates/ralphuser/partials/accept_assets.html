@@ -1,0 +1,28 @@
+{% load i18n %}
+
+{% if transition_id %}
+  <h5>{% trans title %}</h5>
+  {% if transition_exists %}
+    {% if assets %}
+      <form action="" method="POST">{% csrf_token %}
+        <input type="hidden" name="action" value="{{ action }}" />
+        <ul>
+          {% for asset in assets %}
+            <li>{{ asset.model }}</li>
+          {% endfor %}
+        </ul>
+        <button>Accept</button>
+      </form>
+    {% else %}
+      <div class="alert-box radius info">
+        {% trans 'Nothing to accept.' %}
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="alert-box radius warning">
+      {% blocktrans %}
+        Acceptance mechanism is enabled but a transition having ID {{ acceptance_transition_id }} doesn't exist. Please add a transition with this ID or run DB migrations.
+      {% endblocktrans %}
+    </div>
+  {% endif %}
+{% endif %}

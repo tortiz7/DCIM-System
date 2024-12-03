@@ -1,0 +1,84 @@
+{% extends 'admin/base_site.html' %}
+
+{% load i18n staticfiles %}
+
+{% block title %}{% trans 'Tranisition' %}&nbsp;{{ transition.name|lower }} for {{ verbose_name }}{% endblock %}
+
+{% block bodyclass %}{{ block.super }} run-transition{% endblock %}
+
+{% block content %}
+  <h1>{% trans 'Tranisition' %}&nbsp;{{ transition.name|lower }} for {{ verbose_name }}: </h1>
+  <ul>
+    {% for object in objects %}
+      <li><a href="{{ object.get_absolute_url }}">{{ object }}</a></li>
+    {% endfor %}
+  </ul>
+  {% if transition.description %}
+    <p>{{ transition.description }}</p>
+  {% endif %}
+  <form method="POST">
+    {% csrf_token %}
+    {% if form.fields %}
+      {# If there are no fields on the form does not display table #}
+      <table>
+        <thead>
+          <tr>
+            <th>{% trans 'Option' %}</th>
+            <th>{% trans 'Value' %}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ form.as_table }}
+        </tbody>
+      </table>
+    {% endif %}
+    <div class="admin_bottom panel">
+      <div class="row">
+        <div class="small-2 columns">
+          <a href="{{ back_url }}" class="button alert">{% trans 'Cancel transition' %}</a>
+        </div>
+        <div class="small-10 columns text_right right_section">
+          <ul class="button-group radius right">
+            <li>
+              <button class="button success">{% trans 'Run transition' %}</button>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </form>
+{% endblock %}
+{% block extra_scripts %}
+  {{ block.super }}
+  {{ form.media.js }}
+  <script type="text/javascript" src="{% static 'vendor/js/foundation-datepicker.js' %}"></script>
+  <script type="text/javascript" src="{% static 'src/js/foundation-datepicker-init.js' %}"></script>
+  <script type="text/javascript">
+    (function($) {
+      $('#id_assign_user__user').on('change', function() {
+        // automatically assign owner to be the same as user
+        var $this = $(this);
+        var $owner_field = $('#id_assign_owner__owner');
+        if ($this.length === 1 && $owner_field.length === 1 && $this.val() !== '' && $owner_field.val() === '') {
+          $owner_field.val($this.val());
+        }
+      })
+    })(ralph.jQuery);
+
+    document.addEventListener('DOMContentLoaded', function() {
+    const prebootSelect = document.getElementById('preboot-select');
+    prebootSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex].text;
+        if (selectedOption.startsWith('[CRITICAL!]')) {
+          alert("The image should no longer be used - it has been deprecated. Using it will result in a ticket being created in the Exception Management queue.");
+        }
+        else if (selectedOption.startsWith('[WARNING!]')) {
+          {
+            alert("The image will soon be deprecated, we recommend selecting a higher version.");
+          }
+        }
+    });
+
+});
+  </script>
+{% endblock %}

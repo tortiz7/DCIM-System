@@ -1,0 +1,15 @@
+{% load i18n %}
+
+<div class="categories">
+  {% for result in results %}
+    <div class="category {{ result.class }}">
+        <a href="{{ result.url }}">
+          <div class="wrapper">
+              <div class="name">{{ result.label | title }}</div>
+              <div class="value">{{ result.count }}</div>
+              <i class="fa icon" aria-hidden="true"></i>
+          </div>
+        </a>
+    </div>
+  {% endfor %}
+</div>

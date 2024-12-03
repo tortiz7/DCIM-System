@@ -1,0 +1,23 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <div id="content-main">
+    <div class="row header">
+      <div class="large-2 small-2 columns">
+        <h1 class="ellipsis-hidden">{{ object }}</h1>
+      </div>
+    </div>
+    <div class="row flex">
+      {% if change_views %}
+        <div class="small-1 columns no-horizontal-padding elevate">
+          {% block tabs %}{% endblock %}
+        </div>
+      {% endif %}
+      <div class="small-{% if change_views %}11{% else %}12{% endif %} columns content">
+        <div class="content-inner">
+          {% block view_content %}{% endblock %}
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock %}
