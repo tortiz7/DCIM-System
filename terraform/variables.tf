@@ -14,7 +14,7 @@ variable region{
 
  variable instance_type{
   type = string
-  default = "t2.micro"
+  default = "t3.micro"
 
  }  
 
