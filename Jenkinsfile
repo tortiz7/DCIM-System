@@ -1,5 +1,9 @@
 pipeline {
-    agent any
+    agent {
+        node {
+            label 'cloudega-build-node'
+        }
+    }
 
     environment {
         AWS_DEFAULT_REGION = 'us-east-1'
