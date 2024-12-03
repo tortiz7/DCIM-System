@@ -1,12 +1,6 @@
- variable aws_access_key{
-    type = string
-    sensitive = true
- }                                                    # Replace with your AWS access key ID (leave empty if using IAM roles or env vars)
- 
- variable aws_secret_key{
-    type = string
-    sensitive = true
- }                                        # Replace with your AWS secret access key (leave empty if using IAM roles or env vars)
+provider "aws" {
+  region = var.region
+}                         
 
 variable region{
   type = string
