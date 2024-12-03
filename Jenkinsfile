@@ -24,12 +24,12 @@ pipeline {
             steps {
                 script {
                     withCredentials([
-                        string(credentialsId: 'DB_USERNAME', variable: 'TF_VAR_db_username'),
-                        string(credentialsId: 'DB_PASSWORD', variable: 'TF_VAR_db_password'),
-                        string(credentialsId: 'DOCKERHUB_USER', variable: 'TF_VAR_dockerhub_user'),
-                        string(credentialsId: 'DOCKERHUB_PASS', variable: 'TF_VAR_dockerhub_pass'),
-                        string(credentialsId: 'AWS_REGION', variable: 'TF_VAR_region')
-                    ]) {
+                        string(credentialsId: 'TF_VAR_db_username', variable: 'TF_VAR_db_username'),
+                        string(credentialsId: 'TF_VAR_db_password', variable: 'TF_VAR_db_password'),
+                        string(credentialsId: 'TF_VAR_dockerhub_user', variable: 'TF_VAR_dockerhub_user'),
+                        string(credentialsId: 'TF_VAR_dockerhub_pass', variable: 'TF_VAR_dockerhub_pass'),
+                        string(credentialsId: 'TF_VAR_region', variable: 'TF_VAR_region')
+                    ])
                         sh """
                             cd terraform
                             terraform init
