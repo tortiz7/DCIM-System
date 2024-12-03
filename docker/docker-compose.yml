@@ -3,7 +3,7 @@ services:
     platform: linux/amd64
     image: allegro/ralph:latest
     restart: always
-    ports:
+    expose:
       - "8000"
     volumes:
       - ralph_media:/var/local/ralph/media
@@ -21,6 +21,11 @@ services:
       REDIS_PASSWORD: ""
       REDIS_PORT: 6379
       REDIS_DB: 0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   nginx:
     platform: linux/amd64
@@ -30,6 +35,14 @@ services:
       - "80:80"
     volumes:
       - ralph_media:/opt/media
+      - ralph_static:/opt/static
+    depends_on:
+      - web
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   db:
     platform: linux/amd64
@@ -42,13 +55,23 @@ services:
     volumes:
       - ralph_dbdata:/var/lib/mysql
     command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   redis:
     platform: linux/amd64
     image: redis:3.0
     restart: always
-    ports:
+    expose:
       - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   inkpy:
     platform: linux/amd64
@@ -61,6 +84,8 @@ services:
       REDIS_PASSWORD: ""
       REDIS_PORT: 6379
       REDIS_DB: 0
+    depends_on:
+      - redis
 
 volumes:
   ralph_dbdata:
