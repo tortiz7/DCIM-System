@@ -9,3 +9,8 @@ output "app_sg_id" {
 output "app_server_ids" {
   value = [for instance in aws_instance.app_server : instance.id]
 }
+
+output "app_private_ips" {
+  value = aws_instance.app_server[*].private_ip
+  description = "Private IPs of the app servers"
+}

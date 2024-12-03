@@ -13,28 +13,16 @@ locals{
 # instance for app
 resource "aws_instance" "app_server" {
   count = var.app_count
-  ami = "ami-0866a3c8686eaeeba"                # The Amazon Machine Image (AMI) ID used to launch the EC2 instance.
-                                        # Replace this with a valid AMI ID
-  instance_type = var.instance_type                # Specify the desired EC2 instance size.
-  # Attach an existing security group to the instance.
-  # Security groups control the inbound and outbound traffic to your EC2 instance.
-  vpc_security_group_ids = [aws_security_group.app_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
-  key_name = "shafee-jenkins-keypair"                # The key pair name for SSH access to the instance.
+  ami   = "ami-0866a3c8686eaeeba"
+  instance_type = var.instance_type
+  vpc_security_group_ids = [aws_security_group.app_sg.id]
+  key_name = "shafee-jenkins-keypair"
   subnet_id = var.private_subnet[count.index % length(var.private_subnet)]
-# user_data = base64encode(templatefile("${path.root}/deploy.sh", {
-#     rds_endpoint = var.rds_endpoint,
-#     docker_user = var.dockerhub_user,
-#     docker_pass = var.dockerhub_pass,
-#     pub_key = local.pub_key,
-#     docker_compose = templatefile("${path.root}/compose.yml", {
-#       rds_endpoint = var.rds_endpoint,
-#       run_migrations = count.index == 0 ? "true" : "false"
-#     }),
-#   }))
+  
+  user_data = base64encode(file("${path.module}/deploy.sh"))
 
-  # Tagging the resource with a Name label. Tags help in identifying and organizing resources in AWS.
   tags = {
-    "Name" : "ralph_app_az${count.index +1}"         
+    Name = "ralph_app_az${count.index + 1}"
   }
 
   depends_on = [
