@@ -29,7 +29,7 @@ pipeline {
                         string(credentialsId: 'TF_VAR_dockerhub_user', variable: 'TF_VAR_dockerhub_user'),
                         string(credentialsId: 'TF_VAR_dockerhub_pass', variable: 'TF_VAR_dockerhub_pass'),
                         string(credentialsId: 'TF_VAR_region', variable: 'TF_VAR_region')
-                    ])
+                    ]) {
                         sh """
                             cd terraform
                             terraform init
