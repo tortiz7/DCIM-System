@@ -53,21 +53,24 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    def sshOptions = "-o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}\""
+                    def sshOptions = "-o StrictHostKeyChecking=no -o 'ProxyCommand=ssh -o StrictHostKeyChecking=no -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}' -i ${SSH_KEY_PATH}"
 
                     ec2_ips.each { ip ->
                         timeout(time: 5, unit: 'MINUTES') {
                             waitUntil {
                                 def setupComplete = sh(
-                                    script: """
-                                        ssh ${sshOptions} ubuntu@${ip} '
-                                            test -f /home/ubuntu/.setup_complete && 
-                                            systemctl is-active --quiet docker && 
-                                            systemctl is-active --quiet node_exporter
-                                        '
-                                    """,
-                                    returnStatus: true
-                                ) == 0
+                                        script: """
+                                            set -x  # Enable debug mode
+                                            echo "Attempting to connect to ${ip} through bastion ${bastionIp}..."
+                                            ssh ${sshOptions} ubuntu@${ip} '
+                                                test -f /home/ubuntu/.setup_complete && 
+                                                systemctl is-active --quiet docker && 
+                                                systemctl is-active --quiet node_exporter
+                                            '
+                                            echo "Connection and verification completed successfully"
+                                        """,
+                                        returnStatus: true
+                                    ) == 0
                                 
                                 if (!setupComplete) {
                                     sleep(15)
@@ -97,7 +100,7 @@ pipeline {
                             returnStdout: true
                         ).trim()
 
-                        def sshOptions = "-o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}\""
+                        def sshOptions = "-o StrictHostKeyChecking=no -o 'ProxyCommand=ssh -o StrictHostKeyChecking=no -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}' -i ${SSH_KEY_PATH}"
 
                         ec2_ips.each { ip ->
                             def isRalphRunning = sh(
