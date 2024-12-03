@@ -14,7 +14,6 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
-                // Clean workspace and get latest code
                 cleanWs()
                 checkout scm
             }
@@ -41,6 +40,46 @@ pipeline {
             }
         }
 
+        stage('Verify Instance Setup') {
+            steps {
+                script {
+                    def ec2_ips = sh(
+                        script: "cd terraform && terraform output -json private_instance_ips | jq -r '.[]'",
+                        returnStdout: true
+                    ).trim().split('\n')
+
+                    def bastionIp = sh(
+                        script: "cd terraform && terraform output -json bastion_public_ip | jq -r '.'",
+                        returnStdout: true
+                    ).trim()
+
+                    def sshOptions = "-o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}\""
+
+                    ec2_ips.each { ip ->
+                        timeout(time: 5, unit: 'MINUTES') {
+                            waitUntil {
+                                def setupComplete = sh(
+                                    script: """
+                                        ssh ${sshOptions} ubuntu@${ip} '
+                                            test -f /home/ubuntu/.setup_complete && 
+                                            systemctl is-active --quiet docker && 
+                                            systemctl is-active --quiet node_exporter
+                                        '
+                                    """,
+                                    returnStatus: true
+                                ) == 0
+                                
+                                if (!setupComplete) {
+                                    sleep(15)
+                                }
+                                return setupComplete
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Deploy Ralph') {
             steps {
                 script {
@@ -58,11 +97,9 @@ pipeline {
                             returnStdout: true
                         ).trim()
 
-                        // SSH configuration - our tunnel through the infrastructure
                         def sshOptions = "-o StrictHostKeyChecking=no -o ProxyCommand=\"ssh -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}\""
 
                         ec2_ips.each { ip ->
-                            // Check if Ralph is already running on this instance
                             def isRalphRunning = sh(
                                 script: """
                                     ssh ${sshOptions} ubuntu@${ip} '
@@ -80,34 +117,21 @@ pipeline {
                                 echo "📦 Time to welcome Ralph to its new home on ${ip}!"
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
-                                        # Setup workspace
                                         cd /home/ubuntu
                                         git clone https://github.com/allegro/ralph.git
                                         cd ralph/docker
                                         
-                                        # Start containers
                                         docker compose up -d
                                         
-                                        # Wait for services to initialize
                                         sleep 30
                                         
-                                        # Migrate database
                                         docker compose exec -T web ralphctl migrate
                                         
-                                        # Create superuser using credentials from Jenkins
                                         echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('\\"$SUPERUSER_NAME\\"', '\\"team@cloudega.com\\"', '\\"$SUPERUSER_PASSWORD\\"') if not User.objects.filter(username='\\"$SUPERUSER_NAME\\"').exists() else None" | docker compose exec -T web python manage.py shell
                                         
-                                        # Load demo data
                                         docker compose exec -T web ralphctl demodata
                                         
-                                        # Sync site tree
                                         docker compose exec -T web ralphctl sitetree_resync_apps
-                                        
-                                        # Log setup completion with properly escaped dollar sign
-                                        echo "Ralph Instance Setup Successfully on \\\$(date)" > /home/ubuntu/ralph_setup.log
-                                        
-                                        # Set ownership
-                                        sudo chown -R ubuntu:ubuntu /home/ubuntu
                                     '
                                 """
                                 echo "🌟 Ralph is now ready to rock on ${ip}!"

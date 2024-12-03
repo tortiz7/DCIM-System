@@ -60,3 +60,21 @@ module "ALB"{
   vpc_id = module.VPC.vpc_id
 
 }
+
+output "private_instance_ips" {
+    value       = module.EC2.private_instance_ips
+    description = "Private IP addresses of Ralph application servers"
+    sensitive   = false
+}
+
+output "bastion_public_ip" {
+    value       = module.EC2.bastion_public_ip
+    description = "Public IP address of the bastion host for SSH access"
+    sensitive   = false
+}
+
+output "alb_dns_name" {
+    value       = module.ALB.alb_dns_name
+    description = "DNS name of the Application Load Balancer"
+    sensitive   = false
+}
