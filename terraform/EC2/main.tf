@@ -19,7 +19,7 @@ resource "aws_instance" "app_server" {
   # Attach an existing security group to the instance.
   # Security groups control the inbound and outbound traffic to your EC2 instance.
   vpc_security_group_ids = [aws_security_group.app_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
-  key_name = "keypair-cloudega-k"                # The key pair name for SSH access to the instance.
+  key_name = "shafee-jenkins-keypair"                # The key pair name for SSH access to the instance.
   subnet_id = var.private_subnet[count.index % length(var.private_subnet)]
 # user_data = base64encode(templatefile("${path.root}/deploy.sh", {
 #     rds_endpoint = var.rds_endpoint,
@@ -51,7 +51,7 @@ resource "aws_instance" "bastion_host" {
   # Attach an existing security group to the instance.
   # Security groups control the inbound and outbound traffic to your EC2 instance.
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
-  key_name = "keypair-cloudega-k"                # The key pair name for SSH access to the instance.
+  key_name = "shafee-jenkins-keypair"                # The key pair name for SSH access to the instance.
   subnet_id = var.public_subnet[count.index % length(var.public_subnet)]
 #  user_data = templatefile("kura_key_upload.sh", {
 #        pub_key = local.pub_key
