@@ -91,8 +91,8 @@ pipeline {
                                         # Sync site tree
                                         docker compose exec -T web ralphctl sitetree_resync_apps
                                         
-                                        # Log setup completion with escaped $
-                                        echo "Ralph Instance Setup Successfully on \$(date)" > /home/ubuntu/ralph_setup.log
+                                        # Log setup completion with properly escaped dollar sign
+                                        echo "Ralph Instance Setup Successfully on \\\$(date)" > /home/ubuntu/ralph_setup.log
                                         
                                         # Set ownership
                                         sudo chown -R ubuntu:ubuntu /home/ubuntu
