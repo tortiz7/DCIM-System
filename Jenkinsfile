@@ -23,12 +23,20 @@ pipeline {
         stage('Deploy Infrastructure') {
             steps {
                 script {
-                    sh """
-                        cd terraform
-                        terraform init
-                        terraform plan -out=tfplan
-                        terraform apply -auto-approve tfplan
-                    """
+                    withCredentials([
+                        string(credentialsId: 'DB_USERNAME', variable: 'TF_VAR_db_username'),
+                        string(credentialsId: 'DB_PASSWORD', variable: 'TF_VAR_db_password'),
+                        string(credentialsId: 'DOCKERHUB_USER', variable: 'TF_VAR_dockerhub_user'),
+                        string(credentialsId: 'DOCKERHUB_PASS', variable: 'TF_VAR_dockerhub_pass'),
+                        string(credentialsId: 'AWS_REGION', variable: 'TF_VAR_region')
+                    ]) {
+                        sh """
+                            cd terraform
+                            terraform init
+                            terraform plan -out=tfplan
+                            terraform apply -auto-approve tfplan
+                        """
+                    }
                 }
             }
         }
