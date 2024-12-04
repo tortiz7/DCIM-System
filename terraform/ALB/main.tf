@@ -39,13 +39,13 @@ resource "aws_lb" "app_alb" {
 
 resource "aws_lb_target_group" "app_tg" {
   name     = "app-target-group"
-  port     = 80  
+  port     = 8000
   protocol = "HTTP"
   vpc_id   = var.vpc_id
 
   health_check {
     protocol            = "HTTP"
-    path                = "/"
+    path                = "/login/"
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2 
