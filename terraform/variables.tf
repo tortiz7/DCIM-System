@@ -24,7 +24,7 @@ variable region{
 
  variable instance_type{
   type = string
-  default = "t2.micro"
+  default = "t3.medium"
 
  }  
 
@@ -45,7 +45,7 @@ variable "app_count"{
 variable "db_name" {
   description = "The name of the database to create when the DB instance is created"
   type        = string
-  default     = "ecommerce"
+  default     = "ralph"
 }
 
 variable "db_username" {
@@ -65,7 +65,7 @@ variable "alb_name" {
 }
 
 variable "app_port" {
-  default = 8000
+  default = 80
 }
 
 variable "bastion_port" {

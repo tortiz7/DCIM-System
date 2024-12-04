@@ -5,6 +5,7 @@
 # 4. use batsion host instead of frontend_server
 # 5. security group for app: alb_sg
 # 6. load balancer to app server
+# 7. open port 80 for the nginx for test
 locals{
   # pub_key = file("kura_public_key.txt")
   app_private_ips = aws_instance.app_server[*].private_ip
@@ -129,8 +130,8 @@ resource "aws_security_group" "app_sg" { # in order to use securtiy group resouc
   #   }   
 
  ingress {
-    from_port   = 8000
-    to_port     = 8000
+    from_port   = 80
+    to_port     = 80
     protocol    = "tcp"
     # security_groups = [var.alb_sg_id]
     }
