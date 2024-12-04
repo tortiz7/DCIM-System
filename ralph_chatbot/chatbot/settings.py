@@ -77,7 +77,10 @@ CHANNEL_LAYERS = {
 }
 
 # Model Configuration
-MODEL_PATH = os.getenv('MODEL_PATH', BASE_DIR / 'model/ralph_assistant')
+MODEL_PATH = {
+    'base_path': os.path.join(BASE_DIR, 'model'),
+    'adapters_path': os.path.join(BASE_DIR, 'model/adapters')
+}
 
 # Ralph API Configuration
 RALPH_API_URL = os.getenv('RALPH_API_URL', 'http://localhost:8000/api')
