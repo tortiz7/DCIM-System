@@ -55,7 +55,7 @@ variable "alb_name" {
 }
 
 variable "app_port" {
-  default = 8000
+  default = 80
 }
 
 variable "bastion_port" {

@@ -72,3 +72,7 @@ rm -rf node_exporter-1.6.1.linux-amd64.tar.gz node_exporter-1.6.1.linux-amd64
 # Create setup completion marker
 touch /home/ubuntu/.setup_complete
 echo "System setup completed successfully"
+
+echo "Setting up Ralph configuration..."
+mkdir -p /etc/ralph/conf.d
+echo "ALLOWED_HOSTS=${aws_lb.app_alb.dns_name},localhost,127.0.0.1" >> /etc/ralph/conf.d/settings.conf

@@ -100,7 +100,7 @@ resource "aws_security_group" "app_sg" { # in order to use securtiy group resouc
   name        = "tf_made_sg_private"
   description = "host gunicorn"
   vpc_id = var.vpc_id
-  # Ingress rules: Define inbound traffic that is allowed.Allow SSH traffic and HTTP traffic on port 8080 from any IP address (use with caution)
+  # Ingress rules: Define inbound traffic that is allowed. Allow SSH traffic and HTTP traffic on port 8080 from any IP address (use with caution)
    
    ingress {
     from_port   = 22
@@ -109,12 +109,12 @@ resource "aws_security_group" "app_sg" { # in order to use securtiy group resouc
     cidr_blocks = ["0.0.0.0/0"]
     } 
 
-  # ingress {
-  #   from_port   = 80
-  #   to_port     = 80
-  #   protocol    = "tcp"
-  #   cidr_blocks = ["0.0.0.0/0"]
-  #   }   
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    }   
 
  ingress {
     from_port   = 8000
@@ -138,7 +138,7 @@ resource "aws_security_group" "app_sg" { # in order to use securtiy group resouc
     # }
 
 
-     egress {
+    egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
