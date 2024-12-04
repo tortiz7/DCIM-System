@@ -61,16 +61,14 @@ module "ALB"{
 
 }
 
-output "private_instance_ips" {
-    value       = module.EC2.private_instance_ips
-    description = "Private IP addresses of Ralph application servers"
-    sensitive   = false
-}
-
 output "bastion_public_ip" {
     value       = module.EC2.bastion_public_ip
-    description = "Public IP address of the bastion host for SSH access"
-    sensitive   = false
+    description = "Public IP of the bastion host for SSH access"
+}
+
+output "private_instance_ips" {
+    value       = module.EC2.private_instance_ips
+    description = "Private IPs of all application instances"
 }
 
 output "alb_dns_name" {
