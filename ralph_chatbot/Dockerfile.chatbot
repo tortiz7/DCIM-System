@@ -1,0 +1,56 @@
+FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
+
+ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    build-essential \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+ARG CHATBOT_REPO=git@github.com:tortiz7/DCIM-System.git
+ARG CHATBOT_BRANCH=chatbot-TOrtiz
+
+RUN echo "Repo: $CHATBOT_REPO" && echo "Branch: $CHATBOT_BRANCH"
+
+RUN mkdir -p ~/.ssh && \
+    ssh-keyscan github.com >> ~/.ssh/known_hosts && \
+    chmod 600 ~/.ssh/known_hosts
+
+
+RUN --mount=type=ssh git clone --branch $CHATBOT_BRANCH $CHATBOT_REPO .
+
+# Copy requirements first for better caching
+WORKDIR /app/ralph_chatbot
+RUN pip3 install --no-cache-dir -r requirements.txt
+
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV DJANGO_SETTINGS_MODULE=chatbot.settings
+
+# Collect static files
+RUN python3 manage.py collectstatic --noinput
+
+# Skip healthcheck during build by using a build argument
+ARG DOCKER_BUILDKIT=1
+ARG SKIP_HEALTHCHECK=true
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD if [ "$SKIP_HEALTHCHECK" = "true" ]; then exit 0; else curl -f http://localhost:8001/health/ || exit 1; fi
+
+EXPOSE 8001 9100
+
+CMD ["gunicorn", \
+     "--bind", "0.0.0.0:8001", \
+     "--workers", "4", \
+     "--timeout", "120", \
+     "--keep-alive", "65", \
+     "--log-level", "info", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "chatbot.wsgi:application"]

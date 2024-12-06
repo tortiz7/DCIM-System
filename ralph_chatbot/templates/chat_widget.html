@@ -1,0 +1,35 @@
+<div id="ralph-assistant" class="chat-widget">
+    <div class="metrics-dashboard">
+        <div class="metric-card">
+            <h3>Assets</h3>
+            <div id="asset-count">Loading...</div>
+            <div id="asset-status">Loading...</div>
+        </div>
+        
+        <div class="metric-card">
+            <h3>Network</h3>
+            <div id="network-status">Loading...</div>
+        </div>
+        
+        <div class="metric-card">
+            <h3>Power Usage</h3>
+            <div id="power-usage">Loading...</div>
+        </div>
+    </div>
+
+    <div class="chat-window">
+        <!-- Existing chat interface -->
+    </div>
+</div>
+
+<script src="{% static 'js/websocket.js' %}"></script>
+<script>
+    // Initialize WebSocket connection
+    const ralphSocket = new RalphWebSocket();
+    ralphSocket.connect();
+    
+    // Update metrics every 30 seconds
+    setInterval(() => {
+        ralphSocket.requestMetrics('all');
+    }, 30000);
+</script>
