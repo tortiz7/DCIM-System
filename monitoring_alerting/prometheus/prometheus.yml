@@ -25,3 +25,9 @@ scrape_configs:
   - job_name: 'gpu_exporter'
     static_configs:
       - targets: ['<private_ip_of_g4dn_instance1>:9400', '<private_ip_of_g4dn_instance2>:9400']
+
+
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets: ['localost:9093']  # Replace with Alertmanager's address      
