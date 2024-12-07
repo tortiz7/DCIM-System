@@ -1,23 +1,17 @@
 pipeline {
-    // Execute pipeline on the designated build node configured for our deployment requirements
     agent {
         node {
             label 'cloudega-build-node'
         }
     }
 
-    // Define critical environment variables for deployment configuration
-    // These settings align with project requirements and infrastructure specifications
     environment {
-        AWS_DEFAULT_REGION = 'us-east-1'  // Standardized region for project deployment
+        AWS_DEFAULT_REGION = 'us-east-1'
         APP_NAME = 'ralph'
-        // SSH key location for secure instance access
         SSH_KEY_PATH = '/home/ubuntu/.ssh/shafee-jenkins-keypair.pem'
     }
 
     stages {
-        // Initialize clean workspace and retrieve latest codebase
-        // Ensures consistent deployment environment for each pipeline run
         stage('Setup') {
             steps {
                 cleanWs()
@@ -25,13 +19,9 @@ pipeline {
             }
         }
 
-        // Execute infrastructure deployment using Terraform configurations
-        // Utilizes secure credential management for sensitive information
         stage('Deploy Infrastructure') {
             steps {
                 script {
-                    // Access required credentials from Jenkins secure storage
-                    // Critical for maintaining security of deployment process
                     withCredentials([
                         string(credentialsId: 'TF_VAR_db_username', variable: 'TF_VAR_db_username'),
                         string(credentialsId: 'TF_VAR_db_password', variable: 'TF_VAR_db_password'),
@@ -50,12 +40,9 @@ pipeline {
             }
         }
 
-        // Validate instance configuration and service readiness
-        // Ensures all required services are operational before deployment
         stage('Verify Instance Setup') {
             steps {
                 script {
-                    // Retrieve instance information from Terraform outputs
                     def ec2_ips = sh(
                         script: "cd terraform && terraform output -json private_instance_ips | jq -r '.[]'",
                         returnStdout: true
@@ -66,11 +53,8 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
-                    // Configure SSH access through bastion host with security parameters
                     def sshOptions = "-o StrictHostKeyChecking=no -o 'ProxyCommand=ssh -o StrictHostKeyChecking=no -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}' -i ${SSH_KEY_PATH}"
 
-                    // Verify essential services on each instance
-                    // Ensures Docker and monitoring services are operational
                     ec2_ips.each { ip ->
                         timeout(time: 5, unit: 'MINUTES') {
                             waitUntil {
@@ -99,8 +83,6 @@ pipeline {
             }
         }
 
-        // Deploy Ralph application to verified instances
-        // Includes database migration and initial system configuration
         stage('Deploy Ralph') {
             steps {
                 script {
@@ -120,8 +102,6 @@ pipeline {
 
                         def sshOptions = "-o StrictHostKeyChecking=no -o 'ProxyCommand=ssh -o StrictHostKeyChecking=no -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}' -i ${SSH_KEY_PATH}"
 
-                        // Execute deployment process for each instance
-                        // Includes new deployment or update based on current state
                         ec2_ips.each { ip ->
                             def isRalphRunning = sh(
                                 script: """
@@ -137,7 +117,7 @@ pipeline {
                             ).trim()
 
                             if (isRalphRunning == 'false') {
-                                echo "Initiating new Ralph deployment on ${ip}"
+                                echo "📦 Time to deploy Ralph on ${ip}!"
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu
@@ -146,23 +126,29 @@ pipeline {
                                         
                                         docker compose up -d
                                         sleep 30
-
-                                        # Run migrations and create superuser inside the container
+                                        
                                         docker compose exec -T web ralphctl migrate
-                                        docker compose exec -T web ralphctl shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('${SUPERUSER_NAME}', 'team@cloudega.com', '${SUPERUSER_PASSWORD}') if not User.objects.filter(username='${SUPERUSER_NAME}').exists() else None"
+                                        docker compose exec -T web ralphctl shell -c "
+from django.contrib.auth import get_user_model; 
+User = get_user_model(); 
+user, created = User.objects.get_or_create(username=\\"${SUPERUSER_NAME}\\", defaults={\\"email\\":\\"team@cloudega.com\\"});
+user.is_staff = True
+user.is_superuser = True
+user.set_password(\\"${SUPERUSER_PASSWORD}\\")
+user.save()
+"
                                         docker compose exec -T web ralphctl demodata
                                         docker compose exec -T web ralphctl sitetree_resync_apps
 
-                                        # Write settings inside the container
-                                        docker compose exec -T web sh -c "mkdir -p /etc/ralph/conf.d && echo \\"LOGIN_REDIRECT_URL = /\\" >> /etc/ralph/conf.d/settings.conf && echo \\"ALLOWED_HOSTS = [\\\\\\"*\\\\\\"]\\" >> /etc/ralph/conf.d/settings.conf"
-
-                                        # Optionally, restart the web service to ensure new settings are applied
-                                        docker compose restart web
+                                        # Update Ralph settings
+                                        mkdir -p /etc/ralph/conf.d
+                                        echo "LOGIN_REDIRECT_URL = \\"/\\"" >> /etc/ralph/conf.d/settings.conf
+                                        echo "ALLOWED_HOSTS = [\\"*\\"\\]" >> /etc/ralph/conf.d/settings.conf
                                     '
                                 """
-                                echo "Ralph deployment completed successfully on ${ip}"
+                                echo "🌟 Ralph is ready to rock on ${ip}!"
                             } else {
-                                echo "Updating existing Ralph deployment on ${ip}"
+                                echo "🔄 Just refreshing Ralph on ${ip}"
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu/ralph/docker
@@ -180,13 +166,12 @@ pipeline {
         }
     }
 
-    // Pipeline completion handling
     post {
         success {
-            echo "Pipeline execution completed successfully. Ralph deployment is operational."
+            echo "🎉 Pipeline completed successfully! Ralph is ready to roll!"
         }
         failure {
-            echo "Pipeline execution encountered errors. Please review logs for troubleshooting."
+            echo "⚠️ Something went wrong. Check the logs above for details."
         }
     }
 }
