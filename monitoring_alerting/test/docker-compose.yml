@@ -7,24 +7,18 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/alerting_rules.yml:/etc/prometheus/alerting_rules.yml:ro
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
+    command: [ "--config.file=/etc/prometheus/prometheus.yml" ]
     ports:
       - "9090:9090"
     networks:
       - monitoring
-    depends_on:
-      - alertmanager
-      - cadvisor
-      - node_exporter
-      - pushgateway
 
   alertmanager:
     image: prom/alertmanager:v0.26.0
     container_name: alertmanager
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
-    command: ['--config.file=/etc/alertmanager/alertmanager.yml']
+    command: [ "--config.file=/etc/alertmanager/alertmanager.yml" ]
     ports:
       - "9093:9093"
     networks:
@@ -36,22 +30,45 @@ services:
     volumes:
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-    ports:
-      - "3000:3000"
     environment:
       GF_SECURITY_ADMIN_PASSWORD: "admin"
+    ports:
+      - "3000:3000"
     networks:
       - monitoring
     depends_on:
       - prometheus
 
+  pushgateway:
+    image: prom/pushgateway:latest
+    container_name: pushgateway
+    ports:
+      - "9091:9091"
+    networks:
+      - monitoring
+
+  # ML Container
+  machine_learning:
+    build: ./machine_learning
+    container_name: ml_jobs
+    environment:
+      PROMETHEUS_URL: http://prometheus:9090
+      PUSHGATEWAY_URL: http://pushgateway:9091
+    depends_on:
+      - prometheus
+      - pushgateway
+    networks:
+      - monitoring
+
+  # For local testing, run Node Exporter and cAdvisor on the same host:
   node_exporter:
     image: prom/node-exporter:v1.6.0
     container_name: node_exporter
-    command: [ "--path.rootfs=/host" ]
-    pid: "host"
-    network_mode: "host"
-    restart: unless-stopped
+    # Run on host network or map port:
+    ports:
+      - "9100:9100"
+    networks:
+      - monitoring
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -65,30 +82,6 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
     networks:
       - monitoring
-
-  pushgateway:
-    image: prom/pushgateway:latest
-    container_name: pushgateway
-    ports:
-      - "9091:9091"
-    networks:
-      - monitoring
-
-  ml:
-    build: ./ml
-    container_name: ml_jobs
-    volumes:
-      - ./ml:/app
-    environment:
-      - PROMETHEUS_URL=http://prometheus:9090
-      - PUSHGATEWAY_URL=http://pushgateway:9091
-    command: ["/app/run_ml.sh"]
-    networks:
-      - monitoring
-    depends_on:
-      - prometheus
-      - pushgateway
-      - grafana
 
 networks:
   monitoring:
