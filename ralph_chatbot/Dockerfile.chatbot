@@ -22,22 +22,32 @@ RUN mkdir -p ~/.ssh && \
     ssh-keyscan github.com >> ~/.ssh/known_hosts && \
     chmod 600 ~/.ssh/known_hosts
 
-
 RUN --mount=type=ssh git clone --branch $CHATBOT_BRANCH $CHATBOT_REPO .
 
-# Copy requirements first for better caching
 WORKDIR /app/ralph_chatbot
-RUN pip3 install --no-cache-dir -r requirements.txt
 
+# Install Python dependencies including Unsloth
+RUN pip3 install --no-cache-dir -r requirements.txt && \
+    pip3 install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git" && \
+    pip3 install --no-deps packaging ninja einops flash-attn xformers trl peft accelerate bitsandbytes
 
-# Set environment variables
+# Verify CUDA and set up environment
+RUN python3 -c "import torch; assert torch.cuda.is_available(), 'CUDA not available'; print(f'CUDA available: {torch.cuda.get_device_name(0)}')"
+
 ENV PYTHONPATH=/app
 ENV DJANGO_SETTINGS_MODULE=chatbot.settings
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV CUDA_VISIBLE_DEVICES=0
+ENV MODEL_PATH=/app/ralph_chatbot/chatbot/model
+ENV LORA_PATH=/app/ralph_chatbot/chatbot/model/adapters
+
+# Add model verification on startup
+COPY verify_model.py /app/ralph_chatbot/chatbot/utils/verify_model.py
+RUN chmod +x verify_model.py
 
 # Collect static files
 RUN python3 manage.py collectstatic --noinput
 
-# Skip healthcheck during build by using a build argument
 ARG DOCKER_BUILDKIT=1
 ARG SKIP_HEALTHCHECK=true
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
