@@ -141,24 +141,23 @@ pipeline {
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu
-                                        
-                                        # TODO: Change repo to Cloudega repo
                                         git clone https://github.com/allegro/ralph.git
                                         cd ralph/docker
                                         
                                         docker compose up -d
                                         sleep 30
 
-                                        # Create the necessary directory structure first
-                                        sudo mkdir -p /etc/ralph/conf.d
-                                        
+                                        # Run migrations and create superuser inside the container
                                         docker compose exec -T web ralphctl migrate
                                         docker compose exec -T web ralphctl shell -c "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('${SUPERUSER_NAME}', 'team@cloudega.com', '${SUPERUSER_PASSWORD}') if not User.objects.filter(username='${SUPERUSER_NAME}').exists() else None"
                                         docker compose exec -T web ralphctl demodata
                                         docker compose exec -T web ralphctl sitetree_resync_apps
-                                        
-                                        echo "LOGIN_REDIRECT_URL = /" >> /etc/ralph/conf.d/settings.conf
-                                        echo "ALLOWED_HOSTS = [\\"*\\"]" >> /etc/ralph/conf.d/settings.conf
+
+                                        # Write settings inside the container
+                                        docker compose exec -T web sh -c "mkdir -p /etc/ralph/conf.d && echo \\"LOGIN_REDIRECT_URL = /\\" >> /etc/ralph/conf.d/settings.conf && echo \\"ALLOWED_HOSTS = [\\\\\\"*\\\\\\"]\\" >> /etc/ralph/conf.d/settings.conf"
+
+                                        # Optionally, restart the web service to ensure new settings are applied
+                                        docker compose restart web
                                     '
                                 """
                                 echo "Ralph deployment completed successfully on ${ip}"
