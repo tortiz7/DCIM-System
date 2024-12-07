@@ -3,3 +3,4 @@ pandas
 scikit-learn
 prophet
 prometheus_client
+plotly
