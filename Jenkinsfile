@@ -127,7 +127,10 @@ pipeline {
                                         docker compose up -d
                                         sleep 30
                                         
+                                        # Run migrations
                                         docker compose exec -T web ralphctl migrate
+
+                                        # Create or update superuser (cloudega-admin)
                                         docker compose exec -T web ralphctl shell -c "
 from django.contrib.auth import get_user_model; 
 User = get_user_model(); 
@@ -136,17 +139,25 @@ user.is_staff = True
 user.is_superuser = True
 user.set_password(\\"${SUPERUSER_PASSWORD}\\")
 user.save()
+print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_superuser}\\")
 "
+
+                                        # Load demo data
                                         docker compose exec -T web ralphctl demodata
                                         docker compose exec -T web ralphctl sitetree_resync_apps
 
-                                        # Update Ralph settings
-                                        mkdir -p /etc/ralph/conf.d
-                                        echo "LOGIN_REDIRECT_URL = \\"/\\"" >> /etc/ralph/conf.d/settings.conf
-                                        echo "ALLOWED_HOSTS = [\\"*\\"\\]" >> /etc/ralph/conf.d/settings.conf
+                                        # Change ownership to root temporarily for file creation
+                                        docker compose exec -T -u root web bash -c "mkdir -p /etc/ralph/conf.d && touch /etc/ralph/conf.d/settings.conf && chown root:root /etc/ralph/conf.d/settings.conf && chmod 666 /etc/ralph/conf.d/settings.conf"
+
+                                        # Now write our settings as root
+                                        docker compose exec -T -u root web bash -c "echo \\"LOGIN_REDIRECT_URL = \\"/\\"\\" >> /etc/ralph/conf.d/settings.conf"
+                                        docker compose exec -T -u root web bash -c "echo \\"ALLOWED_HOSTS = [\\"*\\"]\\" >> /etc/ralph/conf.d/settings.conf"
+                                        
+                                        # Set file back to normal permissions (not strictly needed)
+                                        docker compose exec -T -u root web bash -c "chmod 644 /etc/ralph/conf.d/settings.conf"
                                     '
                                 """
-                                echo "🌟 Ralph is ready to rock on ${ip}!"
+                                echo "🌟 Ralph is now configured and ready on ${ip}!"
                             } else {
                                 echo "🔄 Just refreshing Ralph on ${ip}"
                                 sh """
@@ -168,7 +179,7 @@ user.save()
 
     post {
         success {
-            echo "🎉 Pipeline completed successfully! Ralph is ready to roll!"
+            echo "🎉 Pipeline completed successfully! Ralph should be ready to roll!"
         }
         failure {
             echo "⚠️ Something went wrong. Check the logs above for details."
