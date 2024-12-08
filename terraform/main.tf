@@ -2,10 +2,20 @@
 # how to authenticate (access key, secret key, and region) when provisioning resources.
 # Note: Hardcoding credentials is not recommended for production use. Instead, use environment variables
 # or IAM roles to manage credentials securely.
+
+terraform {
+  backend "s3" {
+    bucket         = "my-terraform-state-bucket-kura-c5"
+    key            = "terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "terraform-lock"
+    encrypt        = true
+  }
+}
+
 provider "aws" {
   region = var.region
 }
-
 
 module "VPC"{
   source = "./VPC"

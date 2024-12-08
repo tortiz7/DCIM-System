@@ -27,11 +27,12 @@ pipeline {
                         string(credentialsId: 'TF_VAR_db_password', variable: 'TF_VAR_db_password'),
                         string(credentialsId: 'TF_VAR_dockerhub_user', variable: 'TF_VAR_dockerhub_user'),
                         string(credentialsId: 'TF_VAR_dockerhub_pass', variable: 'TF_VAR_dockerhub_pass'),
-                        string(credentialsId: 'TF_VAR_region', variable: 'TF_VAR_region')
+                        string(credentialsId: 'TF_VAR_region', variable: 'TF_VAR_region'),
+                        usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')
                     ]) {
                         sh """
                             cd terraform
-                            terraform init
+                            terraform init -input=false -reconfigure
                             terraform plan -out=tfplan
                             terraform apply -auto-approve tfplan
                         """
@@ -71,7 +72,7 @@ pipeline {
                                     """,
                                     returnStatus: true
                                 ) == 0
-                                
+
                                 if (!setupComplete) {
                                     sleep(15)
                                 }
@@ -130,7 +131,7 @@ pipeline {
                                         # Run migrations
                                         docker compose exec -T web ralphctl migrate
 
-                                        # Create or update superuser (cloudega-admin)
+                                        # Create or update superuser
                                         docker compose exec -T web ralphctl shell -c "
 from django.contrib.auth import get_user_model; 
 User = get_user_model(); 
@@ -146,14 +147,10 @@ print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_sup
                                         docker compose exec -T web ralphctl demodata
                                         docker compose exec -T web ralphctl sitetree_resync_apps
 
-                                        # Change ownership to root temporarily for file creation
+                                        # Adjust permissions for /etc/ralph/conf.d/settings.conf
                                         docker compose exec -T -u root web bash -c "mkdir -p /etc/ralph/conf.d && touch /etc/ralph/conf.d/settings.conf && chown root:root /etc/ralph/conf.d/settings.conf && chmod 666 /etc/ralph/conf.d/settings.conf"
-
-                                        # Now write our settings as root
                                         docker compose exec -T -u root web bash -c "echo \\"LOGIN_REDIRECT_URL = \\"/\\"\\" >> /etc/ralph/conf.d/settings.conf"
                                         docker compose exec -T -u root web bash -c "echo \\"ALLOWED_HOSTS = [\\"*\\"]\\" >> /etc/ralph/conf.d/settings.conf"
-                                        
-                                        # Set file back to normal permissions (not strictly needed)
                                         docker compose exec -T -u root web bash -c "chmod 644 /etc/ralph/conf.d/settings.conf"
                                     '
                                 """
