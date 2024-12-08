@@ -28,7 +28,7 @@ WORKDIR /app/ralph_chatbot
 
 # Install Python dependencies including Unsloth
 RUN pip3 install --no-cache-dir -r requirements.txt && \
-    pip3 install "unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git" && \
+    pip3 install unsloth==2024.11.10 && \
     pip3 install --no-deps packaging ninja einops flash-attn xformers trl peft accelerate bitsandbytes
 
 # Verify CUDA and set up environment
@@ -42,8 +42,7 @@ ENV MODEL_PATH=/app/ralph_chatbot/chatbot/model
 ENV LORA_PATH=/app/ralph_chatbot/chatbot/model/adapters
 
 # Add model verification on startup
-COPY verify_model.py /app/ralph_chatbot/chatbot/utils/verify_model.py
-RUN chmod +x verify_model.py
+RUN chmod +x chatbot/utils/verify_model.py
 
 # Collect static files
 RUN python3 manage.py collectstatic --noinput
