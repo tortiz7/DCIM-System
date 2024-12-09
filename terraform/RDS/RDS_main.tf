@@ -66,12 +66,14 @@ resource "aws_elasticache_subnet_group" "cache_subnet_group" {
 resource "aws_elasticache_replication_group" "redis" {
   replication_group_id          = "my-redis-replication-group"
   description                   = "Multi-AZ Redis Replication Group"
+  preferred_cache_cluster_azs   = ["us-east-1a", "us-east-1b"]
   engine                        = "redis"
   engine_version                = "6.x"
   node_type                     = "cache.t3.medium"
   num_cache_clusters            = 2  # 1 primary + 1 replica
   automatic_failover_enabled    = true
   multi_az_enabled              = true
+  port                          = 6379
   subnet_group_name             = aws_elasticache_subnet_group.cache_subnet_group.name
   security_group_ids            = [aws_security_group.redis_sg.id]
 

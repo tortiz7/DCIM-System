@@ -67,5 +67,5 @@ variable "redis_port"{
 variable "redis_sg_id"{
 }
 
-variable "ssh_private_key"{
+variable "github_token" {
 }

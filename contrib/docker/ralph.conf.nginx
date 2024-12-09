@@ -1,4 +1,3 @@
-# ralph.conf.nginx content (save this as contrib/docker/ralph.conf.nginx)
 server {
     listen 80;
     client_max_body_size 512M;

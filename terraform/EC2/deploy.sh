@@ -73,18 +73,9 @@ rm -rf node_exporter-1.6.1.linux-amd64.tar.gz node_exporter-1.6.1.linux-amd64
 touch /home/ubuntu/.setup_complete
 echo "System setup completed successfully"
 
-mkdir -p ~/.ssh
-ssh-keyscan github.com >> ~/.ssh/known_hosts
-chmod 600 ~/.ssh/known_hosts
-
-mkdir -p ~/.ssh
-cat <<EOF > ~/.ssh/id_rsa
-${ssh_private_key}
-EOF
-chmod 600 ~/.ssh/id_rsa
 
 echo "Cloning modified Ralph repository..."
-git clone -b deployment-test git@github.com:tortiz7/DCIM-System.git /opt/ralph/source
+git clone -b deployment-test https://${github_token}@github.com/tortiz7/DCIM-System.git /opt/ralph/source
 cd /opt/ralph/source
 
 # Essential setup
