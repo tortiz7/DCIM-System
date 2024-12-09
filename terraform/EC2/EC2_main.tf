@@ -31,7 +31,6 @@ resource "aws_instance" "app_server" {
   
   user_data = templatefile("${path.module}/nvidia_preinstall.sh", {
     deploy_script = base64encode(templatefile("${path.module}/deploy.sh", {
-      docker_compose_content = file("${path.module}/docker-compose.yml"),
       aws_lb_dns = var.alb_dns_name,
       db_name = var.db_name,
       db_user = var.db_username,

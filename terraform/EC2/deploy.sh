@@ -73,6 +73,10 @@ rm -rf node_exporter-1.6.1.linux-amd64.tar.gz node_exporter-1.6.1.linux-amd64
 touch /home/ubuntu/.setup_complete
 echo "System setup completed successfully"
 
+echo "Cloning modified Ralph repository..."
+git clone -b deployment-test https://github.com/tortiz7/DCIM-System.git /opt/ralph/source
+cd /opt/ralph/source
+
 # Essential setup
 mkdir -p /etc/ralph/conf.d
 mkdir -p /var/log/ralph
@@ -119,55 +123,86 @@ check_prerequisites() {
 # Add check before deployment
 check_prerequisites
 
-# Start services using Docker Compose
-cd /opt/ralph/docker
-docker compose pull
+# Build and deploy
+cd /opt/ralph/source/docker
+echo "Building custom Ralph images..."
+docker compose build web nginx
+
+echo "Starting services..."
 docker compose up -d
 
-# Wait for containers to be up and running
+# Wait for services
 echo "Waiting for services to be fully up..."
 sleep 60
 
-
 echo "✅ Ralph and Chatbot deployment completed"
 
-echo "Initializing Ralph with demo data..."
-cd /opt/ralph/docker
-
-# # Wait for services to be fully up
-# echo "Waiting for services to be ready..."
-# sleep 30
-
+# Initialize Ralph
 echo "Waiting for database to be ready..."
 until docker compose exec -T db mysqladmin -u${db_user} -p${db_password} ping --silent; do
-    echo "❌ Waiting for DB to be ready..."
+    echo "Waiting for DB to be ready..."
     sleep 5
 done
 echo "✅ Database is ready"
 
-# Create superuser if doesn't exist
-echo "Setting up superuser..."
-docker compose exec -T web python manage.py shell <<EOF
-from django.contrib.auth import get_user_model
-User = get_user_model()
-if not User.objects.filter(username='admin').exists():
-    User.objects.create_superuser('admin', 'admin@example.com', 'admin')
-EOF
-
-# Import demo data
-echo "Importing demo data..."
+# Create superuser and initialize data
+echo "Initializing Ralph..."
+docker compose exec -T web ralphctl migrate
+docker compose exec -T web ralphctl createsuperuser
 docker compose exec -T web ralphctl demodata
-if [ $? -ne 0 ]; then
-    echo "❌ Demo data import failed"
-    exit 1
-fi
-
-# Sync site tree
-echo "Syncing site tree..."
 docker compose exec -T web ralphctl sitetree_resync_apps
-if [ $? -ne 0 ]; then
-    echo "❌ Site tree sync failed"
-    exit 1
-fi
 
-echo "✅ Ralph initialization complete with demo data!"
+echo "✅ Ralph initialization complete!"
+
+# # Start services using Docker Compose
+# cd /opt/ralph/docker
+# docker compose pull
+# docker compose up -d
+
+# # Wait for containers to be up and running
+# echo "Waiting for services to be fully up..."
+# sleep 60
+
+
+# echo "✅ Ralph and Chatbot deployment completed"
+
+# echo "Initializing Ralph with demo data..."
+# cd /opt/ralph/docker
+
+# # # Wait for services to be fully up
+# # echo "Waiting for services to be ready..."
+# # sleep 30
+
+# echo "Waiting for database to be ready..."
+# until docker compose exec -T db mysqladmin -u${db_user} -p${db_password} ping --silent; do
+#     echo "❌ Waiting for DB to be ready..."
+#     sleep 5
+# done
+# echo "✅ Database is ready"
+
+# # Create superuser if doesn't exist
+# echo "Setting up superuser..."
+# docker compose exec -T web python manage.py shell <<EOF
+# from django.contrib.auth import get_user_model
+# User = get_user_model()
+# if not User.objects.filter(username='admin').exists():
+#     User.objects.create_superuser('admin', 'admin@example.com', 'admin')
+# EOF
+
+# # Import demo data
+# echo "Importing demo data..."
+# docker compose exec -T web ralphctl demodata
+# if [ $? -ne 0 ]; then
+#     echo "❌ Demo data import failed"
+#     exit 1
+# fi
+
+# # Sync site tree
+# echo "Syncing site tree..."
+# docker compose exec -T web ralphctl sitetree_resync_apps
+# if [ $? -ne 0 ]; then
+#     echo "❌ Site tree sync failed"
+#     exit 1
+# fi
+
+# echo "✅ Ralph initialization complete with demo data!"

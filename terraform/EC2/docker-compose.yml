@@ -1,24 +1,26 @@
-version: '3.8'
 services:
   web:
-    platform: linux/amd64
-    image: allegro/ralph:latest
-    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: prod-new.Dockerfile
+    restart: always
     expose:
       - "8000"
     volumes:
       - ralph_media:/var/local/ralph/media
       - ralph_static:/usr/share/ralph/static
+    links:
+      - db
+      - redis
+      - nginx
     environment:
-      DATABASE_NAME: ralph_ng
-      DATABASE_USER: ralph_ng
-      DATABASE_PASSWORD: ralph_ng
-      DATABASE_HOST: db
-      REDIS_HOST: redis
-      REDIS_PASSWORD: ""
-      REDIS_PORT: 6379
-      REDIS_DB: 0
-      CHATBOT_ENABLED: "true"
+      DATABASE_NAME: ${db_name}
+      DATABASE_USER: ${db_user}
+      DATABASE_PASSWORD: ${db_password}
+      DATABASE_HOST: ${db_endpoint}
+      REDIS_HOST: ${redis_endpoint}
+      REDIS_PORT: ${redis_port}
+      CHATBOT_ENABLED: true
       CHATBOT_URL: http://chatbot:8001
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
@@ -60,8 +62,9 @@ services:
               capabilities: [gpu]
 
   nginx:
-    platform: linux/amd64
-    image: allegro/ralph-static-nginx:latest
+    build:
+      context: .
+      dockerfile: Dockerfile-static
     restart: always
     ports:
       - "80:80"
