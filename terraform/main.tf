@@ -38,6 +38,7 @@ module "EC2"{
   redis_port = module.RDS.redis_port
   redis_sg_id = module.RDS.redis_sg_id
   alb_dns_name = module.ALB.alb_dns_name
+  ssh_private_key = var.ssh_private_key
 }
 
 module "RDS"{

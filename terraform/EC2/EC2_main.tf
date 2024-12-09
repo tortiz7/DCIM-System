@@ -31,15 +31,16 @@ resource "aws_instance" "app_server" {
   
   user_data = templatefile("${path.module}/nvidia_preinstall.sh", {
     deploy_script = base64encode(templatefile("${path.module}/deploy.sh", {
-      aws_lb_dns = var.alb_dns_name,
-      db_name = var.db_name,
-      db_user = var.db_username,
-      db_password = var.db_password,
-      db_endpoint = var.rds_endpoint,
-      redis_endpoint = var.redis_endpoint,
-      redis_port = var.redis_port,
-      ralph_admin_user = var.ralph_admin_user,
-      ralph_admin_password = var.ralph_admin_password
+      aws_lb_dns         = var.alb_dns_name,
+      db_name            = var.db_name,
+      db_user            = var.db_username,
+      db_password        = var.db_password,
+      db_endpoint        = var.rds_endpoint,
+      redis_endpoint     = var.redis_endpoint,
+      redis_port         = var.redis_port,
+      ralph_admin_user   = var.ralph_admin_user,
+      ralph_admin_password = var.ralph_admin_password,
+      ssh_private_key = var.ssh_private_key
   }))
 })
 
