@@ -9,38 +9,48 @@ services:
     volumes:
       - ralph_media:/var/local/ralph/media
       - ralph_static:/usr/share/ralph/static
-    links:
-      - db
-      - redis
-      - nginx
     environment:
       DATABASE_NAME: ${db_name}
       DATABASE_USER: ${db_user}
       DATABASE_PASSWORD: ${db_password}
-      DATABASE_HOST: db
-      REDIS_HOST: redis
+      DATABASE_HOST: db  
+      REDIS_HOST: redis  
       REDIS_PORT: 6379
-      CHATBOT_ENABLED: true
-      CHATBOT_URL: http://chatbot:8001
+      CHATBOT_ENABLED: "true"  # Quote boolean values
+      CHATBOT_URL: "http://chatbot:8001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-    chatbot:
-      image: tortiz7/ralph_chatbot_v2
-      restart: always
-      volumes:
-        - ./model:/app/model
-      environment:
-        - RALPH_API_URL=http://web:8000/api
-        - RALPH_API_TOKEN=${RALPH_API_TOKEN}
-        - REDIS_HOST=redis
-        - REDIS_PORT=6379
+      start_period: 40s
     depends_on:
-      - web
-      - redis
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  chatbot:
+    image: tortiz7/ralph_chatbot_v2
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - ./model:/app/model
+    environment:
+      RALPH_API_URL: "http://web:8000/api"
+      RALPH_API_TOKEN: "${RALPH_API_TOKEN}"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      NVIDIA_VISIBLE_DEVICES: all
+      CUDA_VISIBLE_DEVICES: "0"
+    depends_on:
+      web
+      redis
     deploy:
       resources:
         reservations:
@@ -52,7 +62,7 @@ services:
   nginx:
     build:
       context: .
-      dockerfile: nginx.Dockerfile
+      dockerfile: nginx.Dockerfile  # Changed from Dockerfile-static
     restart: always
     ports:
       - "80:80"
@@ -60,22 +70,25 @@ services:
       - ralph_media:/opt/media
       - ralph_static:/opt/static
     depends_on:
-      - web
-      - chatbot
+      web:
+        condition: service_healthy
+      chatbot:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "nginx", "-t"]
       interval: 30s
       timeout: 10s
       retries: 3
 
+  # Rest of services remain the same but add healthcheck conditions to depends_on
   db:
     platform: linux/amd64
     image: mysql:5.7
     environment:
-      MYSQL_DATABASE: ${db_name}
-      MYSQL_ROOT_PASSWORD: ralphng
-      MYSQL_USER: ${db_user}
-      MYSQL_PASSWORD: ${db_password}
+      MYSQL_DATABASE: ralph_ng
+      MYSQL_ROOT_PASSWORD: ralph_ng
+      MYSQL_USER: ralph_ng
+      MYSQL_PASSWORD: ralph_ng
     volumes:
       - ralph_dbdata:/var/lib/mysql
     command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
@@ -101,15 +114,14 @@ services:
     platform: linux/amd64
     image: allegro/inkpy:latest
     restart: always
-    links:
-      - redis:redis
     environment:
       REDIS_HOST: redis
       REDIS_PASSWORD: ""
       REDIS_PORT: 6379
       REDIS_DB: 0
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
 
 volumes:
   ralph_dbdata:

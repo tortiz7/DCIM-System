@@ -15,27 +15,6 @@ apt-get install -y \
     git \
     jq
 
-# Install Docker
-# echo "Installing Docker..."
-# if ! command -v docker &> /dev/null; then
-#     mkdir -p /etc/apt/keyrings
-#     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-
-#     echo \
-#     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
-#     $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-#     apt-get update
-#     apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-
-#     # Start and enable Docker service
-#     systemctl start docker
-#     systemctl enable docker
-
-#     # Add ubuntu user to docker group
-#     usermod -aG docker ubuntu
-# fi
-
 # Install Node Exporter for monitoring
 echo "Setting up Node Exporter..."
 useradd --no-create-home --shell /bin/false node_exporter
@@ -73,17 +52,18 @@ rm -rf node_exporter-1.6.1.linux-amd64.tar.gz node_exporter-1.6.1.linux-amd64
 touch /home/ubuntu/.setup_complete
 echo "System setup completed successfully"
 
-
+# Clone Ralph repository
 echo "Cloning modified Ralph repository..."
 git clone -b deployment-test https://${github_token}@github.com/tortiz7/DCIM-System.git /opt/ralph/source
 cd /opt/ralph/source
 
-# Essential setup
+# Create required directories
 mkdir -p /etc/ralph/conf.d
 mkdir -p /var/log/ralph
 mkdir -p /opt/ralph/docker
+mkdir -p /opt/ralph/docker/model
 
-# Configure Ralph settings
+# Configure initial Ralph settings
 cat <<EOF > /etc/ralph/conf.d/settings.conf
 ALLOWED_HOSTS=${aws_lb_dns},localhost,127.0.0.1
 DATABASE_NAME=${db_name}
@@ -96,111 +76,104 @@ CHATBOT_ENABLED=true
 CHATBOT_URL=http://chatbot:8001
 EOF
 
-# Add to deploy.sh
+# Verify prerequisites
 check_prerequisites() {
-    # Check disk space
     FREE_SPACE=$(df -h / | awk 'NR==2 {print $4}' | sed 's/G//')
     if [ $FREE_SPACE -lt 20 ]; then
-        echo "❌ Insufficient disk space. Need at least 50GB free."
+        echo "❌ Insufficient disk space. Need at least 20GB free."
         exit 1
     fi
     
-    # Verify NVIDIA setup
     if ! command -v nvidia-smi &> /dev/null; then
         echo "❌ NVIDIA drivers not properly installed"
         exit 1
     fi
     
-    # Check Docker
     if ! docker info | grep -q "Runtimes:.*nvidia"; then
         echo "❌ NVIDIA Docker runtime not configured"
         exit 1
     fi
 }
 
-# Add check before deployment
 check_prerequisites
 
-# Build and deploy
+# Start initial services (without chatbot)
 cd /opt/ralph/source/docker
-echo "Building custom Ralph images..."
-docker compose build web nginx
+echo "Starting initial services..."
+docker compose up -d db redis web nginx
 
-echo "Starting services..."
-docker compose up -d
-
-# Wait for services
-echo "Waiting for services to be fully up..."
-sleep 60
-
-echo "✅ Ralph and Chatbot deployment completed"
-
-# Initialize Ralph
+# Wait for database
 echo "Waiting for database to be ready..."
 until docker compose exec -T db mysqladmin -u${db_user} -p${db_password} ping --silent; do
-    echo "Waiting for DB to be ready..."
+    echo "⏳ Waiting for DB to be ready..."
     sleep 5
 done
-echo "✅ Database is ready"
 
-# Create superuser and initialize data
-echo "Initializing Ralph..."
+# Initialize database
+echo "Initializing database..."
 docker compose exec -T web ralphctl migrate
-docker compose exec -T web ralphctl createsuperuser
+
+# Create superuser and get API token
+echo "Creating superuser and retrieving API token..."
+RALPH_API_TOKEN=$(docker compose exec -T web python3 << 'EOF' | grep RALPH_API_TOKEN | cut -d'=' -f2
+from django.contrib.auth import get_user_model
+from rest_framework.authtoken.models import Token
+User = get_user_model()
+
+if not User.objects.filter(username="admin").exists():
+    user = User.objects.create_superuser("admin", "admin@example.com", "admin")
+    print("Superuser created successfully")
+else:
+    user = User.objects.get(username="admin")
+    print("Superuser already exists")
+
+token, created = Token.objects.get_or_create(user=user)
+print(f"RALPH_API_TOKEN={token.key}")
+EOF
+)
+
+# Verify token exists
+if [ -z "$RALPH_API_TOKEN" ]; then
+    echo "❌ Failed to retrieve API token"
+    exit 1
+else
+    echo "✅ API token retrieved successfully"
+fi
+
+# Update environment file with all variables including token
+cat > /opt/ralph/docker/.env << EOF
+db_name=${db_name}
+db_user=${db_user}
+db_password=${db_password}
+RALPH_API_TOKEN=${RALPH_API_TOKEN}
+EOF
+
+# Restart all services with complete configuration
+echo "Restarting all services with API token..."
+docker compose down
+docker compose up -d
+
+# Wait for services to be healthy
+echo "Waiting for all services to be healthy..."
+for service in web chatbot nginx db redis; do
+    until docker compose ps $service | grep -q "healthy"; do
+        echo "⏳ Waiting for $service to be healthy..."
+        sleep 5
+    done
+done
+
+# Initialize Ralph with demo data
+echo "Importing demo data..."
 docker compose exec -T web ralphctl demodata
 docker compose exec -T web ralphctl sitetree_resync_apps
 
-echo "✅ Ralph initialization complete!"
+# Verify chatbot connectivity
+echo "Verifying chatbot connectivity..."
+if curl -f "http://localhost:8001/health/" &>/dev/null; then
+    echo "✅ Chatbot is responding correctly"
+else
+    echo "❌ Chatbot health check failed"
+    exit 1
+fi
 
-# # Start services using Docker Compose
-# cd /opt/ralph/docker
-# docker compose pull
-# docker compose up -d
-
-# # Wait for containers to be up and running
-# echo "Waiting for services to be fully up..."
-# sleep 60
-
-
-# echo "✅ Ralph and Chatbot deployment completed"
-
-# echo "Initializing Ralph with demo data..."
-# cd /opt/ralph/docker
-
-# # # Wait for services to be fully up
-# # echo "Waiting for services to be ready..."
-# # sleep 30
-
-# echo "Waiting for database to be ready..."
-# until docker compose exec -T db mysqladmin -u${db_user} -p${db_password} ping --silent; do
-#     echo "❌ Waiting for DB to be ready..."
-#     sleep 5
-# done
-# echo "✅ Database is ready"
-
-# # Create superuser if doesn't exist
-# echo "Setting up superuser..."
-# docker compose exec -T web python manage.py shell <<EOF
-# from django.contrib.auth import get_user_model
-# User = get_user_model()
-# if not User.objects.filter(username='admin').exists():
-#     User.objects.create_superuser('admin', 'admin@example.com', 'admin')
-# EOF
-
-# # Import demo data
-# echo "Importing demo data..."
-# docker compose exec -T web ralphctl demodata
-# if [ $? -ne 0 ]; then
-#     echo "❌ Demo data import failed"
-#     exit 1
-# fi
-
-# # Sync site tree
-# echo "Syncing site tree..."
-# docker compose exec -T web ralphctl sitetree_resync_apps
-# if [ $? -ne 0 ]; then
-#     echo "❌ Site tree sync failed"
-#     exit 1
-# fi
-
-# echo "✅ Ralph initialization complete with demo data!"
+echo "🚀 Ralph deployment completed successfully!"
