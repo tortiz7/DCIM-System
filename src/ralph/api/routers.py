@@ -60,3 +60,4 @@ class RalphRouter(NestedCustomFieldsRouterMixin, routers.DefaultRouter):
 
 
 router = RalphRouter()
+router.register(r'metrics', MetricsViewSet, basename='metrics')

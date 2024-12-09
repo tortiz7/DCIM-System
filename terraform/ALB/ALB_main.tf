@@ -37,9 +37,10 @@ resource "aws_lb" "app_alb" {
   }
 }
 
+# Update ALB_main.tf
 resource "aws_lb_target_group" "app_tg" {
   name     = "app-target-group"
-  port     = 80
+  port     = 80  # Ralph web port
   protocol = "HTTP"
   vpc_id   = var.vpc_id
 
@@ -73,5 +74,21 @@ resource "aws_lb_listener" "http_listener" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.app_tg.arn
+  }
+}
+
+resource "aws_lb_listener_rule" "chatbot" {
+  listener_arn = aws_lb_listener.http_listener.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/chatbot/*"]
+    }
   }
 }

@@ -2,6 +2,16 @@ variable region{
   type = string
 }
 
+variable access_key{
+  type = string
+  sensitive = true
+}
+
+variable secret_key{
+  type = string
+  sensitive = true
+}
+
  variable dockerhub_user{
     type = string
     sensitive = true
@@ -14,7 +24,7 @@ variable region{
 
  variable instance_type{
   type = string
-  default = "t3.medium"
+  default = "g4dn.xlarge"
 
  }  
 
@@ -35,7 +45,7 @@ variable "app_count"{
 variable "db_name" {
   description = "The name of the database to create when the DB instance is created"
   type        = string
-  default     = "ecommerce"
+  default     = "ralph_ng"
 }
 
 variable "db_username" {
@@ -60,4 +70,9 @@ variable "app_port" {
 
 variable "bastion_port" {
   default = 22
+}
+
+variable "ssh_private_key" {
+  type = string
+  sensitive = true
 }

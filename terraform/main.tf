@@ -4,6 +4,8 @@
 # or IAM roles to manage credentials securely.
 provider "aws" {
   region = var.region
+  access_key = var.access_key
+  secret_key = var.secret_key
 }
 
 
@@ -32,7 +34,10 @@ module "EC2"{
   dockerhub_user = var.dockerhub_user
   dockerhub_pass = var.dockerhub_pass
   nat_gw = module.VPC.nat_gw
-
+  redis_endpoint = module.RDS.redis_endpoint
+  redis_port = module.RDS.redis_port
+  redis_sg_id = module.RDS.redis_sg_id
+  alb_dns_name = module.ALB.alb_dns_name
 }
 
 module "RDS"{
@@ -45,7 +50,6 @@ module "RDS"{
   private_subnet    = module.VPC.private_subnet
   app_sg_id     = module.EC2.app_sg_id
 
-  
 }
 
 module "ALB"{
@@ -76,3 +80,13 @@ output "alb_dns_name" {
     description = "DNS name of the Application Load Balancer"
     sensitive   = false
 }
+
+# resource "null_resource" "docker_build" {
+#   provisioner "local-exec" {
+#     command = <<EOT
+#     echo "${var.ssh_private_key}" > /tmp/docker_ssh_key
+#     chmod 600 /tmp/docker_ssh_key
+#     DOCKER_BUILDKIT=1 docker build --ssh default=/tmp/docker_ssh_key -t tortiz7/ralph_chatbot_v2:latest .
+#     EOT
+#   }
+# }

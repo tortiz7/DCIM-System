@@ -1,17 +1,14 @@
+version: '3.8'
 services:
   web:
     platform: linux/amd64
     image: allegro/ralph:latest
-    restart: always
+    restart: unless-stopped
     expose:
       - "8000"
     volumes:
       - ralph_media:/var/local/ralph/media
       - ralph_static:/usr/share/ralph/static
-    links:
-      - db
-      - redis
-      - nginx
     environment:
       DATABASE_NAME: ralph_ng
       DATABASE_USER: ralph_ng
@@ -21,24 +18,36 @@ services:
       REDIS_PASSWORD: ""
       REDIS_PORT: 6379
       REDIS_DB: 0
-      CHATBOT_ENABLED: true
+      CHATBOT_ENABLED: "true"
       CHATBOT_URL: http://chatbot:8001
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 40s
+    depends_on:
+      - db
+      - redis
 
-    chatbot:
-      image: tortiz7/ralph_chatbot_v2
-      restart: always
-      volumes:
-        - ./model:/app/model
-      environment:
-        - RALPH_API_URL=http://web:8000/api
-        - RALPH_API_TOKEN=${RALPH_API_TOKEN}
-        - REDIS_HOST=redis
-        - REDIS_PORT=6379
+  chatbot:
+    image: tortiz7/ralph_chatbot_v2
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    volumes:
+      - ./model:/app/model
+    environment:
+      RALPH_API_URL: http://web:8000/api
+      RALPH_API_TOKEN: "${RALPH_API_TOKEN}"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      NVIDIA_VISIBLE_DEVICES: all
+      CUDA_VISIBLE_DEVICES: 0
     depends_on:
       - web
       - redis
@@ -101,8 +110,6 @@ services:
     platform: linux/amd64
     image: allegro/inkpy:latest
     restart: always
-    links:
-      - redis:redis
     environment:
       REDIS_HOST: redis
       REDIS_PASSWORD: ""

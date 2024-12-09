@@ -8,6 +8,7 @@ from django.contrib.messages import constants as messages
 from moneyed import CURRENCIES
 
 from ralph.settings.hooks import HOOKS_CONFIGURATION  # noqa: F401
+from django.db.models import Count, Sum
 
 
 SILENCED_SYSTEM_CHECKS = ['models.E006', ]  # TODO fix
@@ -59,6 +60,7 @@ RALPH_INSTANCE = os.environ.get('RALPH_INSTANCE', 'http://127.0.0.1:8000')
 # Application definition
 
 INSTALLED_APPS = (
+    'channels',
     'django.contrib.contenttypes',
     'taggit',
     'django.contrib.auth',
@@ -106,6 +108,7 @@ INSTALLED_APPS = (
     'ralph.lib.hooks',
     'ralph.notifications',
     'ralph.ssl_certificates',
+    'ralph-assistant',
     'rest_framework',
     'rest_framework.authtoken',
     'taggit_serializer',
@@ -149,6 +152,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'ralph.wsgi.application'
+ASGI_APPLICATION = 'ralph.asgi.application'
 
 DEFAULT_DATABASE_OPTIONS = {
     'sql_mode': 'TRADITIONAL',
@@ -183,6 +187,16 @@ DATABASES = {
             'NAME': 'test_ralph_ng',
         }
     }
+}
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [(os.environ.get('REDIS_HOST', 'localhost'), 
+                      int(os.environ.get('REDIS_PORT', 6379)))],
+        },
+    },
 }
 
 AUTH_USER_MODEL = 'accounts.RalphUser'
@@ -282,6 +296,14 @@ LOGGING = {
         }
     },
 }
+
+RALPH_CHATBOT_URL = os.environ.get('RALPH_CHATBOT_URL', 'http://chatbot:8001')
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8001",
+    "http://chatbot:8001",
+]
+CORS_ALLOW_CREDENTIALS = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

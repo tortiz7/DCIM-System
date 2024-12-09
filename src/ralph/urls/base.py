@@ -6,6 +6,7 @@ from sitetree.sitetreeapp import SiteTree  # noqa
 from ralph.admin.sites import ralph_site as admin
 from ralph.api import router
 from ralph.health_check import status_health, status_ping
+from django.urls import path, include
 
 # monkey patch for sitetree until
 # https://github.com/idlesign/django-sitetree/issues/226 will be discussed
@@ -57,6 +58,7 @@ urlpatterns = [
     url(r'^virtual/', include('ralph.virtual.urls')),
     url(r'^', include('ralph.lib.transitions.urls')),
     url(r'^i18n/', include('django.conf.urls.i18n')),
+    path('api/assistant/', include('ralph.assistant.urls')),
     url(
         r'^status/ping?$',
         status_ping,

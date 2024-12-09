@@ -69,3 +69,28 @@
 
 @import 'styles';
 @import 'overrides';
+
+@import "components/chat-widget";
+
+// Add any custom overrides after all imports
+.ralph-assistant {
+    // Ensure chat widget appears above other Ralph UI elements
+    z-index: 9999;
+    
+    // Integrate with Ralph's color scheme
+    --primary-color: $primary-color;
+    --secondary-color: $secondary-color;
+    
+    .metric-card {
+        border-color: $border-color;
+    }
+    
+    .chat-input {
+        background-color: $white;
+        border-top-color: $border-color;
+    }
+    
+    button {
+        @extend .button;  // Inherit Ralph's button styles
+    }
+}

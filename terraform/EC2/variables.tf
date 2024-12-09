@@ -43,6 +43,9 @@ variable "rds_sg_id" {
 variable "alb_sg_id"{
 }
 
+variable "alb_dns_name"{
+}
+
 variable "app_port"{
 }
 
@@ -53,4 +56,13 @@ variable "dockerhub_pass"{
 }
 
 variable "nat_gw"{
+}
+
+variable "redis_endpoint"{
+}
+
+variable "redis_port"{
+}
+
+variable "redis_sg_id"{
 }
