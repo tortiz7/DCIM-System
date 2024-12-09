@@ -167,6 +167,9 @@ echo "Importing demo data..."
 docker compose exec -T web ralphctl demodata
 docker compose exec -T web ralphctl sitetree_resync_apps
 
+docker compose exec -T web chmod 644 /var/local/ralph/static/js/ralph-assistant.js
+docker compose exec -T web chown www-data:www-data /var/local/ralph/static/js/ralph-assistant.js
+
 # Verify chatbot connectivity
 echo "Verifying chatbot connectivity..."
 if curl -f "http://localhost:8001/health/" &>/dev/null; then
