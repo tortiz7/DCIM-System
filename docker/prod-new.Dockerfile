@@ -1,26 +1,17 @@
-# Use Ubuntu 18.04 (Bionic) as base
 FROM ubuntu:bionic
 
-# Prevent interactive prompts during build
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Set Ralph configuration paths
+# Ralph configuration and paths
 ARG RALPH_LOCAL_DIR="/var/local/ralph"
+ARG RALPH_VERSION=""
 ENV PATH=/opt/ralph/ralph-core/bin/:$PATH \
     RALPH_CONF_DIR="/etc/ralph" \
     RALPH_LOCAL_DIR="$RALPH_LOCAL_DIR" \
     RALPH_IMAGE_TMP_DIR="/tmp" \
-    # Set locale environment variables
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
-
-# Add metadata
-LABEL maintainer="Your Organization <your.email@example.com>" \
-      description="Ralph DCIM with AI-powered assistant" \
-      runtime.nvidia.com/visible-devices=all \
-      runtime.nvidia.com/cuda.driver.major="12" \
-      runtime.nvidia.com/cuda.driver.minor="4"
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -44,8 +35,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && locale-gen en_US.UTF-8
 
-# Set up Python environment
-RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel
+# Install Python dependencies for chatbot integration
+RUN pip3 install --no-cache-dir \
+    channels==3.0.4 \
+    channels-redis==3.3.0 \
+    aioredis==1.3.1 \
+    websockets==10.0 \
+    prometheus-client==0.11.0 \
+    hiredis==2.0.0
 
 # Copy application code
 COPY . $RALPH_LOCAL_DIR/
@@ -56,14 +53,11 @@ RUN chmod +x $RALPH_LOCAL_DIR/docker/provision/*.sh \
     && mv $RALPH_LOCAL_DIR/docker/provision/createsuperuser.py $RALPH_LOCAL_DIR/ \
     && mkdir -p /var/log/ralph
 
-# Install Python dependencies
 WORKDIR $RALPH_LOCAL_DIR
 RUN pip3 install --no-cache-dir -r requirements/prod.txt
 
-# Add healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/ || exit 1
 
-# Set entrypoint and default command
 ENTRYPOINT ["/var/local/ralph/docker-entrypoint.sh"]
 CMD ["start"]

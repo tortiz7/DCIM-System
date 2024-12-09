@@ -32,6 +32,7 @@ services:
 
   chatbot:
     image: tortiz7/ralph_chatbot_v2
+    runtime: nvidia
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health/"]
@@ -48,6 +49,9 @@ services:
       REDIS_PORT: 6379
       NVIDIA_VISIBLE_DEVICES: all
       CUDA_VISIBLE_DEVICES: "0"
+      CUDA_HOME: /usr/local/cuda
+      PATH: /usr/local/cuda/bin:${PATH}
+      LD_LIBRARY_PATH: /usr/local/cuda/lib64:${LD_LIBRARY_PATH}
     depends_on:
       web
       redis
@@ -62,7 +66,7 @@ services:
   nginx:
     build:
       context: .
-      dockerfile: nginx.Dockerfile  # Changed from Dockerfile-static
+      dockerfile: nginx.Dockerfile
     restart: always
     ports:
       - "80:80"

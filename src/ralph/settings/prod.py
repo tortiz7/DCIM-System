@@ -86,3 +86,15 @@ if bool_from_env('COLLECT_METRICS'):
         STATSD_GRAPHS_PREFIX = os.environ.get(
             'STATSD_GRAPHS_PREFIX', 'ralph.graphs'
         )
+
+if bool_from_env('CHATBOT_ENABLED', False):
+    INSTALLED_APPS += ['channels']
+    ASGI_APPLICATION = 'chatbot.routing.application'
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [(REDIS_HOST, REDIS_PORT)],
+            },
+        },
+    }

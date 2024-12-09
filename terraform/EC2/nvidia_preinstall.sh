@@ -38,11 +38,16 @@ check_status "NVIDIA driver installation"
 
 echo "5. Adding NVIDIA Container Toolkit repository..."
 curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | \
-    gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+    sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
 
-echo "deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://nvidia.github.io/libnvidia-container/stable/ubuntu22.04/$(dpkg --print-architecture) /" | \
-    tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
-check_status "Repository configuration"
+curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
+    sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+    sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
+echo "6. Installing NVIDIA Container Toolkit..."
+apt-get update
+apt-get install -y nvidia-container-toolkit
+check_status "Container toolkit installation"
 
 # Install Docker
 echo "Installing Docker..."

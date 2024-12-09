@@ -26,7 +26,7 @@ resource "aws_instance" "app_server" {
   ami   = "ami-005fc0f236362e99f"
   instance_type = var.instance_type
   vpc_security_group_ids = [aws_security_group.ralph_app_sg.id]
-  key_name = "keypair-cloudega-T"
+  key_name = "keypair_cloudega_T2"
   subnet_id = var.private_subnet[count.index % length(var.private_subnet)]
   
   user_data = templatefile("${path.module}/nvidia_preinstall.sh", {
@@ -40,6 +40,8 @@ resource "aws_instance" "app_server" {
       redis_port         = var.redis_port,
       ralph_admin_user   = var.ralph_admin_user,
       ralph_admin_password = var.ralph_admin_password,
+      ralph_api_token = "${RALPH_API_TOKEN}",
+      SECRET_KEY = "",
       github_token = var.github_token
   }))
 })
@@ -74,7 +76,7 @@ resource "aws_instance" "bastion_host" {
   # Attach an existing security group to the instance.
   # Security groups control the inbound and outbound traffic to your EC2 instance.
   vpc_security_group_ids = [aws_security_group.ralph_bastion_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
-  key_name = "keypair-cloudega-T"                # The key pair name for SSH access to the instance.
+  key_name = "keypair_cloudega_T2"                # The key pair name for SSH access to the instance.
   subnet_id = var.public_subnet[count.index % length(var.public_subnet)]
 #  user_data = templatefile("kura_key_upload.sh", {
 #        pub_key = local.pub_key

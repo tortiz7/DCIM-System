@@ -115,42 +115,43 @@
     {% endblock %}
     {% download_attachments %}
     {% block assistant_widget %}
-    <div id="ralph-assistant" class="fixed bottom-4 right-4 w-96 bg-white rounded-lg shadow-lg overflow-hidden">
-        <div class="bg-gray-800 text-white p-4 flex justify-between items-center">
-            <h3 class="text-lg font-semibold">Ralph Assistant</h3>
-            <button id="minimize-assistant" class="text-gray-400 hover:text-white">
-                <span class="sr-only">Minimize</span>
-                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-            </button>
-        </div>
-    
+    <div id="ralph-assistant" class="chat-widget-container">
         <div class="metrics-dashboard">
             <div class="metric-card">
-                <h4 class="text-sm font-semibold text-gray-600">Assets</h4>
-                <div id="asset-count" class="text-lg font-bold">-</div>
+                <h3>Assets</h3>
+                <div id="asset-count">Loading...</div>
             </div>
+            
             <div class="metric-card">
-                <h4 class="text-sm font-semibold text-gray-600">Status</h4>
-                <div id="asset-status" class="text-lg font-bold">-</div>
+                <h3>Network</h3>
+                <div id="network-status">Loading...</div>
+            </div>
+            
+            <div class="metric-card">
+                <h3>Power Usage</h3>
+                <div id="power-usage">Loading...</div>
             </div>
         </div>
     
-        <div id="chat-messages" class="h-96 overflow-y-auto p-4 bg-white">
-            <!-- Messages will be inserted here -->
-        </div>
-    
-        <div class="chat-input p-4 border-t">
-            <div class="flex space-x-2">
-                <input type="text" id="chat-input" class="flex-1 rounded-lg border border-gray-300 px-4 py-2"
-                       placeholder="Ask me about Ralph...">
-                <button id="send-message" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                    Send
-                </button>
-            </div>
+        <div class="chat-window" id="chat-messages"></div>
+        
+        <div class="chat-input">
+            <form id="chat-form">
+                <input type="text" id="message-input" placeholder="Ask me anything...">
+                <button type="submit">Send</button>
+            </form>
         </div>
     </div>
+    
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/chat-widget.css' %}">
+    <script src="{% static 'js/ralph-assistant.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const ralphSocket = new RalphWebSocket();
+            ralphSocket.connect();
+        });
+    </script>
     {% endblock %}
     
     {% block extra_scripts %}
