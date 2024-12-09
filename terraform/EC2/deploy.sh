@@ -1,12 +1,11 @@
 #!/bin/bash
 
-set -e
-
 # Log setup progress
 exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 echo "Starting system setup..."
 
-# System updates with added dependencies
+# System updates
+echo "Updating system packages..."
 apt-get update
 apt-get install -y \
    ca-certificates \
@@ -14,21 +13,67 @@ apt-get install -y \
    gnupg \
    lsb-release \
    git \
-   jq \
-   netcat \
-   mysql-client
+   jq
 
-# Node Exporter setup (unchanged from your script)
-[Previous Node Exporter setup section remains exactly the same]
+# Install Node Exporter for monitoring
+echo "Setting up Node Exporter..."
+useradd --no-create-home --shell /bin/false node_exporter
+wget https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz
+tar xzf node_exporter-1.6.1.linux-amd64.tar.gz
+cp node_exporter-1.6.1.linux-amd64/node_exporter /usr/local/bin/
+chown node_exporter:node_exporter /usr/local/bin/node_exporter
 
-# Create directories with proper permissions
-mkdir -p /var/local/ralph/{media,static,logs} /usr/share/ralph/static /etc/ralph/conf.d
-chown -R www-data:www-data /var/local/ralph /usr/share/ralph/static
+# Create Node Exporter service
+cat <<EOF > /etc/systemd/system/node_exporter.service
+[Unit]
+Description=Node Exporter
+Wants=network-online.target
+After=network-online.target
 
-# Generate secret key
-SECRET_KEY=$(openssl rand -base64 32)
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter
 
-# Enhanced Ralph settings
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Start Node Exporter
+systemctl daemon-reload
+systemctl start node_exporter
+systemctl enable node_exporter
+
+# Clean up Node Exporter installation files
+rm -rf node_exporter-1.6.1.linux-amd64.tar.gz node_exporter-1.6.1.linux-amd64
+
+# Create setup completion marker
+touch /home/ubuntu/.setup_complete
+echo "System setup completed successfully"
+
+# Clone Ralph repository
+echo "Cloning modified Ralph repository..."
+git clone -b deployment-test https://${github_token}@github.com/tortiz7/DCIM-System.git /opt/ralph/source
+cd /opt/ralph/source
+
+# Create required directories
+mkdir -p /etc/ralph/conf.d
+mkdir -p /var/log/ralph
+mkdir -p /opt/ralph/docker
+mkdir -p /opt/ralph/docker/model
+
+echo "db_name=${db_name}"
+echo "db_user=${db_user}"
+echo "db_password=${db_password}"
+echo "db_endpoint=${db_endpoint}"
+echo "redis_endpoint=${redis_endpoint}"
+echo "RALPH_API_TOKEN=${RALPH_API_TOKEN}"
+
+sysctl -w net.bridge.bridge-nf-call-iptables=1
+sysctl -w net.bridge.bridge-nf-call-ip6tables=1
+
+# Configure initial Ralph settings
 cat <<EOF > /etc/ralph/conf.d/settings.conf
 ALLOWED_HOSTS=${aws_lb_dns},localhost,127.0.0.1
 DATABASE_NAME=${db_name}
@@ -37,15 +82,10 @@ DATABASE_PASSWORD=${db_password}
 DATABASE_HOST=${db_endpoint}
 REDIS_HOST=${redis_endpoint}
 REDIS_PORT=${redis_port}
-SECRET_KEY=${SECRET_KEY}
-DEBUG=False
-STATIC_ROOT=/usr/share/ralph/static
-MEDIA_ROOT=/var/local/ralph/media
-LOG_DIR=/var/local/ralph/logs
 CHATBOT_ENABLED=true
 EOF
 
-# Enhanced prerequisites check
+# Verify prerequisites
 check_prerequisites() {
    FREE_SPACE=$(df -h / | awk 'NR==2 {print $4}' | sed 's/G//')
    if [ $FREE_SPACE -lt 20 ]; then
@@ -66,41 +106,53 @@ check_prerequisites() {
    if ! command -v docker &> /dev/null; then
        echo "❌ Docker not installed"
        exit 1
-   }
+   fi
 }
 
 check_prerequisites
 
-# Wait for external services
-echo "Waiting for database connection..."
-until nc -z ${db_endpoint} 3306; do
-    echo "⏳ Database not ready - waiting..."
+cat > /opt/ralph/docker/.env << EOF
+DATABASE_NAME=${db_name}
+DATABASE_USER=${db_user}
+DATABASE_PASSWORD=${db_password}
+DATABASE_HOST=${db_endpoint}
+REDIS_HOST=${redis_endpoint}
+REDIS_PORT=${redis_port}
+RALPH_API_TOKEN=${RALPH_API_TOKEN}
+ALLOWED_HOSTS=${aws_lb_dns},localhost,127.0.0.1
+CHATBOT_ENABLED=true
+CHATBOT_URL=http://chatbot:8001
+EOF
+
+echo "Verifying environment variables:"
+echo "Current directory: $(pwd)"
+echo "Contents of .env file:"
+cat .env
+echo "Running docker-compose with environment..."
+
+echo "Verifying RDS connection..."
+until nc -z -v -w5 ${db_endpoint%:*} ${db_endpoint#*:}; do
+    echo "⏳ Waiting for RDS connection..."
     sleep 5
 done
 
-echo "Waiting for Redis connection..."
-until nc -z ${redis_endpoint} ${redis_port}; do
-    echo "⏳ Redis not ready - waiting..."
+echo "Verifying ElastiCache connection..."
+until nc -z -v -w5 ${redis_endpoint} ${redis_port}; do
+    echo "⏳ Waiting for ElastiCache connection..."
     sleep 5
 done
 
-# Verify database connection
-until mysql -h${db_endpoint} -u${db_user} -p${db_password} -e "SELECT 1" ${db_name}; do
-    echo "⏳ Database connection not ready - retrying..."
-    sleep 5
-done
-
-mkdir -p /opt/ralph/model
-chmod 777 /opt/ralph/model
-
-# Start services
+# Start services and build containers
 cd /opt/ralph/source/docker
-echo "Starting services..."
-docker compose up -d
+echo "Building and starting containers..."
+docker compose --env-file /opt/ralph/docker/.env up --build -d db redis web nginx
 
-# Simple wait for services
-echo "Waiting for services to start..."
-sleep 45
+# Wait for database
+echo "Waiting for database to be ready..."
+until docker compose exec -T db mysqladmin -u${db_user} -p${db_password} ping --silent; do
+   echo "⏳ Waiting for DB to be ready..."
+   sleep 5
+done
 
 # Initialize database
 echo "Initializing database..."
@@ -144,17 +196,10 @@ db_user=${db_user}
 db_password=${db_password}
 EOF
 
-# Initialize Ralph with demo data
-echo "Importing demo data..."
-docker compose exec -T web ralphctl demodata
-docker compose exec -T web ralphctl sitetree_resync_apps
+# Restart all services with complete configuration
+echo "Restarting all services with API token..."
+docker compose down
+docker compose up --build -d
 
-# Simple chatbot connectivity check
-sleep 15
-if curl -m 5 -sf "http://localhost:8001/health/" &>/dev/null; then
-   echo "✅ Chatbot responding"
-else
-   echo "⚠️ Chatbot not responding, but continuing deployment"
-fi
-
-echo "🚀 Ralph deployment completed!"
+# Finalize deployment process
+echo "🚀 Ralph deployment completed successfully!"

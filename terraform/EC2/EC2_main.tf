@@ -40,7 +40,7 @@ resource "aws_instance" "app_server" {
       redis_port         = var.redis_port,
       ralph_admin_user   = var.ralph_admin_user,
       ralph_admin_password = var.ralph_admin_password,
-      ralph_api_token = "${RALPH_API_TOKEN}",
+      RALPH_API_TOKEN = "",
       SECRET_KEY = "",
       github_token = var.github_token
   }))

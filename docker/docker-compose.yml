@@ -10,13 +10,13 @@ services:
       - ralph_media:/var/local/ralph/media
       - ralph_static:/usr/share/ralph/static
     environment:
-      DATABASE_NAME: ${db_name}
-      DATABASE_USER: ${db_user}
-      DATABASE_PASSWORD: ${db_password}
-      DATABASE_HOST: db  
-      REDIS_HOST: redis  
-      REDIS_PORT: 6379
-      CHATBOT_ENABLED: "true"  # Quote boolean values
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_USER}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_HOST: ${DATABASE_HOST}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      CHATBOT_ENABLED: "true"
       CHATBOT_URL: "http://chatbot:8001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
@@ -24,11 +24,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
 
   chatbot:
     image: tortiz7/ralph_chatbot_v2
@@ -45,16 +40,12 @@ services:
     environment:
       RALPH_API_URL: "http://web:8000/api"
       RALPH_API_TOKEN: "${RALPH_API_TOKEN}"
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
       NVIDIA_VISIBLE_DEVICES: all
       CUDA_VISIBLE_DEVICES: "0"
-      CUDA_HOME: /usr/local/cuda
-      PATH: /usr/local/cuda/bin:${PATH}
-      LD_LIBRARY_PATH: /usr/local/cuda/lib64:${LD_LIBRARY_PATH}
     depends_on:
-      web
-      redis
+      - web
     deploy:
       resources:
         reservations:
@@ -84,50 +75,16 @@ services:
       timeout: 10s
       retries: 3
 
-  # Rest of services remain the same but add healthcheck conditions to depends_on
-  db:
-    platform: linux/amd64
-    image: mysql:5.7
-    environment:
-      MYSQL_DATABASE: ralph_ng
-      MYSQL_ROOT_PASSWORD: ralph_ng
-      MYSQL_USER: ralph_ng
-      MYSQL_PASSWORD: ralph_ng
-    volumes:
-      - ralph_dbdata:/var/lib/mysql
-    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  redis:
-    platform: linux/amd64
-    image: redis:3.0
-    restart: always
-    expose:
-      - "6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
   inkpy:
     platform: linux/amd64
     image: allegro/inkpy:latest
     restart: always
     environment:
-      REDIS_HOST: redis
+      REDIS_HOST: ${REDIS_HOST}
       REDIS_PASSWORD: ""
-      REDIS_PORT: 6379
+      REDIS_PORT: ${REDIS_PORT}
       REDIS_DB: 0
-    depends_on:
-      redis:
-        condition: service_healthy
 
 volumes:
-  ralph_dbdata:
   ralph_media:
   ralph_static:
