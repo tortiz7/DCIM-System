@@ -56,6 +56,7 @@ pipeline {
 
                     def sshOptions = "-o StrictHostKeyChecking=no -o 'ProxyCommand=ssh -o StrictHostKeyChecking=no -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}' -i ${SSH_KEY_PATH}"
 
+                    // Verify setup complete and services active
                     ec2_ips.each { ip ->
                         timeout(time: 5, unit: 'MINUTES') {
                             waitUntil {
@@ -118,7 +119,7 @@ pipeline {
                             ).trim()
 
                             if (isRalphRunning == 'false') {
-                                echo "📦 Time to deploy Ralph on ${ip}!"
+                                echo "📦 Deploying Ralph on ${ip}!"
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu
@@ -126,9 +127,22 @@ pipeline {
                                         cd ralph/docker
                                         
                                         docker compose up -d
+                                        # Wait a bit for containers to start
                                         sleep 30
                                         
-                                        docker compose exec -T web ralphctl migrate
+                                        # Check if web container is running
+                                        docker compose ps web
+                                        docker compose logs web || true
+
+                                        # Attempt migration; if container is still starting, retry
+                                        for i in {1..5}; do
+                                            if docker compose exec web ralphctl migrate; then
+                                                break
+                                            else
+                                                echo "Web container not ready yet, retrying..."
+                                                sleep 20
+                                            fi
+                                        done
 
                                         docker compose exec -T web ralphctl shell -c "
 from django.contrib.auth import get_user_model; 
@@ -145,16 +159,31 @@ print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_sup
                                         docker compose exec -T web ralphctl sitetree_resync_apps
                                     '
                                 """
-                                echo "🌟 Ralph is now configured and ready on ${ip}!"
+                                echo "🌟 Ralph is configured and ready on ${ip}!"
                             } else {
-                                echo "🔄 Just refreshing Ralph on ${ip}"
+                                echo "🔄 Refreshing Ralph on ${ip}"
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu/ralph/docker
                                         git pull
                                         docker compose pull
                                         docker compose up -d
-                                        docker compose exec -T web ralphctl migrate
+                                        # Give time for the container to restart properly
+                                        sleep 30
+
+                                        # Check if web container is stable
+                                        docker compose ps web
+                                        docker compose logs web || true
+
+                                        # Try migrating again with a small retry loop
+                                        for i in {1..5}; do
+                                            if docker compose exec web ralphctl migrate; then
+                                                break
+                                            else
+                                                echo "Web container not ready yet, retrying..."
+                                                sleep 20
+                                            fi
+                                        done
                                     '
                                 """
                             }
@@ -185,9 +214,7 @@ print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_sup
                     def sshOptions = "-o StrictHostKeyChecking=no -o 'ProxyCommand=ssh -o StrictHostKeyChecking=no -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}' -i ${SSH_KEY_PATH}"
 
                     ec2_ips.each { ip ->
-                        echo "📜 Configuring Ralph cookies and CSRF using a Python settings file on ${ip}"
-
-                        // Create a Python file to override settings
+                        echo "📜 Configuring Ralph cookies and CSRF with a Python settings file on ${ip}"
                         sh """
                             ssh ${sshOptions} ubuntu@${ip} '
                                 cd /home/ubuntu/ralph/docker
