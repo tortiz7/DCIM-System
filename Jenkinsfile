@@ -185,15 +185,18 @@ print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_sup
                     def sshOptions = "-o StrictHostKeyChecking=no -o 'ProxyCommand=ssh -o StrictHostKeyChecking=no -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}' -i ${SSH_KEY_PATH}"
 
                     ec2_ips.each { ip ->
-                        echo "📜 Configuring Ralph cookies and CSRF on ${ip} via settings.conf (original working method)"
+                        echo "📜 Configuring Ralph cookies and CSRF using a Python settings file on ${ip}"
 
+                        // Create a Python file to override settings
                         sh """
                             ssh ${sshOptions} ubuntu@${ip} '
                                 cd /home/ubuntu/ralph/docker
-                                # Append the lines as previously done successfully
-                                docker compose exec -T -u root web bash -c "echo 'CSRF_TRUSTED_ORIGINS = [\\\"http://${albUrl}\\\"]' >> /etc/ralph/conf.d/settings.conf"
-                                docker compose exec -T -u root web bash -c "echo 'SESSION_COOKIE_SECURE = False' >> /etc/ralph/conf.d/settings.conf"
-                                docker compose exec -T -u root web bash -c "echo 'CSRF_COOKIE_SECURE = False' >> /etc/ralph/conf.d/settings.conf"
+                                docker compose exec -T -u root web bash -c "cat <<EOF > /etc/ralph/conf.d/ralph_overrides.py
+CSRF_TRUSTED_ORIGINS = [\\"http://${albUrl}\\"] 
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+EOF
+                                "
                                 docker compose restart web
                             '
                         """
