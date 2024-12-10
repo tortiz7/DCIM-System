@@ -1,11 +1,6 @@
-{% extends BASE_TEMPLATE %}
-
-{% block content %}
-    {{ block.super }}
-    {{ object }}
-    <form method="post">
-        {% csrf_token %}
-        {{ form }}
-        <button>Submit</button>
-    </form>
+{% extends BASE_TEMPLATE %} {% block content %} {{ block.super }} {{ object }}
+<form method="post">
+  {% csrf_token %} {{ form }}
+  <button>Submit</button>
+</form>
 {% endblock %}
