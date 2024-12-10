@@ -53,6 +53,13 @@ resource "aws_lb_target_group" "app_tg" {
     matcher             = "200,302"
   }
 
+  # Enable stickiness:
+  stickiness {
+    type            = "lb_cookie"
+    # cookie_duration is in seconds. Example: 86400 = 24 hours
+    cookie_duration = 604800
+  }
+
   tags = {
     Name = "Ralph App Target Group"
   }
