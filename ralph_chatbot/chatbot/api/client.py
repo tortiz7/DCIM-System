@@ -17,7 +17,6 @@ class RalphAPIClient:
         self.session.headers.update(self.headers)
 
     def _get_cached(self, endpoint: str, cache_key: str = None, timeout: int = 300) -> Dict[str, Any]:
-        """Make a GET request with caching"""
         if not cache_key:
             cache_key = f'ralph_api_{endpoint}'
             
@@ -33,22 +32,17 @@ class RalphAPIClient:
         return data
 
     def get_datacenter_metrics(self) -> Dict[str, Any]:
-        """Get data center asset metrics"""
         return self._get_cached('datacenter-assets/')
 
     def get_backoffice_metrics(self) -> Dict[str, Any]:
-        """Get back office asset metrics"""
         return self._get_cached('backoffice-assets/')
 
     def get_network_metrics(self) -> Dict[str, Any]:
-        """Get network infrastructure metrics"""
         return self._get_cached('networks/')
 
     def get_power_metrics(self) -> Dict[str, Any]:
-        """Get power consumption metrics"""
         return self._get_cached('power-metrics/')
 
     @lru_cache(maxsize=128)
     def get_asset_details(self, asset_id: str) -> Dict[str, Any]:
-        """Get detailed information about a specific asset"""
         return self._get_cached(f'assets/{asset_id}/')

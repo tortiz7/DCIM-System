@@ -1,10 +1,10 @@
-# Add to chatbot/health_check.py
-
 from django.http import HttpResponse
 from django.db import connections
 from django.db.utils import OperationalError
 from redis import Redis
 from redis.exceptions import RedisError
+from django.conf import settings
+import os
 
 def check_database():
     try:
@@ -25,11 +25,15 @@ def check_redis():
         return False
 
 def check_model_loaded():
-    try:
-        from .chatbot.model import model
-        return model is not None
-    except:
-        return False
+    model_path = settings.MODEL_PATH['base_path']
+    required_files = [
+        'tokenizer.json',
+        'tokenizer_config.json',
+        'special_tokens_map.json',
+        'adapters/adapter_config.json',
+        'adapters/adapter_model.safetensors'
+    ]
+    return all(os.path.exists(os.path.join(model_path, f)) for f in required_files)
 
 def health_check(request):
     checks = {
@@ -37,16 +41,10 @@ def health_check(request):
         'redis': check_redis(),
         'model': check_model_loaded()
     }
-    
+
     if all(checks.values()):
         return HttpResponse("healthy", status=200)
     return HttpResponse("unhealthy", status=503)
 
 def readiness_check(request):
     return HttpResponse("ready", status=200)
-
-# Add to chatbot/urls.py
-urlpatterns += [
-    path('health/', health_check, name='health_check'),
-    path('ready/', readiness_check, name='readiness_check'),
-]

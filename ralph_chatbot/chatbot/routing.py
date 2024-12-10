@@ -1,9 +1,6 @@
 from django.urls import re_path
-from channels.routing import ProtocolTypeRouter, URLRouter
-from . import consumers
+from .consumers import RalphMetricsConsumer
 
-application = ProtocolTypeRouter({
-    'websocket': URLRouter([
-        re_path(r'ws/chat/$', consumers.ChatConsumer.as_asgi()),
-    ]),
-})
+websocket_urlpatterns = [
+    re_path(r'^ws/chat/$', RalphMetricsConsumer.as_asgi()),
+]

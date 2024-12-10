@@ -29,6 +29,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Add your chatbot middleware as needed
 ]
 
 ROOT_URLCONF = 'chatbot.urls'
@@ -52,7 +53,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'chatbot.wsgi.application'
 ASGI_APPLICATION = 'chatbot.asgi.application'
 
-# Database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
@@ -64,8 +64,10 @@ DATABASES = {
     }
 }
 
-# Redis/ElastiCache Configuration
-REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
+
+REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
@@ -75,10 +77,12 @@ CHANNEL_LAYERS = {
     },
 }
 
-# Model Configuration
+# Unify model paths
+MODEL_BASE_PATH = os.getenv('MODEL_PATH', str(BASE_DIR / 'model'))
+MODEL_ADAPTERS_PATH = os.getenv('LORA_PATH', str(BASE_DIR / 'model/adapters'))
 MODEL_PATH = {
-    'base_path': os.path.join(BASE_DIR, 'model'),
-    'adapters_path': os.path.join(BASE_DIR, 'model/adapters')
+    'base_path': MODEL_BASE_PATH,
+    'adapters_path': MODEL_ADAPTERS_PATH
 }
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
@@ -86,19 +90,15 @@ SESSION_CACHE_ALIAS = 'default'
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-        'LOCATION': f'redis://{os.getenv("REDIS_HOST", "localhost")}:6379/0',
+        'LOCATION': REDIS_URL,
     }
 }
 
-# Ralph API Configuration
 RALPH_API_URL = os.getenv('RALPH_API_URL', 'http://localhost:8000/api')
 RALPH_API_TOKEN = os.getenv('RALPH_API_TOKEN', '')
 
-# Monitoring Configuration
 PROMETHEUS_METRICS_EXPORT_PORT = 9100
 PROMETHEUS_METRICS_EXPORT_ADDRESS = ''
 
-# Static files settings
-STATIC_URL = '/static/'  # URL for serving static files
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Location for collected static files
-
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')

@@ -13,10 +13,7 @@ class MetricsCollector:
         )
 
     def get_relevant_metrics(self, question: str) -> Dict[str, Any]:
-        """Get relevant metrics based on the question context"""
         metrics = {}
-        
-        # Enhanced keyword mapping
         keyword_mapping = {
             'asset_metrics': ['asset', 'server', 'hardware', 'device', 'equipment'],
             'network_metrics': ['network', 'ip', 'connection', 'bandwidth', 'dns'],
@@ -25,14 +22,11 @@ class MetricsCollector:
             'deployment_metrics': ['deployment', 'provision', 'install', 'setup']
         }
 
-        # Check which metrics to fetch based on question context
         for metric_type, keywords in keyword_mapping.items():
             if any(word in question.lower() for word in keywords):
                 metrics.update(getattr(self, f'get_{metric_type}')())
 
         return metrics
-
-    """Get asset-related metrics"""
 
     def get_asset_metrics(self) -> Dict[str, Any]:
         try:
@@ -52,19 +46,7 @@ class MetricsCollector:
             logger.error(f"Error fetching asset metrics: {e}")
             return {}
 
-def get_network_metrics(self) -> Dict[str, Any]:
-    """Get network-related metrics"""
-    try:
-        return self.client._get_cached(
-            'assets/metrics/network/',
-            cache_key='network_metrics'
-        )
-    except Exception as e:
-        logger.error(f"Error fetching network metrics: {e}")
-        return {}
-
     def get_network_metrics(self) -> Dict[str, Any]:
-        """Get network infrastructure metrics"""
         try:
             return self.client._get_cached('metrics/network_metrics/', cache_key='network_metrics')
         except Exception as e:
@@ -72,7 +54,6 @@ def get_network_metrics(self) -> Dict[str, Any]:
             return {}
 
     def get_power_metrics(self) -> Dict[str, Any]:
-        """Get power consumption metrics"""
         try:
             return self.client._get_cached('metrics/power_metrics/', cache_key='power_metrics')
         except Exception as e:
@@ -80,7 +61,6 @@ def get_network_metrics(self) -> Dict[str, Any]:
             return {}
 
     def get_rack_metrics(self) -> Dict[str, Any]:
-        """Get rack space and cooling metrics"""
         try:
             return self.client._get_cached('metrics/rack_metrics/', cache_key='rack_metrics')
         except Exception as e:
@@ -88,7 +68,6 @@ def get_network_metrics(self) -> Dict[str, Any]:
             return {}
 
     def get_deployment_metrics(self) -> Dict[str, Any]:
-        """Get deployment status metrics"""
         try:
             return self.client._get_cached('metrics/deployment_metrics/', cache_key='deployment_metrics')
         except Exception as e:
@@ -96,7 +75,6 @@ def get_network_metrics(self) -> Dict[str, Any]:
             return {}
 
     def get_all_metrics(self) -> Dict[str, Any]:
-        """Get all available metrics"""
         return {
             'assets': self.get_asset_metrics(),
             'networks': self.get_network_metrics(),
@@ -106,7 +84,6 @@ def get_network_metrics(self) -> Dict[str, Any]:
         }
 
     def refresh_cache(self) -> None:
-        """Force refresh all cached metrics"""
         try:
             for metric_type in ['asset', 'network', 'power', 'rack', 'deployment']:
                 getattr(self, f'get_{metric_type}_metrics')()
