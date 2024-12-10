@@ -143,11 +143,6 @@ print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_sup
 
                                         docker compose exec -T web ralphctl demodata
                                         docker compose exec -T web ralphctl sitetree_resync_apps
-
-                                        docker compose exec -T -u root web bash -c "mkdir -p /etc/ralph/conf.d && touch /etc/ralph/conf.d/settings.conf && chown root:root /etc/ralph/conf.d/settings.conf && chmod 666 /etc/ralph/conf.d/settings.conf"
-                                        docker compose exec -T -u root web bash -c "echo \\"LOGIN_REDIRECT_URL = \\"/\\"\\" >> /etc/ralph/conf.d/settings.conf"
-                                        docker compose exec -T -u root web bash -c "echo \\"ALLOWED_HOSTS = [\\"*\\"]\\" >> /etc/ralph/conf.d/settings.conf"
-                                        docker compose exec -T -u root web bash -c "chmod 644 /etc/ralph/conf.d/settings.conf"
                                     '
                                 """
                                 echo "🌟 Ralph is now configured and ready on ${ip}!"
@@ -169,16 +164,17 @@ print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_sup
             }
         }
 
+        // Configure Ralph Cookies and Settings
         stage('Configure Ralph Cookies') {
             steps {
                 script {
-                    // Get the ALB DNS name from Terraform outputs
+                    // Get the ALB DNS name
                     def albUrl = sh(
                         script: "cd terraform && terraform output -json alb_dns_name | jq -r '.'",
                         returnStdout: true
                     ).trim()
 
-                    // Retrieve private instance IPs again to apply settings to each web instance
+                    // Get instance IPs and bastion IP again
                     def ec2_ips = sh(
                         script: "cd terraform && terraform output -json private_instance_ips | jq -r '.[]'",
                         returnStdout: true
@@ -194,12 +190,18 @@ print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_sup
                     ec2_ips.each { ip ->
                         echo "📜 Configuring Ralph cookies and CSRF on ${ip}"
 
+                        // Write all settings in a .py file with proper Python syntax
                         sh """
                             ssh ${sshOptions} ubuntu@${ip} '
                                 cd /home/ubuntu/ralph/docker
                                 docker compose exec -T -u root web bash -c "echo \\"CSRF_TRUSTED_ORIGINS = ['http://${albUrl}']\\" > /etc/ralph/conf.d/settings.py"
                                 docker compose exec -T -u root web bash -c "echo \\"SESSION_COOKIE_SECURE = False\\" >> /etc/ralph/conf.d/settings.py"
                                 docker compose exec -T -u root web bash -c "echo \\"CSRF_COOKIE_SECURE = False\\" >> /etc/ralph/conf.d/settings.py"
+
+                                # Also set the LOGIN_REDIRECT_URL and ALLOWED_HOSTS here instead of in the Deploy Ralph step
+                                docker compose exec -T -u root web bash -c "echo \\"LOGIN_REDIRECT_URL = '/'\\" >> /etc/ralph/conf.d/settings.py"
+                                docker compose exec -T -u root web bash -c "echo \\"ALLOWED_HOSTS = ['*']\\" >> /etc/ralph/conf.d/settings.py"
+
                                 docker compose restart web
                             '
                         """
