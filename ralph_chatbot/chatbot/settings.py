@@ -5,7 +5,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'your-secret-key-here')
 DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost:8001').split(',')
+
+# Ensure localhost and 127.0.0.1 are always allowed
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -77,7 +79,6 @@ CHANNEL_LAYERS = {
     },
 }
 
-# Unify model paths
 MODEL_BASE_PATH = os.getenv('MODEL_PATH', str(BASE_DIR / 'model'))
 MODEL_ADAPTERS_PATH = os.getenv('LORA_PATH', str(BASE_DIR / 'model/adapters'))
 MODEL_PATH = {

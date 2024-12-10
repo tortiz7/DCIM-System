@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
+from django.http import HttpResponse
 from .api.client import RalphAPIClient
 from .api.metrics import MetricsCollector
 import torch
@@ -20,7 +21,10 @@ class ChatbotView(APIView):
                 device_map="auto"
             )
             # Load adapter model with PeftModel
-            self.model = PeftModel.from_pretrained(self.model, settings.MODEL_PATH['adapters_path'])
+            self.model = PeftModel.from_pretrained(
+                self.model, 
+                settings.MODEL_PATH['adapters_path']
+            )
             self.tokenizer = AutoTokenizer.from_pretrained(
                 settings.MODEL_PATH['base_path']
             )
@@ -75,3 +79,11 @@ class ChatbotView(APIView):
                 {'error': 'Internal server error'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+class MetricsView(APIView):
+    def get(self, request):
+        # Return a simple JSON response for now
+        return Response({'status': 'OK', 'message': 'Metrics endpoint placeholder'}, status=200)
+
+def health_check(request):
+    return HttpResponse("healthy", status=200)
