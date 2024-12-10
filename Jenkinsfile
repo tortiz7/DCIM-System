@@ -175,7 +175,7 @@ print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_sup
                     def ec2_ips = sh(
                         script: "cd terraform && terraform output -json private_instance_ips | jq -r '.[]'",
                         returnStdout: true
-                    ).trim().split('\\n')
+                    ).trim().split('\n')
 
                     def bastionIp = sh(
                         script: "cd terraform && terraform output -json bastion_public_ip | jq -r '.'",
@@ -187,17 +187,17 @@ print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_sup
                     ec2_ips.each { ip ->
                         echo "📜 Configuring Ralph cookies and CSRF on ${ip}"
 
-                        def settingsContent = """CSRF_TRUSTED_ORIGINS = ['http://${albUrl}']
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-LOGIN_REDIRECT_URL = '/'
-ALLOWED_HOSTS = ['*']
+                        def envContent = """export CSRF_TRUSTED_ORIGINS="http://${albUrl}"
+export SESSION_COOKIE_SECURE="False"
+export CSRF_COOKIE_SECURE="False"
+export LOGIN_REDIRECT_URL="/"
+export ALLOWED_HOSTS="*"
 """
 
                         sh """
                             ssh ${sshOptions} ubuntu@${ip} '
                                 cd /home/ubuntu/ralph/docker
-                                echo "${settingsContent}" | docker compose exec -T -u root web bash -c "cat > /etc/ralph/conf.d/settings.py"
+                                echo "${envContent}" | docker compose exec -T -u root web bash -c "cat > /etc/ralph/conf.d/settings.conf"
                                 docker compose restart web
                             '
                         """
