@@ -16,7 +16,6 @@ SILENCED_SYSTEM_CHECKS = ['models.E006', ]  # TODO fix
 
 def bool_from_env(var, default: bool=False) -> bool:
     """Helper for converting env string into boolean.
-
     Returns bool True for string values: '1' or 'true', False otherwise.
     """
     def str_to_bool(s: str) -> bool:
@@ -24,20 +23,13 @@ def bool_from_env(var, default: bool=False) -> bool:
 
     os_var = os.environ.get(var)
     if os_var is None:
-        # as user expect
         return default
     else:
         return str_to_bool(os_var)
 
 
 def get_sentinels(sentinels_string):
-    """ Helper for converting sentinel hosts string into list of tuples.
-
-    sentinel_string must be a string in the following format:
-    <sentinel_ip>:<sentinel_port>;<sentinel_ip>:<sentinel_port>
-
-    Returns a list of sentinel host and port tuples
-    """
+    """ Helper for converting sentinel hosts string into list of tuples. """
     if sentinels_string:
         sentinels = sentinels_string.split(';')
         result = [tuple(sentinel.split(':')) for sentinel in sentinels]
@@ -57,7 +49,9 @@ ALLOWED_HOSTS = ['*']
 # Only for deployment
 RALPH_INSTANCE = os.environ.get('RALPH_INSTANCE', 'http://127.0.0.1:8000')
 
-# Application definition
+# Add Ralph API URL and Token for chatbot integration
+RALPH_API_URL = os.environ.get('RALPH_API_URL', 'http://127.0.0.1:8000/api')
+RALPH_API_TOKEN = os.environ.get('RALPH_API_TOKEN', '')
 
 INSTALLED_APPS = (
     'channels',
@@ -176,7 +170,7 @@ if DATABASE_SSL_CA:
 
 DATABASES = {
     'default': {
-        'ENGINE': os.environ.get('DATABASE_ENGINE', 'django.db.backends.mysql'),  # noqa
+        'ENGINE': os.environ.get('DATABASE_ENGINE', 'django.db.backends.mysql'),
         'NAME': os.environ.get('DATABASE_NAME', 'ralph_ng'),
         'USER': os.environ.get('DATABASE_USER', 'ralph_ng'),
         'PASSWORD': os.environ.get('DATABASE_PASSWORD', 'ralph_ng') or None,
@@ -194,8 +188,8 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [(os.environ.get('REDIS_HOST', 'localhost'), 
-                      int(os.environ.get('REDIS_PORT', 6379)))],
+            'hosts': [(os.environ.get('REDIS_HOST', 'localhost'),
+                      int(os.environ.get('REDIS_PORT', 6379)))]
         },
     },
 }
@@ -224,15 +218,14 @@ MEDIA_ROOT = os.environ.get(
     'MEDIA_ROOT', os.path.join(BASE_DIR, 'var', 'media')
 )
 
-# adapt message's tags to bootstrap
 MESSAGE_TAGS = {
     messages.DEBUG: 'info',
     messages.ERROR: 'alert',
 }
 FILE_UPLOAD_PERMISSIONS = 0o644
 
-DEFAULT_DEPRECIATION_RATE = int(os.environ.get('DEFAULT_DEPRECIATION_RATE', 25))  # noqa
-DEFAULT_LICENCE_DEPRECIATION_RATE = int(os.environ.get('DEFAULT_LICENCE_DEPRECIATION_RATE', 50))  # noqa
+DEFAULT_DEPRECIATION_RATE = int(os.environ.get('DEFAULT_DEPRECIATION_RATE', 25))
+DEFAULT_LICENCE_DEPRECIATION_RATE = int(os.environ.get('DEFAULT_LICENCE_DEPRECIATION_RATE', 50))
 CHECK_IP_HOSTNAME_ON_SAVE = bool_from_env('CHECK_IP_HOSTNAME_ON_SAVE', True)
 ASSET_HOSTNAME_TEMPLATE = {
     'prefix': '{{ country_code|upper }}{{ code|upper }}',
@@ -242,7 +235,7 @@ ASSET_HOSTNAME_TEMPLATE = {
 DEFAULT_COUNTRY_CODE = os.environ.get('DEFAULT_COUNTRY_CODE', 'POL')
 
 
-LDAP_SERVER_OBJECT_USER_CLASS = 'user'  # possible values: user, person
+LDAP_SERVER_OBJECT_USER_CLASS = 'user'
 
 ADMIN_SITE_HEADER = 'Ralph 3'
 ADMIN_SITE_TITLE = 'Ralph 3'
@@ -329,13 +322,13 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.MultiPartParser',
         'rest_framework_xml.parsers.XMLParser',
     ),
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',  # noqa
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_METADATA_CLASS': 'ralph.lib.api.utils.RalphApiMetadata',
-    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.AcceptHeaderVersioning',  # noqa
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.AcceptHeaderVersioning',
     'DEFAULT_VERSION': 'v1',
     'ALLOWED_VERSIONS': ('v1',),
-    'EXCEPTION_HANDLER': 'ralph.lib.api.exception_handler.validation_error_exception_handler',  # noqa
+    'EXCEPTION_HANDLER': 'ralph.lib.api.exception_handler.validation_error_exception_handler',
 }
 
 API_THROTTLING = bool_from_env('API_THROTTLING', default=False)
@@ -357,10 +350,9 @@ REDIS_COMMAND_TIMEOUT = float(os.environ.get('REDIS_COMMAND_TIMEOUT', 10.0))
 
 if REDIS_SENTINEL_ENABLED:
     from redis.sentinel import Sentinel
-
-    REDIS_SENTINEL_HOSTS = get_sentinels(os.environ.get('REDIS_SENTINEL_HOSTS', None))  # noqa
+    REDIS_SENTINEL_HOSTS = get_sentinels(os.environ.get('REDIS_SENTINEL_HOSTS', None))
     REDIS_CLUSTER_NAME = os.environ.get('REDIS_CLUSTER_NAME', 'ralph_ng')
-    REDIS_SENTINEL_SOCKET_TIMEOUT = float(os.environ.get('REDIS_SENTINEL_SOCKET_TIMEOUT', 1.0))  # noqa
+    REDIS_SENTINEL_SOCKET_TIMEOUT = float(os.environ.get('REDIS_SENTINEL_SOCKET_TIMEOUT', 1.0))
 
     sentinel = Sentinel(
         REDIS_SENTINEL_HOSTS,
@@ -392,7 +384,7 @@ else:
     REDIS_MASTER_IP = None
     REDIS_MASTER_PORT = None
     REDIS_CONNECTION = {
-            'HOST': REDIS_MASTER_IP or os.environ.get('REDIS_HOST', 'localhost'),  # noqa
+            'HOST': REDIS_MASTER_IP or os.environ.get('REDIS_HOST', 'localhost'),
             'PORT': REDIS_MASTER_PORT or os.environ.get('REDIS_PORT', '6379'),
             'DB': int(os.environ.get('REDIS_DB', 0)),
             'PASSWORD': os.environ.get('REDIS_PASSWORD', ''),
@@ -405,7 +397,6 @@ else:
         )
     }
 
-# set to False to turn off cache decorator
 USE_CACHE = bool_from_env('USE_CACHE', True)
 
 SENTRY_ENABLED = bool_from_env('SENTRY_ENABLED')
@@ -418,7 +409,7 @@ BACKOFFICE_HOSTNAME_FIELD_READONLY = bool_from_env(
     'BACKOFFICE_HOSTNAME_FIELD_READONLY', False
 )
 
-TAGGIT_CASE_INSENSITIVE = True  # case insensitive tags
+TAGGIT_CASE_INSENSITIVE = True
 
 RALPH_QUEUES = {
     'ralph_ext_pdf': {},
@@ -444,47 +435,28 @@ RALPH_INTERNAL_SERVICES = {
     }
 }
 
-# =============================================================================
-# DC view
-# =============================================================================
-
 RACK_LISTING_NUMBERING_TOP_TO_BOTTOM = False
-
-# =============================================================================
-# Deployment
-# =============================================================================
 
 DEPLOYMENT_MAX_DNS_ENTRIES_TO_CLEAN = 30
 
-# =============================================================================
-
-# Example:
-# MY_EQUIPMENT_LINKS = [
-#     {'url': 'http://....', 'name': 'Link name'},
-# ]
 MY_EQUIPMENT_LINKS = json.loads(os.environ.get('MY_EQUIPMENT_LINKS', '[]'))
-MANAGING_DEVICES_MOVED_INFO = os.environ.get('MANAGING_DEVICES_MOVED_INFO', '')  # noqa
-MY_EQUIPMENT_REPORT_FAILURE_URL = os.environ.get('MY_EQUIPMENT_REPORT_FAILURE_URL', '')  # noqa
+MANAGING_DEVICES_MOVED_INFO = os.environ.get('MANAGING_DEVICES_MOVED_INFO', '')
+MY_EQUIPMENT_REPORT_FAILURE_URL = os.environ.get('MY_EQUIPMENT_REPORT_FAILURE_URL', '')
 MY_EQUIPMENT_SHOW_BUYOUT_DATE = bool_from_env('MY_EQUIPMENT_SHOW_BUYOUT_DATE')
 MY_EQUIPMENT_BUYOUT_URL = os.environ.get('MY_EQUIPMENT_BUYOUT_URL', '')
 
-# Sets URL shown to user if they declare that they dp not have specific asset.
 MISSING_ASSET_REPORT_URL = os.environ.get('MISSING_ASSET_REPORT_URL', None)
 
-# Redirect to result detail view if there is only one in search result list
 REDIRECT_TO_DETAIL_VIEW_IF_ONE_SEARCH_RESULT = bool_from_env(
     'REDIRECT_TO_DETAIL_VIEW_IF_ONE_SEARCH_RESULT', True
 )
 
-# Stocktaking tagging config - each variable describes individual tag.
-# To disable tag set it to None or, in case of date tag, set variable to '0'.
 INVENTORY_TAG = os.environ.get('INVENTORY_TAG', 'INV')
-# This tag means user himself confirmed asset possession.
 INVENTORY_TAG_USER = os.environ.get('INVENTORY_TAG_USER', 'INV_CONF')
 INVENTORY_TAG_MISSING = os.environ.get('INVENTORY_TAG_MISSING', 'INV_MISSING')
 INVENTORY_TAG_APPEND_DATE = bool_from_env('INVENTORY_TAG_APPEND_DATE', True)
 
-ENABLE_ACCEPT_ASSETS_FOR_CURRENT_USER = bool_from_env('ENABLE_ACCEPT_ASSETS_FOR_CURRENT_USER')  # noqa
+ENABLE_ACCEPT_ASSETS_FOR_CURRENT_USER = bool_from_env('ENABLE_ACCEPT_ASSETS_FOR_CURRENT_USER')
 ACCEPT_ASSETS_FOR_CURRENT_USER_CONFIG = {
     'TRANSITION_ID': os.environ.get(
         'ACCEPT_ASSETS_FOR_CURRENT_USER_TRANSITION_ID', None
@@ -495,7 +467,6 @@ ACCEPT_ASSETS_FOR_CURRENT_USER_CONFIG = {
     'TRANSITION_ACCESS_CARD_ID': os.environ.get(
         'ACCEPT_ACCESS_CARD_FOR_CURRENT_USER_CONFIG', None
     ),
-    # in_progress by default
     'BACK_OFFICE_ACCEPT_STATUS': os.environ.get(
         'ACCEPT_ASSETS_FOR_CURRENT_USER_BACK_OFFICE_ACCEPT_STATUS', 2
     ),
@@ -508,14 +479,12 @@ ACCEPT_ASSETS_FOR_CURRENT_USER_CONFIG = {
     'LOAN_TRANSITION_ID': os.environ.get(
         'LOAN_ASSETS_FOR_CURRENT_USER_TRANSITION_ID', None
     ),
-    # loan_in_progress by default
     'BACK_OFFICE_ACCEPT_LOAN_STATUS': os.environ.get(
         'LOAN_ASSETS_FOR_CURRENT_USER_BACK_OFFICE_ACCEPT_STATUS', 13
     ),
     'RETURN_TRANSITION_ID': os.environ.get(
         'RETURN_ASSETS_FOR_CURRENT_USER_TRANSITION_ID', None
     ),
-    # waiting_for_return by default
     'BACK_OFFICE_ACCEPT_RETURN_STATUS': os.environ.get(
         'RETURN_ASSESTS_FOR_CURRENT_USER_BACK_OFFICE_ACCEPT_STATUS', 14
     ),
@@ -533,11 +502,9 @@ ACCEPT_ASSETS_FOR_CURRENT_USER_CONFIG = {
     ),
 }
 RELEASE_REPORT_CONFIG = {
-    # report with name 'release' is by default
     'DEFAULT_REPORT': os.environ.get(
         'RELEASE_REPORT_CONFIG_DEFAULT_REPORT', 'release'
     ),
-    # map transition id to different report
     'REPORTS_MAPPER': json.loads(
         os.environ.get('RELEASE_REPORT_CONFIG_REPORTS_MAPPER', '{}')
     )
@@ -549,50 +516,29 @@ OPENSTACK_INSTANCES = json.loads(os.environ.get('OPENSTACK_INSTANCES', '[]'))
 DEFAULT_OPENSTACK_PROVIDER_NAME = os.environ.get(
     'DEFAULT_OPENSTACK_PROVIDER_NAME', 'openstack'
 )
-# issue tracker url for Operations urls (issues ids) - should end with /
 ISSUE_TRACKER_URL = os.environ.get('ISSUE_TRACKER_URL', '')
 
-# Networks
-DEFAULT_NETWORK_BOTTOM_MARGIN = int(os.environ.get('DEFAULT_NETWORK_BOTTOM_MARGIN', 10))  # noqa
-DEFAULT_NETWORK_TOP_MARGIN = int(os.environ.get('DEFAULT_NETWORK_TOP_MARGIN', 0))  # noqa
-# deprecated, to remove in the future
+DEFAULT_NETWORK_BOTTOM_MARGIN = int(os.environ.get('DEFAULT_NETWORK_BOTTOM_MARGIN', 10))
+DEFAULT_NETWORK_TOP_MARGIN = int(os.environ.get('DEFAULT_NETWORK_TOP_MARGIN', 0))
 DEFAULT_NETWORK_MARGIN = int(os.environ.get('DEFAULT_NETWORK_MARGIN', 10))
-# when set to True, network records (IP/Ethernet) can't be modified until
-# 'expose in DHCP' is selected
 DHCP_ENTRY_FORBID_CHANGE = bool_from_env('DHCP_ENTRY_FORBID_CHANGE', True)
 
-# disable integration with DNSaaS as it's no longer supported
-# https://github.com/allegro/django-powerdns-dnssec
-# This settings will be deleted in future release.
 ENABLE_DNSAAS_INTEGRATION = False
+
 DNSAAS_URL = os.environ.get('DNSAAS_URL', '')
 DNSAAS_TOKEN = os.environ.get('DNSAAS_TOKEN', '')
 DNSAAS_TIMEOUT = os.environ.get('DNSAAS_TIMEOUT', 10)
 DNSAAS_AUTO_PTR_ALWAYS = os.environ.get('DNSAAS_AUTO_PTR_ALWAYS', 2)
 DNSAAS_AUTO_PTR_NEVER = os.environ.get('DNSAAS_AUTO_PTR_NEVER', 1)
-# user in dnsaas which can do changes, like update TXT records etc.
 DNSAAS_OWNER = os.environ.get('DNSAAS_OWNER', 'ralph')
-# pyhermes topic where messages about auto txt records are announced
 DNSAAS_AUTO_TXT_RECORD_TOPIC_NAME = None
-# define names of values send to DNSAAS for:
-# DataCenterAsset, Cluster, VirtualServer
 DNSAAS_AUTO_TXT_RECORD_PURPOSE_MAP = {
-    # self.configuration_path.class will be send as 'VENTURE'
     'class_name': 'VENTURE',
-    # self.configuration_path.module will be send as 'ROLE'
     'module_name': 'ROLE',
-    # self.configuration_path.path will be send as 'PATH'
     'configuration_path': 'CONFIGURATION_PATH',
-    # self.service_env will be send as 'SERVICE_ENV'
     'service_env': 'SERVICE_ENV',
-    # self.model will be send as 'MODEL'
     'model': 'MODEL',
-    # self.location will be send as 'LOCATION'
     'location': 'LOCATION',
-    # self.location will be send as 'LOCATION'
-    # if any of above is set to none
-    # 'location': None
-    # then this value won't be set at all
 }
 DNSAAS_AUTO_UPDATE_HOST_DNS = bool_from_env('DNSAAS_AUTO_UPDATE_HOST_DNS')
 
@@ -604,62 +550,32 @@ DOMAIN_OWNER_TYPE = {
     'TO': 'Technical Owner',
 }
 
-# Transitions settings
-
-# E.g.: pl (see: https://www.iso.org/iso-3166-country-codes.html)
 CHANGE_HOSTNAME_ACTION_DEFAULT_COUNTRY = None
 
-
-# Change management settings
-
 CHANGE_MGMT_OPERATION_STATUSES = {
-    'OPENED': os.getenv(
-        'CHANGE_MGMT_OPERATION_STATUS_OPENED', 'Open'
-    ),
-    'IN_PROGRESS': os.getenv(
-        'CHANGE_MGMT_OPERATION_STATUS_IN_PROGRESS', 'In Progress'
-    ),
-    'RESOLVED': os.getenv(
-        'CHANGE_MGMT_OPERATION_STATUS_RESOLVED', 'Resolved'
-    ),
-    'CLOSED': os.getenv(
-        'CHANGE_MGMT_OPERATION_STATUS_CLOSED', 'Closed'
-    ),
-    'REOPENED': os.getenv(
-        'CHANGE_MGMT_OPERATION_STATUS_REOPENED', 'Reopened'
-    ),
-    'TODO': os.getenv(
-        'CHANGE_MGMT_OPERATION_STATUS_TODO', 'Todo'
-    ),
-    'BLOCKED': os.getenv(
-        'CHANGE_MGMT_OPERATION_STATUS_BLOCKED', 'Blocked'
-    )
+    'OPENED': os.getenv('CHANGE_MGMT_OPERATION_STATUS_OPENED', 'Open'),
+    'IN_PROGRESS': os.getenv('CHANGE_MGMT_OPERATION_STATUS_IN_PROGRESS', 'In Progress'),
+    'RESOLVED': os.getenv('CHANGE_MGMT_OPERATION_STATUS_RESOLVED', 'Resolved'),
+    'CLOSED': os.getenv('CHANGE_MGMT_OPERATION_STATUS_CLOSED', 'Closed'),
+    'REOPENED': os.getenv('CHANGE_MGMT_OPERATION_STATUS_REOPENED', 'Reopened'),
+    'TODO': os.getenv('CHANGE_MGMT_OPERATION_STATUS_TODO', 'Todo'),
+    'BLOCKED': os.getenv('CHANGE_MGMT_OPERATION_STATUS_BLOCKED', 'Blocked')
 }
 
-CHANGE_MGMT_BASE_OBJECT_LOADER = os.getenv(
-    'CHANGE_MGMT_BASE_OBJECT_LOADER', None
-)
+CHANGE_MGMT_BASE_OBJECT_LOADER = os.getenv('CHANGE_MGMT_BASE_OBJECT_LOADER', None)
 CHANGE_MGMT_PROCESSOR = os.getenv(
     'CHANGE_MGMT_PROCESSOR', 'ralph.operations.changemanagement.jira'
 )
 
+HERMES_CHANGE_MGMT_CHANGES_TOPIC = 'hermes.changemanagement.changes'
 HERMES_CHANGE_MGMT_TOPICS = {
-    'CHANGES': os.getenv(
-        'HERMES_CHANGE_MGMT_CHANGES_TOPIC', 'hermes.changemanagement.changes'
-    )
+    'CHANGES': os.getenv('HERMES_CHANGE_MGMT_CHANGES_TOPIC', HERMES_CHANGE_MGMT_CHANGES_TOPIC)
 }
-
-
-# Hermes settings
 
 ENABLE_HERMES_INTEGRATION = bool_from_env('ENABLE_HERMES_INTEGRATION')
 HERMES = json.loads(os.environ.get('HERMES', '{}'))
 HERMES['ENABLED'] = ENABLE_HERMES_INTEGRATION
-# topic name where DC asset, cloud host, virtual server changes should be
-# announced
-HERMES_HOST_UPDATE_TOPIC_NAME = os.environ.get(
-    'HERMES_HOST_UPDATE_TOPIC_NAME', None
-)
+HERMES_HOST_UPDATE_TOPIC_NAME = os.environ.get('HERMES_HOST_UPDATE_TOPIC_NAME', None)
 
 HERMES_SERVICE_TOPICS = {
     'CREATE': os.environ.get(
@@ -702,7 +618,6 @@ SCM_TOOL_URL = os.getenv('SCM_TOOL_URL', '')
 
 RALPH_HOST_URL = os.environ.get('RALPH_HOST_URL', None)
 
-# METRICS
 COLLECT_METRICS = False
 ALLOW_PUSH_GRAPHS_DATA_TO_STATSD = False
 STATSD_GRAPHS_PREFIX = 'ralph.graphs'
@@ -716,7 +631,6 @@ TRANSITION_TEMPLATES = None
 CONVERT_TO_DATACENTER_ASSET_DEFAULT_STATUS_ID = 1
 CONVERT_TO_BACKOFFICE_ASSET_DEFAULT_STATUS_ID = 1
 
-# Currency choices for django-money
 DEFAULT_CURRENCY_CODE = 'XXX'
 CURRENCY_CHOICES = [
     (c.code, c.code) for i, c in CURRENCIES.items()

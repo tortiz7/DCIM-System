@@ -13,7 +13,8 @@ apt-get install -y \
    gnupg \
    lsb-release \
    git \
-   jq
+   jq \
+   netcat
 
 # Install Node Exporter for monitoring
 echo "Setting up Node Exporter..."
@@ -52,41 +53,10 @@ rm -rf node_exporter-1.6.1.linux-amd64.tar.gz node_exporter-1.6.1.linux-amd64
 touch /home/ubuntu/.setup_complete
 echo "System setup completed successfully"
 
-# Clone Ralph repository
-echo "Cloning modified Ralph repository..."
-git clone -b deployment-test https://${github_token}@github.com/tortiz7/DCIM-System.git /opt/ralph/source
-cd /opt/ralph/source
-
-# Create required directories
-mkdir -p /etc/ralph/conf.d
-mkdir -p /var/log/ralph
-mkdir -p /opt/ralph/docker
-mkdir -p /opt/ralph/docker/model
-
-echo "db_name=${db_name}"
-echo "db_user=${db_user}"
-echo "db_password=${db_password}"
-echo "db_endpoint=${db_endpoint}"
-echo "redis_endpoint=${redis_endpoint}"
-echo "RALPH_API_TOKEN=${RALPH_API_TOKEN}"
-
-sysctl -w net.bridge.bridge-nf-call-iptables=1
-sysctl -w net.bridge.bridge-nf-call-ip6tables=1
-
-# Configure initial Ralph settings
-cat <<EOF > /etc/ralph/conf.d/settings.conf
-ALLOWED_HOSTS=${aws_lb_dns},localhost,127.0.0.1
-DATABASE_NAME=${db_name}
-DATABASE_USER=${db_user}
-DATABASE_PASSWORD=${db_password}
-DATABASE_HOST=${db_endpoint}
-REDIS_HOST=${redis_endpoint}
-REDIS_PORT=${redis_port}
-CHATBOT_ENABLED=true
-EOF
-
 # Verify prerequisites
 check_prerequisites() {
+   echo "Checking prerequisites..."
+   
    FREE_SPACE=$(df -h / | awk 'NR==2 {print $4}' | sed 's/G//')
    if [ $FREE_SPACE -lt 20 ]; then
        echo "❌ Insufficient disk space. Need at least 20GB free."
@@ -107,11 +77,29 @@ check_prerequisites() {
        echo "❌ Docker not installed"
        exit 1
    fi
+   
+   echo "✅ All prerequisites met"
 }
 
 check_prerequisites
 
-# Write .env file to correct location
+# Clone Ralph repository
+echo "Cloning modified Ralph repository..."
+git clone -b deployment-test https://${github_token}@github.com/tortiz7/DCIM-System.git /opt/ralph/source
+cd /opt/ralph/source
+
+# Create required directories
+mkdir -p /etc/ralph/conf.d
+mkdir -p /var/log/ralph
+mkdir -p /opt/ralph/docker
+mkdir -p /opt/ralph/docker/model
+
+# Enable required kernel settings
+sysctl -w net.bridge.bridge-nf-call-iptables=1
+sysctl -w net.bridge.bridge-nf-call-ip6tables=1
+
+# Write environment variables to file
+echo "Setting up environment configuration..."
 cat > /opt/ralph/source/docker/.env << EOF
 DATABASE_NAME=${db_name}
 DATABASE_USER=${db_user}
@@ -119,45 +107,56 @@ DATABASE_PASSWORD=${db_password}
 DATABASE_HOST=${db_endpoint}
 REDIS_HOST=${redis_endpoint}
 REDIS_PORT=${redis_port}
-RALPH_API_TOKEN=${RALPH_API_TOKEN}
 ALLOWED_HOSTS=${aws_lb_dns},localhost,127.0.0.1
 CHATBOT_ENABLED=true
 CHATBOT_URL=http://chatbot:8001
 EOF
 
-# Verify the environment file exists and has content
-echo "Verifying environment variables:"
-echo "Current directory: $(pwd)"
-echo "Contents of .env file:"
-cat /opt/ralph/source/docker/.env
+# Verify the environment file
+echo "Verifying environment file:"
+if [ ! -f /opt/ralph/source/docker/.env ]; then
+    echo "❌ Environment file not created properly"
+    exit 1
+fi
 
-# Verify connection to external services
-echo "Verifying RDS connection..."
-DB_HOST=$(echo "${db_endpoint}" | cut -d':' -f1)
-DB_PORT=$(echo "${db_endpoint}" | cut -d':' -f2)
-until nc -z -v -w5 $DB_HOST $DB_PORT; do
-    echo "Waiting for RDS connection..."
-    sleep 5
-done
-
-echo "Verifying ElastiCache connection..."
-until nc -z -v -w5 ${redis_endpoint} ${redis_port}; do
-    echo "Waiting for ElastiCache connection..."
-    sleep 5
-done
-
-# Change to correct directory and start services
+# Start services
 cd /opt/ralph/source/docker
 echo "Building and starting containers..."
-docker compose up --build -d
+docker compose up -d --build web nginx chatbot
 
-# Add debug output to verify environment variables are being read
-echo "Docker compose environment verification:"
-docker compose config
+# Wait for web service to be healthy
+echo "Waiting for web service to be healthy..."
+TIMEOUT=300  # 5 minutes timeout
+start_time=$(date +%s)
+while true; do
+    if docker compose ps | grep web | grep -q "(healthy)"; then
+        echo "✅ Web service is healthy"
+        break
+    fi
+    
+    current_time=$(date +%s)
+    elapsed_time=$((current_time - start_time))
+    
+    if [ $elapsed_time -ge $TIMEOUT ]; then
+        echo "❌ Timeout waiting for web service to become healthy"
+        exit 1
+    fi
+    
+    echo "Waiting for web service... ($elapsed_time seconds elapsed)"
+    sleep 10
+done
 
 # Initialize database
 echo "Initializing database..."
 docker compose exec -T web ralphctl migrate
+if [ $? -ne 0 ]; then
+    echo "❌ Database migration failed"
+    exit 1
+fi
+
+echo "Loading demo data..."
+docker compose exec -T web ralphctl demodata
+docker compose exec -T web ralphctl sitetree_resync_apps
 
 # Create superuser and get API token
 echo "Creating superuser and retrieving API token..."
@@ -186,21 +185,62 @@ else
    echo "✅ API token retrieved successfully"
 fi
 
-# Add chatbot settings after token generation
+# Add chatbot settings to Ralph configuration
+echo "Configuring chatbot settings..."
 echo "CHATBOT_URL=http://chatbot:8001" >> /etc/ralph/conf.d/settings.conf
 echo "RALPH_API_TOKEN=${RALPH_API_TOKEN}" >> /etc/ralph/conf.d/settings.conf
 
-# Update environment file with all variables
-cat > /opt/ralph/docker/.env << EOF
-db_name=${db_name}
-db_user=${db_user}
-db_password=${db_password}
+# Update environment file with complete configuration
+cat > /opt/ralph/source/docker/.env << EOF
+DATABASE_NAME=${db_name}
+DATABASE_USER=${db_user}
+DATABASE_PASSWORD=${db_password}
+DATABASE_HOST=${db_endpoint}
+REDIS_HOST=${redis_endpoint}
+REDIS_PORT=${redis_port}
+ALLOWED_HOSTS=${aws_lb_dns},localhost,127.0.0.1
+CHATBOT_ENABLED=true
+CHATBOT_URL=http://chatbot:8001
+RALPH_API_TOKEN=${RALPH_API_TOKEN}
 EOF
 
-# Restart all services with complete configuration
+# Restart all services to pick up new configuration
 echo "Restarting all services with API token..."
 docker compose down
-docker compose up --build -d
+docker compose up -d --build
+
+# Wait for services to be healthy
+echo "Waiting for services to be healthy..."
+TIMEOUT=300  # 5 minutes timeout
+start_time=$(date +%s)
+while true; do
+    if docker compose ps | grep -q "(healthy)" && [ $(docker compose ps | grep -c "(healthy)") -ge 3 ]; then
+        echo "✅ All services are healthy"
+        break
+    fi
+    
+    current_time=$(date +%s)
+    elapsed_time=$((current_time - start_time))
+    
+    if [ $elapsed_time -ge $TIMEOUT ]; then
+        echo "❌ Timeout waiting for services to become healthy"
+        docker compose logs
+        exit 1
+    fi
+    
+    echo "Waiting for services... ($elapsed_time seconds elapsed)"
+    sleep 10
+done
+
+# Verify Chatbot can connect to Ralph
+echo "Verifying Chatbot connection to Ralph..."
+if ! docker compose logs chatbot | grep -q "Connected to Ralph API"; then
+    echo "⚠️ Chatbot connection to Ralph cannot be verified - check logs for details"
+    docker compose logs chatbot
+else
+    echo "✅ Chatbot successfully connected to Ralph"
+fi
 
 # Finalize deployment process
 echo "🚀 Ralph deployment completed successfully!"
+echo "Access the application at http://${aws_lb_dns}"

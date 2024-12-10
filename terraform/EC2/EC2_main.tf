@@ -176,47 +176,48 @@ resource "aws_security_group" "ralph_bastion_sg" { # in order to use securtiy gr
   }
 }
 
-resource "aws_security_group" "ralph_app_sg" { # in order to use securtiy group resouce, must use first "", the second "" is what terraform reconginzes as the name
+resource "aws_security_group" "ralph_app_sg" {
   name        = "tf_made_sg_private"
-  description = "host gunicorn"
+  description = "host gunicorn and chatbot"
   vpc_id = var.vpc_id
-  # Ingress rules: Define inbound traffic that is allowed. Allow SSH traffic and HTTP traffic on port 8080 from any IP address (use with caution)
-   
-   ingress {
+
+  ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    } 
+  }
 
   ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    }   
+  }
 
- ingress {
+  ingress {
     from_port   = 8000
     to_port     = 8000
     protocol    = "tcp"
-    # security_groups = [var.alb_sg_id]
-    }
+    # Typically from ALB
+    security_groups = [var.alb_sg_id]
+  }
 
   ingress {
     from_port   = 9100
     to_port     = 9100
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    }
+  }
 
-  # ingress {
-  #   from_port   = 8001
-  #   to_port     = 8001
-  #   protocol    = "tcp"
-  #   security_groups = [var.alb_sg_id]  # Only allow access from ALB
-  # }
+  ingress {
+    from_port   = 8001
+    to_port     = 8001
+    protocol    = "tcp"
+    security_groups = [var.alb_sg_id]
+  }
 
+  # Allow self
   ingress {
     from_port = 0
     to_port   = 0
@@ -224,29 +225,20 @@ resource "aws_security_group" "ralph_app_sg" { # in order to use securtiy group 
     self      = true
   }
 
-    #   ingress {
-    # from_port   = 5432
-    # to_port     = 5432
-    # protocol    = "tcp"
-    # cidr_blocks = ["0.0.0.0/0"]
-    # }
-
-
-    egress {
+  egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
- # Tags for the security group
   tags = {
-    "Name"      : "App_SG"                          # Name tag for the security group
-    "Terraform" : "true"                                # Custom tag to indicate this SG was created with Terraform
-    }
+    "Name"      = "App_SG"
+    "Terraform" = "true"
+  }
 }
 
-  resource "aws_security_group_rule" "backend_to_rds_ingress" {
+resource "aws_security_group_rule" "backend_to_rds_ingress" {
   type                     = "ingress"
   from_port                = 3306
   to_port                  = 3306
@@ -260,9 +252,8 @@ resource "aws_security_group_rule" "allow_alb_to_app" {
   from_port         = var.app_port
   to_port           = var.app_port
   protocol          = "tcp"
-  security_group_id = aws_security_group.ralph_app_sg.id  
-
-  source_security_group_id = var.alb_sg_id  
+  security_group_id = aws_security_group.ralph_app_sg.id
+  source_security_group_id = var.alb_sg_id
 }
 
 resource "aws_security_group_rule" "redis_access" {

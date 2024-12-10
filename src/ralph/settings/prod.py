@@ -9,8 +9,6 @@ STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesSto
 
 REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] = (
     'rest_framework.authentication.TokenAuthentication',
-    # session authentication enabled for API requests from UI (ex. in
-    # visualisation)
     'rest_framework.authentication.SessionAuthentication',
 )
 
@@ -52,7 +50,7 @@ if os.environ.get('USE_REDIS_CACHE'):
         },
     }
     if REDIS_SENTINEL_ENABLED:
-        CACHES['default']['BACKEND'] = 'ralph.lib.cache.DjangoConnectionPoolCache'  # noqa
+        CACHES['default']['BACKEND'] = 'ralph.lib.cache.DjangoConnectionPoolCache'
     else:
         CACHES['default']['BACKEND'] = 'redis_cache.RedisCache'
         CACHES['default']['LOCATION'] = json.loads(

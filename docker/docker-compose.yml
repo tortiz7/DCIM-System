@@ -2,7 +2,7 @@ services:
   web:
     build:
       context: /opt/ralph/source
-      dockerfile: prod-new.Dockerfile
+      dockerfile: docker/prod-new.Dockerfile
     restart: always
     expose:
       - "8000"
@@ -57,7 +57,7 @@ services:
   nginx:
     build:
       context: /opt/ralph/source
-      dockerfile: nginx.Dockerfile
+      dockerfile: docker/nginx.Dockerfile
     restart: always
     ports:
       - "80:80"

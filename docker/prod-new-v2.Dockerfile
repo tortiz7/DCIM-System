@@ -1,25 +1,20 @@
-# Use Ubuntu 22.04 (Jammy) as base
-FROM ubuntu:22.04
+FROM ubuntu:jammy
 
-# Prevent interactive prompts during build
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Set Ralph configuration paths
+# Ralph configuration and paths
 ARG RALPH_LOCAL_DIR="/var/local/ralph"
+ARG RALPH_VERSION=""
 ENV PATH=/opt/ralph/ralph-core/bin/:$PATH \
     RALPH_CONF_DIR="/etc/ralph" \
     RALPH_LOCAL_DIR="$RALPH_LOCAL_DIR" \
     RALPH_IMAGE_TMP_DIR="/tmp" \
-    # Set locale environment variables
     LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
-    LC_ALL=en_US.UTF-8
+    LC_ALL=en_US.UTF-8 \
+    PYTHONUNBUFFERED=1
 
-# Add metadata
-LABEL maintainer="Your Organization <your.email@example.com>" \
-      description="Ralph DCIM with AI-powered assistant"
-
-# Install system dependencies including Pillow requirements
+# Install system dependencies - Updated for Ubuntu 22.04
 RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-transport-https \
     ca-certificates \
@@ -41,7 +36,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libmariadb-dev-compat \
     libmariadb-dev \
     pkg-config \
-    # Pillow dependencies
     libjpeg-dev \
     libpng-dev \
     libtiff-dev \
@@ -51,12 +45,32 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/* \
     && locale-gen en_US.UTF-8
+    
+# Upgrade pip and install build tools
+RUN python3 -m pip install --no-cache-dir pip setuptools wheel --upgrade
 
-# Set up Python environment
-RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel
+# Install Python dependencies for chatbot integration
+RUN pip3 install --no-cache-dir \
+    channels==3.0.4 \
+    channels-redis==3.3.0 \
+    aioredis==1.3.1 \
+    websockets==10.0 \
+    prometheus-client==0.11.0 \
+    hiredis==2.0.0 \
+    mysqlclient==2.1.1
 
-# Install Python dependencies with specific order
+# Copy application code
+COPY . $RALPH_LOCAL_DIR/
+
+# Set up Ralph scripts and configuration
+RUN mkdir -p /var/log/ralph && \
+    chmod +x $RALPH_LOCAL_DIR/docker/provision/*.sh && \
+    mv $RALPH_LOCAL_DIR/docker/provision/*.sh $RALPH_LOCAL_DIR/ && \
+    mv $RALPH_LOCAL_DIR/docker/provision/createsuperuser.py $RALPH_LOCAL_DIR/
+
 WORKDIR $RALPH_LOCAL_DIR
+
+# Install Ralph dependencies
 RUN pip3 install --no-cache-dir mysqlclient && \
     pip3 install --no-cache-dir 'Django>=2.2,<3.0' && \
     pip3 install --no-cache-dir 'channels==3.0.4' && \
@@ -69,6 +83,7 @@ RUN pip3 install --no-cache-dir mysqlclient && \
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/ || exit 1
 
-# Set entrypoint and default command
-ENTRYPOINT ["/var/local/ralph/docker-entrypoint.sh"]
-CMD ["start"]
+COPY docker/initialize.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/initialize.sh
+
+ENTRYPOINT ["/usr/local/bin/initialize.sh"]
