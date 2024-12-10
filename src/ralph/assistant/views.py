@@ -1,3 +1,4 @@
+import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.conf import settings
@@ -11,10 +12,10 @@ from asgiref.sync import async_to_sync
 class ChatView(APIView):
     def post(self, request):
         message = request.data.get('message')
-        # Forward to chatbot service
+        # Using 'question' if chatbot expects 'question', otherwise use 'message'.
         response = requests.post(
-            f'http://localhost:8001/chat/',
-            json={'message': message}
+            'http://chatbot:8001/chat/',
+            json={'question': message}
         )
         return Response(response.json())
 

@@ -10,31 +10,20 @@ from moneyed import CURRENCIES
 from ralph.settings.hooks import HOOKS_CONFIGURATION  # noqa: F401
 from django.db.models import Count, Sum
 
-
-SILENCED_SYSTEM_CHECKS = ['models.E006', ]  # TODO fix
-
-
 def bool_from_env(var, default: bool=False) -> bool:
-    """Helper for converting env string into boolean.
-    Returns bool True for string values: '1' or 'true', False otherwise.
-    """
     def str_to_bool(s: str) -> bool:
         return s.lower() in ('1', 'true')
-
     os_var = os.environ.get(var)
     if os_var is None:
         return default
     else:
         return str_to_bool(os_var)
 
-
 def get_sentinels(sentinels_string):
-    """ Helper for converting sentinel hosts string into list of tuples. """
     if sentinels_string:
         sentinels = sentinels_string.split(';')
         result = [tuple(sentinel.split(':')) for sentinel in sentinels]
         return result
-
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -44,12 +33,15 @@ LOG_FILEPATH = os.environ.get('LOG_FILEPATH', '/tmp/ralph.log')
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['*']
+# Define ALLOWED_HOSTS from environment and append ALB_DOMAIN if provided
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALB_DOMAIN = os.environ.get('ALB_DOMAIN', '')
+if ALB_DOMAIN and ALB_DOMAIN not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(ALB_DOMAIN)
 
 # Only for deployment
 RALPH_INSTANCE = os.environ.get('RALPH_INSTANCE', 'http://127.0.0.1:8000')
 
-# Add Ralph API URL and Token for chatbot integration
 RALPH_API_URL = os.environ.get('RALPH_API_URL', 'http://127.0.0.1:8000/api')
 RALPH_API_TOKEN = os.environ.get('RALPH_API_TOKEN', '')
 
@@ -239,6 +231,7 @@ LDAP_SERVER_OBJECT_USER_CLASS = 'user'
 
 ADMIN_SITE_HEADER = 'Ralph 3'
 ADMIN_SITE_TITLE = 'Ralph 3'
+
 
 LOGGING = {
     'version': 1,

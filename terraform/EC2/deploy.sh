@@ -110,6 +110,7 @@ REDIS_PORT=${redis_port}
 ALLOWED_HOSTS=${aws_lb_dns},localhost,127.0.0.1
 CHATBOT_ENABLED=true
 CHATBOT_URL=http://chatbot:8001
+EXPORT ALB_DOMAIN=${aws_lb_dns}
 EOF
 
 # Verify the environment file

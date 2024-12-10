@@ -1,8 +1,6 @@
 variable "alb_name"{
 }
 
-
-
  variable "app_count"{
 
  }

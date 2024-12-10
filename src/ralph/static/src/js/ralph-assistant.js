@@ -33,18 +33,15 @@ class RalphAssistant {
     }
 
     async loadMetrics() {
-        try {
-            const response = await fetch('/api/assistant/metrics/');
-            const data = await response.json();
-            this.updateMetrics(data);
-        } catch (error) {
-            console.error('Error loading metrics:', error);
-        }
+        // Adjust the URL to match how you mounted assistant's urls. If /assistant/ is correct, use it:
+        const response = await fetch('/assistant/metrics/');
+        const data = await response.json();
+        this.updateMetrics(data);
     }
 
     updateMetrics(metrics) {
         document.getElementById('asset-count').textContent = metrics.assets.total;
-        document.getElementById('asset-status').textContent = 
+        document.getElementById('asset-status').textContent =
             `In Use: ${metrics.status.in_use} | Free: ${metrics.status.free}`;
     }
 
@@ -56,36 +53,27 @@ class RalphAssistant {
         this.appendMessage('user', message);
         input.value = '';
 
-        try {
-            const response = await fetch('/api/assistant/chat/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ message })
-            });
-            
-            const data = await response.json();
-            this.appendMessage('assistant', data.response);
-        } catch (error) {
-            console.error('Error sending message:', error);
-            this.appendMessage('assistant', 'Sorry, I encountered an error. Please try again.');
-        }
+        const response = await fetch('/assistant/chat/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message })
+        });
+        
+        const data = await response.json();
+        this.appendMessage('assistant', data.response);
     }
 
     appendMessage(sender, text) {
         const messages = document.getElementById('chat-messages');
         const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${sender} mb-4 ${
-            sender === 'user' ? 'text-right' : 'text-left'
-        }`;
+        messageDiv.className = `message ${sender} mb-4 ${sender === 'user' ? 'text-right' : 'text-left'}`;
         
         const bubble = document.createElement('div');
-        bubble.className = `inline-block p-3 rounded-lg ${
-            sender === 'user' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-200 text-gray-900'
-        }`;
+        bubble.className = `inline-block p-3 rounded-lg ${sender === 'user' 
+            ? 'bg-blue-600 text-white' 
+            : 'bg-gray-200 text-gray-900'}`;
         bubble.textContent = text;
         
         messageDiv.appendChild(bubble);

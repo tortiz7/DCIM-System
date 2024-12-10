@@ -26,7 +26,7 @@ services:
       start_period: 40s
 
   chatbot:
-    image: tortiz7/ralph_chatbot_v2
+    image: tortiz7/ralph-chatbot-final
     runtime: nvidia
     restart: always
     healthcheck:
