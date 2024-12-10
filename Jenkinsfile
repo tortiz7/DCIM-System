@@ -18,7 +18,7 @@ pipeline {
                 checkout scm
             }
         }
-
+        // TODO: Remove this comment. It's a test.
         stage('Deploy Infrastructure') {
             steps {
                 script {
