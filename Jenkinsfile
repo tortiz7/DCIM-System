@@ -18,7 +18,7 @@ pipeline {
                 checkout scm
             }
         }
-        // TODO: Remove this comment. It's a test.
+
         stage('Deploy Infrastructure') {
             steps {
                 script {
@@ -64,8 +64,8 @@ pipeline {
                                         set -x
                                         echo "Verifying setup on ${ip} through bastion ${bastionIp}..."
                                         ssh ${sshOptions} ubuntu@${ip} '
-                                            test -f /home/ubuntu/.setup_complete && 
-                                            systemctl is-active --quiet docker && 
+                                            test -f /home/ubuntu/.setup_complete &&
+                                            systemctl is-active --quiet docker &&
                                             systemctl is-active --quiet node_exporter
                                         '
                                         echo "Verification completed successfully"
@@ -148,10 +148,7 @@ print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_sup
                                         docker compose exec -T web ralphctl sitetree_resync_apps
 
                                         # Adjust permissions for /etc/ralph/conf.d/settings.conf
-                                        docker compose exec -T -u root web bash -c "mkdir -p /etc/ralph/conf.d && touch /etc/ralph/conf.d/settings.conf && chown root:root /etc/ralph/conf.d/settings.conf && chmod 666 /etc/ralph/conf.d/settings.conf"
-                                        docker compose exec -T -u root web bash -c "echo \\"LOGIN_REDIRECT_URL = \\"/\\"\\" >> /etc/ralph/conf.d/settings.conf"
-                                        docker compose exec -T -u root web bash -c "echo \\"ALLOWED_HOSTS = [\\"*\\"]\\" >> /etc/ralph/conf.d/settings.conf"
-                                        docker compose exec -T -u root web bash -c "chmod 644 /etc/ralph/conf.d/settings.conf"
+                                        docker compose exec -T -u root web bash -c "mkdir -p /etc/ralph/conf.d && touch /etc/ralph/conf.d/settings.conf && chown root:root /etc/ralph/conf.d/settings.conf && chmod 644 /etc/ralph/conf.d/settings.conf"
                                     '
                                 """
                                 echo "🌟 Ralph is now configured and ready on ${ip}!"
