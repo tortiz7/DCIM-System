@@ -210,12 +210,12 @@ resource "aws_security_group" "ralph_app_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  ingress {
-    from_port   = 8001
-    to_port     = 8001
-    protocol    = "tcp"
-    security_groups = [var.alb_sg_id]
-  }
+  # ingress {
+  #   from_port   = 8001
+  #   to_port     = 8001
+  #   protocol    = "tcp"
+  #   security_groups = [var.alb_sg_id]
+  # }
 
   # Allow self
   ingress {
@@ -266,14 +266,13 @@ resource "aws_security_group_rule" "redis_access" {
 }
 
 resource "aws_security_group_rule" "chatbot_access" {
-  type              = "ingress"
-  from_port         = 8001
-  to_port           = 8001
-  protocol          = "tcp"
-  security_group_id = aws_security_group.ralph_app_sg.id
+  type                     = "ingress"
+  from_port                = 8001
+  to_port                  = 8001
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.ralph_app_sg.id
   source_security_group_id = var.alb_sg_id
 }
-
 
 
 

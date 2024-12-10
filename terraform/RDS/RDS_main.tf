@@ -94,6 +94,7 @@ resource "aws_elasticache_replication_group" "redis" {
   preferred_cache_cluster_azs= ["us-east-1a", "us-east-1b"]
   engine                     = "redis"
   engine_version             = "6.x"
+  node_type                  = "cache.t3.medium"
   num_cache_clusters         = 2
   automatic_failover_enabled = true
   multi_az_enabled           = true
@@ -106,22 +107,8 @@ resource "aws_elasticache_replication_group" "redis" {
   }
 }
 
-output "rds_endpoint" {
-  value       = aws_db_instance.mysql_db.address
-  description = "RDS endpoint"
-}
-
-output "rds_sg_id" {
-  value       = aws_security_group.rds_sg.id
-  description = "RDS SG ID"
-}
-
 output "redis_primary_endpoint" {
   description = "Primary endpoint of the Redis Replication Group"
   value       = aws_elasticache_replication_group.redis.primary_endpoint_address
 }
 
-output "redis_sg_id" {
-  value       = aws_security_group.redis_sg.id
-  description = "Redis SG ID"
-}

@@ -107,7 +107,7 @@ DATABASE_PASSWORD=${db_password}
 DATABASE_HOST=${db_endpoint}
 REDIS_HOST=${redis_endpoint}
 REDIS_PORT=${redis_port}
-ALLOWED_HOSTS=${aws_lb_dns},localhost,127.0.0.1
+ALLOWED_HOSTS="${aws_lb_dns},localhost,127.0.0.1"
 CHATBOT_ENABLED=true
 CHATBOT_URL=http://chatbot:8001
 EXPORT ALB_DOMAIN=${aws_lb_dns}
@@ -199,10 +199,11 @@ DATABASE_PASSWORD=${db_password}
 DATABASE_HOST=${db_endpoint}
 REDIS_HOST=${redis_endpoint}
 REDIS_PORT=${redis_port}
-ALLOWED_HOSTS=${aws_lb_dns},localhost,127.0.0.1
+ALLOWED_HOSTS="${aws_lb_dns},localhost,127.0.0.1"
 CHATBOT_ENABLED=true
 CHATBOT_URL=http://chatbot:8001
 RALPH_API_TOKEN=${RALPH_API_TOKEN}
+ALB_DOMAIN=${aws_lb_dns}
 EOF
 
 # Restart all services to pick up new configuration
