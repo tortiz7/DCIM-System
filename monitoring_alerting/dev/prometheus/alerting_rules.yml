@@ -13,7 +13,7 @@ groups:
   - name: anomaly_alerts
     rules:
       - alert: HighAnomalyDetected
-        expr: anomaly_score > 0.8
+        expr: anomaly_score > 0.5
         for: 5m
         labels:
           severity: warning
@@ -22,7 +22,7 @@ groups:
           description: "The ML-based anomaly detection indicates unusual behavior."
       
       - alert: HighCPUUsageRalph
-        expr: rate(container_cpu_usage_seconds_total{container_name="ralph"}[5m]) > 0.8
+        expr: rate(container_cpu_usage_seconds_total{container_name="ralph"}[5m]) > 0.5
         for: 5m
         labels:
           severity: warning
