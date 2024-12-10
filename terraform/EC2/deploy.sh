@@ -111,7 +111,8 @@ check_prerequisites() {
 
 check_prerequisites
 
-cat > /opt/ralph/docker/.env << EOF
+# Write .env file to correct location
+cat > /opt/ralph/source/docker/.env << EOF
 DATABASE_NAME=${db_name}
 DATABASE_USER=${db_user}
 DATABASE_PASSWORD=${db_password}
@@ -124,35 +125,35 @@ CHATBOT_ENABLED=true
 CHATBOT_URL=http://chatbot:8001
 EOF
 
+# Verify the environment file exists and has content
 echo "Verifying environment variables:"
 echo "Current directory: $(pwd)"
 echo "Contents of .env file:"
-cat .env
-echo "Running docker-compose with environment..."
+cat /opt/ralph/source/docker/.env
 
+# Verify connection to external services
 echo "Verifying RDS connection..."
-until nc -z -v -w5 ${db_endpoint%:*} ${db_endpoint#*:}; do
-    echo "⏳ Waiting for RDS connection..."
+DB_HOST=$(echo "${db_endpoint}" | cut -d':' -f1)
+DB_PORT=$(echo "${db_endpoint}" | cut -d':' -f2)
+until nc -z -v -w5 $DB_HOST $DB_PORT; do
+    echo "Waiting for RDS connection..."
     sleep 5
 done
 
 echo "Verifying ElastiCache connection..."
 until nc -z -v -w5 ${redis_endpoint} ${redis_port}; do
-    echo "⏳ Waiting for ElastiCache connection..."
+    echo "Waiting for ElastiCache connection..."
     sleep 5
 done
 
-# Start services and build containers
+# Change to correct directory and start services
 cd /opt/ralph/source/docker
 echo "Building and starting containers..."
-docker compose --env-file /opt/ralph/docker/.env up --build -d db redis web nginx
+docker compose up --build -d
 
-# Wait for database
-echo "Waiting for database to be ready..."
-until docker compose exec -T db mysqladmin -u${db_user} -p${db_password} ping --silent; do
-   echo "⏳ Waiting for DB to be ready..."
-   sleep 5
-done
+# Add debug output to verify environment variables are being read
+echo "Docker compose environment verification:"
+docker compose config
 
 # Initialize database
 echo "Initializing database..."

@@ -1,7 +1,7 @@
 services:
   web:
     build:
-      context: .
+      context: /opt/ralph/source
       dockerfile: prod-new.Dockerfile
     restart: always
     expose:
@@ -56,7 +56,7 @@ services:
 
   nginx:
     build:
-      context: .
+      context: /opt/ralph/source
       dockerfile: nginx.Dockerfile
     restart: always
     ports:
@@ -64,6 +64,9 @@ services:
     volumes:
       - ralph_media:/opt/media
       - ralph_static:/opt/static
+    environment:
+      DJANGO_DEBUG: "false"
+      DJANGO_SETTINGS_MODULE: "ralph.settings.prod"
     depends_on:
       web:
         condition: service_healthy

@@ -1,0 +1,1230 @@
+.
+├── ./AUTHORS
+├── ./CONTRIBUTING.md
+├── ./Jenkinsfile
+├── ./LICENSE
+├── ./MANIFEST.in
+├── ./Makefile
+├── ./Makefile.docker
+├── ./NOTICE
+├── ./README.md
+├── ./bower.json
+├── ./contrib
+│   ├── ./contrib/common
+│   │   ├── ./contrib/common/apt
+│   │   │   └── ./contrib/common/apt/ralph.list
+│   │   ├── ./contrib/common/etc
+│   │   │   └── ./contrib/common/etc/ralph
+│   │   │       ├── ./contrib/common/etc/ralph/conf.d
+│   │   │       │   ├── ./contrib/common/etc/ralph/conf.d/cache.conf
+│   │   │       │   ├── ./contrib/common/etc/ralph/conf.d/gunicorn.conf
+│   │   │       │   └── ./contrib/common/etc/ralph/conf.d/redis.conf
+│   │   │       └── ./contrib/common/etc/ralph/ralph.conf
+│   │   ├── ./contrib/common/gunicorn
+│   │   │   └── ./contrib/common/gunicorn/gunicorn.ini
+│   │   ├── ./contrib/common/systemd
+│   │   │   └── ./contrib/common/systemd/ralph.service
+│   │   └── ./contrib/common/usr
+│   │       └── ./contrib/common/usr/bin
+│   │           └── ./contrib/common/usr/bin/ralphctl
+│   ├── ./contrib/dhcp_agent
+│   │   ├── ./contrib/dhcp_agent/dhcp_agent.py
+│   │   ├── ./contrib/dhcp_agent/setup.py
+│   │   ├── ./contrib/dhcp_agent/test.py
+│   │   └── ./contrib/dhcp_agent/tox.ini
+│   ├── ./contrib/docker
+│   │   ├── ./contrib/docker/ralph-demo.conf.nginx
+│   │   ├── ./contrib/docker/ralph-local-dev.conf.nginx
+│   │   ├── ./contrib/docker/ralph.conf.nginx
+│   │   └── ./contrib/docker/ralph.conf.nginx.OLD
+│   ├── ./contrib/logo.svg
+│   └── ./contrib/ralph.conf.nginx
+├── ./debian
+│   ├── ./debian/changelog
+│   ├── ./debian/compat
+│   ├── ./debian/control
+│   ├── ./debian/ralph-core.config
+│   ├── ./debian/ralph-core.dirs
+│   ├── ./debian/ralph-core.install
+│   ├── ./debian/ralph-core.links
+│   ├── ./debian/ralph-core.postinst
+│   ├── ./debian/ralph-core.preinst
+│   ├── ./debian/ralph-core.prerm
+│   ├── ./debian/ralph-core.templates
+│   ├── ./debian/rules
+│   └── ./debian/source
+│       └── ./debian/source/options
+├── ./docker
+│   ├── ./docker/Dockerfile-deb
+│   ├── ./docker/Dockerfile-local-dev
+│   ├── ./docker/Dockerfile-local-dev-static
+│   ├── ./docker/Dockerfile-local-interpreter
+│   ├── ./docker/Dockerfile-prod
+│   ├── ./docker/Dockerfile-static
+│   ├── ./docker/docker-compose-demo.yml
+│   ├── ./docker/docker-compose-dev.yml
+│   ├── ./docker/docker-compose-local-dev.yml
+│   ├── ./docker/docker-compose.yml
+│   ├── ./docker/hooks
+│   │   ├── ./docker/hooks/build
+│   │   └── ./docker/hooks/push
+│   ├── ./docker/nginx.Dockerfile
+│   ├── ./docker/prod-new.Dockerfile
+│   └── ./docker/provision
+│       ├── ./docker/provision/createsuperuser.py
+│       ├── ./docker/provision/docker-entrypoint.sh
+│       ├── ./docker/provision/docker-local-dev-entrypoint.sh
+│       ├── ./docker/provision/init-local-dev-ralph.sh
+│       ├── ./docker/provision/init-ralph.sh
+│       ├── ./docker/provision/install_ralph.sh
+│       ├── ./docker/provision/rebuild-local-dev-statics.sh
+│       ├── ./docker/provision/start-ralph.sh
+│       └── ./docker/provision/wait-for-it.sh
+├── ./docs
+│   ├── ./docs/CONTRIBUTING.md -> ../CONTRIBUTING.md
+│   ├── ./docs/custom.css
+│   ├── ./docs/development
+│   │   ├── ./docs/development/addons.md
+│   │   ├── ./docs/development/admin.md
+│   │   ├── ./docs/development/api.md
+│   │   ├── ./docs/development/custom_fields.md
+│   │   ├── ./docs/development/development_environment.md
+│   │   ├── ./docs/development/docker_development_environment.md
+│   │   ├── ./docs/development/faq.md
+│   │   ├── ./docs/development/img
+│   │   │   ├── ./docs/development/img/add_transitions.png
+│   │   │   ├── ./docs/development/img/extra_params.png
+│   │   │   ├── ./docs/development/img/setup_docker_path.png
+│   │   │   ├── ./docs/development/img/setup_dockerfile.png
+│   │   │   └── ./docs/development/img/setup_done.png
+│   │   ├── ./docs/development/maintainers_devtools.md
+│   │   ├── ./docs/development/overview.md
+│   │   ├── ./docs/development/packaging.md
+│   │   └── ./docs/development/transitions.md
+│   ├── ./docs/img
+│   │   ├── ./docs/img/dcview.png
+│   │   ├── ./docs/img/ralph-dc-inspecting.mov
+│   │   ├── ./docs/img/welcome-screen-1.png
+│   │   ├── ./docs/img/welcome-screen-2.png
+│   │   └── ./docs/img/welcome-screen-3.png
+│   ├── ./docs/index.md
+│   ├── ./docs/installation
+│   │   ├── ./docs/installation/configuration.md
+│   │   ├── ./docs/installation/data_migration.md
+│   │   └── ./docs/installation/installation.md
+│   └── ./docs/user
+│       ├── ./docs/user/api.md
+│       ├── ./docs/user/cloudsync.md
+│       ├── ./docs/user/custom_fields.md
+│       ├── ./docs/user/dashboards.md
+│       ├── ./docs/user/dcim.md
+│       ├── ./docs/user/deployment.md
+│       ├── ./docs/user/domains.md
+│       ├── ./docs/user/guide.md
+│       ├── ./docs/user/img
+│       │   ├── ./docs/user/img/custom-field-add.png
+│       │   ├── ./docs/user/img/custom-field-autocomplete.png
+│       │   ├── ./docs/user/img/custom-field-select-value.png
+│       │   ├── ./docs/user/img/dashboard-create-dasboard.png
+│       │   ├── ./docs/user/img/dashboard-create-graph-dc.png
+│       │   ├── ./docs/user/img/dashboard-final-dc.png
+│       │   ├── ./docs/user/img/dashboard-link.png
+│       │   ├── ./docs/user/img/quickstart-add-asset.png
+│       │   ├── ./docs/user/img/quickstart-add-license.png
+│       │   ├── ./docs/user/img/quickstart-add-service.png
+│       │   ├── ./docs/user/img/quickstart-assign-license.png
+│       │   ├── ./docs/user/img/quickstart-dcview.png
+│       │   ├── ./docs/user/img/quickstart-licences-reports.png
+│       │   ├── ./docs/user/img/quickstart-model.png
+│       │   ├── ./docs/user/img/quickstart-multiple-racks.png
+│       │   ├── ./docs/user/img/quickstart-supports.png
+│       │   ├── ./docs/user/img/ralph-add-cloud-provider.png
+│       │   ├── ./docs/user/img/stock-taking.png
+│       │   ├── ./docs/user/img/transition-actions.png
+│       │   ├── ./docs/user/img/transition-example.png
+│       │   ├── ./docs/user/img/transition-form.png
+│       │   ├── ./docs/user/img/transition-list.png
+│       │   ├── ./docs/user/img/transition-models.png
+│       │   └── ./docs/user/img/transition-multiple.png
+│       ├── ./docs/user/quickstart.md
+│       └── ./docs/user/ralph-cli.md
+├── ./get_version.sh
+├── ./gulpfile.js
+├── ./issue_template.md
+├── ./mkdocs.yml
+├── ./mypy.ini
+├── ./package.json
+├── ./ralph_repo.txt
+├── ./requirements
+│   ├── ./requirements/base.txt
+│   ├── ./requirements/code_style.txt
+│   ├── ./requirements/dev.txt
+│   ├── ./requirements/docs.txt
+│   ├── ./requirements/hermes.txt
+│   ├── ./requirements/openstack.txt
+│   ├── ./requirements/prod.txt
+│   ├── ./requirements/prod_ldap.txt
+│   └── ./requirements/test.txt
+├── ./requirements.txt
+├── ./scripts
+│   ├── ./scripts/build_deb_package.sh
+│   ├── ./scripts/check_missing_migrations.sh
+│   ├── ./scripts/flake.txt
+│   ├── ./scripts/generate_deb_changelog.sh
+│   ├── ./scripts/models_relations.png
+│   ├── ./scripts/ralph_bash_completion.sh
+│   ├── ./scripts/reset.sh
+│   ├── ./scripts/reset_db.sh
+│   ├── ./scripts/test_settings.sh
+│   ├── ./scripts/travis_deploy_bintray.sh
+│   ├── ./scripts/travis_deploy_docker.sh
+│   └── ./scripts/users.json
+├── ./setup.cfg
+├── ./setup.py
+├── ./src
+│   └── ./src/ralph
+│       ├── ./src/ralph/__init__.py
+│       ├── ./src/ralph/__main__.py
+│       ├── ./src/ralph/access_cards
+│       │   ├── ./src/ralph/access_cards/__init__.py
+│       │   ├── ./src/ralph/access_cards/admin.py
+│       │   ├── ./src/ralph/access_cards/api.py
+│       │   ├── ./src/ralph/access_cards/models.py
+│       │   └── ./src/ralph/access_cards/tests
+│       │       ├── ./src/ralph/access_cards/tests/__init__.py
+│       │       ├── ./src/ralph/access_cards/tests/factories.py
+│       │       └── ./src/ralph/access_cards/tests/test_api.py
+│       ├── ./src/ralph/accessories
+│       │   ├── ./src/ralph/accessories/__init__.py
+│       │   ├── ./src/ralph/accessories/admin.py
+│       │   ├── ./src/ralph/accessories/models.py
+│       │   └── ./src/ralph/accessories/tests
+│       │       ├── ./src/ralph/accessories/tests/__init__.py
+│       │       └── ./src/ralph/accessories/tests/factories.py
+│       ├── ./src/ralph/accounts
+│       │   ├── ./src/ralph/accounts/__init__.py
+│       │   ├── ./src/ralph/accounts/admin.py
+│       │   ├── ./src/ralph/accounts/api.py
+│       │   ├── ./src/ralph/accounts/api_simple.py
+│       │   ├── ./src/ralph/accounts/apps.py
+│       │   ├── ./src/ralph/accounts/helpers.py
+│       │   ├── ./src/ralph/accounts/ldap.py
+│       │   ├── ./src/ralph/accounts/ldap_helpers.py
+│       │   ├── ./src/ralph/accounts/management
+│       │   │   ├── ./src/ralph/accounts/management/__init__.py
+│       │   │   └── ./src/ralph/accounts/management/commands
+│       │   │       ├── ./src/ralph/accounts/management/commands/__init__.py
+│       │   │       └── ./src/ralph/accounts/management/commands/ldap_sync.py
+│       │   ├── ./src/ralph/accounts/models.py
+│       │   ├── ./src/ralph/accounts/templates
+│       │   │   └── ./src/ralph/accounts/templates/ralphuser
+│       │   │       ├── ./src/ralph/accounts/templates/ralphuser/inventory_tag_confirmation.html
+│       │   │       ├── ./src/ralph/accounts/templates/ralphuser/my_equipment.html
+│       │   │       ├── ./src/ralph/accounts/templates/ralphuser/partials
+│       │   │       │   └── ./src/ralph/accounts/templates/ralphuser/partials/accept_assets.html
+│       │   │       ├── ./src/ralph/accounts/templates/ralphuser/user_additional_info.html
+│       │   │       ├── ./src/ralph/accounts/templates/ralphuser/user_profile.html
+│       │   │       └── ./src/ralph/accounts/templates/ralphuser/user_transition_history.html
+│       │   ├── ./src/ralph/accounts/tests
+│       │   │   ├── ./src/ralph/accounts/tests/__init__.py
+│       │   │   ├── ./src/ralph/accounts/tests/factories.py
+│       │   │   └── ./src/ralph/accounts/tests/tests.py
+│       │   ├── ./src/ralph/accounts/urls.py
+│       │   └── ./src/ralph/accounts/views.py
+│       ├── ./src/ralph/admin
+│       │   ├── ./src/ralph/admin/__init__.py
+│       │   ├── ./src/ralph/admin/apps.py
+│       │   ├── ./src/ralph/admin/autocomplete.py
+│       │   ├── ./src/ralph/admin/autocomplete_urls.py
+│       │   ├── ./src/ralph/admin/decorators.py
+│       │   ├── ./src/ralph/admin/fields.py
+│       │   ├── ./src/ralph/admin/filters.py
+│       │   ├── ./src/ralph/admin/helpers.py
+│       │   ├── ./src/ralph/admin/m2m.py
+│       │   ├── ./src/ralph/admin/mixins.py
+│       │   ├── ./src/ralph/admin/signals.py
+│       │   ├── ./src/ralph/admin/sites.py
+│       │   ├── ./src/ralph/admin/sitetrees.py
+│       │   ├── ./src/ralph/admin/static
+│       │   │   ├── ./src/ralph/admin/static/auto-complete-helpers.js
+│       │   │   ├── ./src/ralph/admin/static/elements
+│       │   │   │   ├── ./src/ralph/admin/static/elements/auto-complete.html
+│       │   │   │   ├── ./src/ralph/admin/static/elements/badge-input.html
+│       │   │   │   ├── ./src/ralph/admin/static/elements/elements.html
+│       │   │   │   ├── ./src/ralph/admin/static/elements/html-echo.html
+│       │   │   │   └── ./src/ralph/admin/static/elements/tool-tip.html
+│       │   │   └── ./src/ralph/admin/static/js
+│       │   │       └── ./src/ralph/admin/static/js/popup_response.js
+│       │   ├── ./src/ralph/admin/templates
+│       │   │   ├── ./src/ralph/admin/templates/admin
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/actions.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/app_index.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/base.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/breadcrumbs_foundation.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/change_form.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/change_list.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/change_list_results.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/date_hierarchy.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/delete_confirmation.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/delete_selected_confirmation.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/edit_inline
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/edit_inline/tabular.html
+│       │   │   │   │   └── ./src/ralph/admin/templates/admin/edit_inline/tabular_m2m.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/extra_views
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/extra_views/base.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/extra_views/base_admin_change.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/extra_views/base_change.html
+│       │   │   │   │   └── ./src/ralph/admin/templates/admin/extra_views/base_list.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/filters
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/filters/_filter_base.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/filters/checkbox_filter.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/filters/choices_filter.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/filters/date_filter.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/filters/number_filter.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/filters/related_filter.html
+│       │   │   │   │   └── ./src/ralph/admin/templates/admin/filters/text_filter.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/import_export
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/import_export/change_list.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/import_export/change_list_import_export.html
+│       │   │   │   │   └── ./src/ralph/admin/templates/admin/import_export/export.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/includes
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/includes/depreciation_rate.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/includes/favicon.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/includes/fieldset.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/includes/javascripts.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/includes/object_delete_summary.html
+│       │   │   │   │   └── ./src/ralph/admin/templates/admin/includes/summary_table.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/index.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/login.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/menu_admin.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/menu_admin_children.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/mptt_change_list.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/mptt_change_list_results.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/multi_add.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/object_history.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/pagination.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/partials
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/partials/filters.html
+│       │   │   │   │   └── ./src/ralph/admin/templates/admin/partials/userlinks.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/popup_response.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/search_form.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/submit_line.html
+│       │   │   │   ├── ./src/ralph/admin/templates/admin/templatetags
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/templatetags/dc_capacity.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/templatetags/download_attachment.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/templatetags/my_services.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/templatetags/objects_summary.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/templatetags/ralph_summary.html
+│       │   │   │   │   ├── ./src/ralph/admin/templates/admin/templatetags/tabs.html
+│       │   │   │   │   └── ./src/ralph/admin/templates/admin/templatetags/transition_history.html
+│       │   │   │   └── ./src/ralph/admin/templates/admin/widgets
+│       │   │   │       ├── ./src/ralph/admin/templates/admin/widgets/autocomplete.html
+│       │   │   │       └── ./src/ralph/admin/templates/admin/widgets/related_widget_wrapper.html
+│       │   │   └── ./src/ralph/admin/templates/reversion
+│       │   │       └── ./src/ralph/admin/templates/reversion/object_history.html
+│       │   ├── ./src/ralph/admin/templatetags
+│       │   │   ├── ./src/ralph/admin/templatetags/__init__.py
+│       │   │   ├── ./src/ralph/admin/templatetags/admin_change_list.py
+│       │   │   ├── ./src/ralph/admin/templatetags/dashboard_tags.py
+│       │   │   └── ./src/ralph/admin/templatetags/ralph_tags.py
+│       │   ├── ./src/ralph/admin/tests
+│       │   │   ├── ./src/ralph/admin/tests/__init__.py
+│       │   │   ├── ./src/ralph/admin/tests/test_m2m.py
+│       │   │   ├── ./src/ralph/admin/tests/test_menu.py
+│       │   │   ├── ./src/ralph/admin/tests/test_templatetags.py
+│       │   │   ├── ./src/ralph/admin/tests/tests_autocomplete.py
+│       │   │   ├── ./src/ralph/admin/tests/tests_fields.py
+│       │   │   ├── ./src/ralph/admin/tests/tests_filters.py
+│       │   │   ├── ./src/ralph/admin/tests/tests_functional.py
+│       │   │   ├── ./src/ralph/admin/tests/tests_helpers.py
+│       │   │   ├── ./src/ralph/admin/tests/tests_multiadd.py
+│       │   │   ├── ./src/ralph/admin/tests/tests_tags.py
+│       │   │   ├── ./src/ralph/admin/tests/tests_views.py
+│       │   │   └── ./src/ralph/admin/tests/tests_widgets.py
+│       │   ├── ./src/ralph/admin/views
+│       │   │   ├── ./src/ralph/admin/views/__init__.py
+│       │   │   ├── ./src/ralph/admin/views/extra.py
+│       │   │   ├── ./src/ralph/admin/views/main.py
+│       │   │   └── ./src/ralph/admin/views/multiadd.py
+│       │   └── ./src/ralph/admin/widgets.py
+│       ├── ./src/ralph/api
+│       │   ├── ./src/ralph/api/__init__.py
+│       │   ├── ./src/ralph/api/fields.py
+│       │   ├── ./src/ralph/api/filters.py
+│       │   ├── ./src/ralph/api/metrics.py
+│       │   ├── ./src/ralph/api/permissions.py
+│       │   ├── ./src/ralph/api/relations.py
+│       │   ├── ./src/ralph/api/routers.py
+│       │   ├── ./src/ralph/api/serializers.py
+│       │   ├── ./src/ralph/api/tests
+│       │   │   ├── ./src/ralph/api/tests/__init__.py
+│       │   │   ├── ./src/ralph/api/tests/_base.py
+│       │   │   ├── ./src/ralph/api/tests/api.py
+│       │   │   ├── ./src/ralph/api/tests/test_fields.py
+│       │   │   ├── ./src/ralph/api/tests/test_filters.py
+│       │   │   ├── ./src/ralph/api/tests/test_rendering.py
+│       │   │   ├── ./src/ralph/api/tests/test_routers.py
+│       │   │   ├── ./src/ralph/api/tests/test_serializers.py
+│       │   │   └── ./src/ralph/api/tests/test_viewsets.py
+│       │   ├── ./src/ralph/api/utils.py
+│       │   └── ./src/ralph/api/viewsets.py
+│       ├── ./src/ralph/apps.py
+│       ├── ./src/ralph/assets
+│       │   ├── ./src/ralph/assets/__init__.py
+│       │   ├── ./src/ralph/assets/_migration_helpers.py
+│       │   ├── ./src/ralph/assets/admin.py
+│       │   ├── ./src/ralph/assets/api
+│       │   │   ├── ./src/ralph/assets/api/__init__.py
+│       │   │   ├── ./src/ralph/assets/api/filters.py
+│       │   │   ├── ./src/ralph/assets/api/metrics.py
+│       │   │   ├── ./src/ralph/assets/api/routers.py
+│       │   │   ├── ./src/ralph/assets/api/serializers.py
+│       │   │   ├── ./src/ralph/assets/api/serializers_dchosts.py
+│       │   │   └── ./src/ralph/assets/api/views.py
+│       │   ├── ./src/ralph/assets/apps.py
+│       │   ├── ./src/ralph/assets/country_utils.py
+│       │   ├── ./src/ralph/assets/filters.py
+│       │   ├── ./src/ralph/assets/invoice_report.py
+│       │   ├── ./src/ralph/assets/models
+│       │   │   ├── ./src/ralph/assets/models/__init__.py
+│       │   │   ├── ./src/ralph/assets/models/assets.py
+│       │   │   ├── ./src/ralph/assets/models/base.py
+│       │   │   ├── ./src/ralph/assets/models/choices.py
+│       │   │   ├── ./src/ralph/assets/models/components.py
+│       │   │   └── ./src/ralph/assets/models/configuration.py
+│       │   ├── ./src/ralph/assets/signals.py
+│       │   ├── ./src/ralph/assets/subscribers.py
+│       │   ├── ./src/ralph/assets/templates
+│       │   │   └── ./src/ralph/assets/templates/service
+│       │   │       └── ./src/ralph/assets/templates/service/service_base_objects.html
+│       │   ├── ./src/ralph/assets/tests
+│       │   │   ├── ./src/ralph/assets/tests/__init__.py
+│       │   │   ├── ./src/ralph/assets/tests/factories.py
+│       │   │   ├── ./src/ralph/assets/tests/test_api.py
+│       │   │   ├── ./src/ralph/assets/tests/test_models.py
+│       │   │   ├── ./src/ralph/assets/tests/test_signals.py
+│       │   │   └── ./src/ralph/assets/tests/test_subscribers.py
+│       │   ├── ./src/ralph/assets/utils.py
+│       │   └── ./src/ralph/assets/views.py
+│       ├── ./src/ralph/assistant
+│       │   ├── ./src/ralph/assistant/urls.py
+│       │   └── ./src/ralph/assistant/views.py
+│       ├── ./src/ralph/attachments
+│       │   ├── ./src/ralph/attachments/__init__.py
+│       │   ├── ./src/ralph/attachments/admin.py
+│       │   ├── ./src/ralph/attachments/forms.py
+│       │   ├── ./src/ralph/attachments/helpers.py
+│       │   ├── ./src/ralph/attachments/models.py
+│       │   ├── ./src/ralph/attachments/templates
+│       │   │   └── ./src/ralph/attachments/templates/attachments
+│       │   │       └── ./src/ralph/attachments/templates/attachments/attachments.html
+│       │   ├── ./src/ralph/attachments/tests
+│       │   │   ├── ./src/ralph/attachments/tests/__init__.py
+│       │   │   └── ./src/ralph/attachments/tests/test_models.py
+│       │   ├── ./src/ralph/attachments/urls.py
+│       │   ├── ./src/ralph/attachments/utils.py
+│       │   └── ./src/ralph/attachments/views.py
+│       ├── ./src/ralph/back_office
+│       │   ├── ./src/ralph/back_office/__init__.py
+│       │   ├── ./src/ralph/back_office/admin.py
+│       │   ├── ./src/ralph/back_office/api.py
+│       │   ├── ./src/ralph/back_office/apps.py
+│       │   ├── ./src/ralph/back_office/helpers.py
+│       │   ├── ./src/ralph/back_office/models.py
+│       │   ├── ./src/ralph/back_office/templates
+│       │   │   ├── ./src/ralph/back_office/templates/backofficeasset
+│       │   │   │   ├── ./src/ralph/back_office/templates/backofficeasset/add_form.html
+│       │   │   │   ├── ./src/ralph/back_office/templates/backofficeasset/components.html
+│       │   │   │   └── ./src/ralph/back_office/templates/backofficeasset/software.html
+│       │   │   └── ./src/ralph/back_office/templates/warehouse
+│       │   │       ├── ./src/ralph/back_office/templates/warehouse/change_name.html
+│       │   │       └── ./src/ralph/back_office/templates/warehouse/detail_extra.html
+│       │   ├── ./src/ralph/back_office/tests
+│       │   │   ├── ./src/ralph/back_office/tests/__init__.py
+│       │   │   ├── ./src/ralph/back_office/tests/factories.py
+│       │   │   ├── ./src/ralph/back_office/tests/test_api.py
+│       │   │   ├── ./src/ralph/back_office/tests/test_helpers.py
+│       │   │   └── ./src/ralph/back_office/tests/test_models.py
+│       │   └── ./src/ralph/back_office/views.py
+│       ├── ./src/ralph/configuration_management
+│       │   ├── ./src/ralph/configuration_management/__init__.py
+│       │   ├── ./src/ralph/configuration_management/api.py
+│       │   ├── ./src/ralph/configuration_management/models.py
+│       │   ├── ./src/ralph/configuration_management/templates
+│       │   │   └── ./src/ralph/configuration_management/templates/configuration_management
+│       │   │       └── ./src/ralph/configuration_management/templates/configuration_management/scminfo
+│       │   │           └── ./src/ralph/configuration_management/templates/configuration_management/scminfo/scm_info.html
+│       │   ├── ./src/ralph/configuration_management/tests
+│       │   │   ├── ./src/ralph/configuration_management/tests/__init__.py
+│       │   │   ├── ./src/ralph/configuration_management/tests/factories.py
+│       │   │   └── ./src/ralph/configuration_management/tests/test_api.py
+│       │   └── ./src/ralph/configuration_management/views.py
+│       ├── ./src/ralph/dashboards
+│       │   ├── ./src/ralph/dashboards/__init__.py
+│       │   ├── ./src/ralph/dashboards/admin.py
+│       │   ├── ./src/ralph/dashboards/admin_filters.py
+│       │   ├── ./src/ralph/dashboards/api
+│       │   │   ├── ./src/ralph/dashboards/api/__init__.py
+│       │   │   ├── ./src/ralph/dashboards/api/routers.py
+│       │   │   ├── ./src/ralph/dashboards/api/serializers.py
+│       │   │   └── ./src/ralph/dashboards/api/views.py
+│       │   ├── ./src/ralph/dashboards/filter_parser.py
+│       │   ├── ./src/ralph/dashboards/helpers.py
+│       │   ├── ./src/ralph/dashboards/management
+│       │   │   ├── ./src/ralph/dashboards/management/__init__.py
+│       │   │   └── ./src/ralph/dashboards/management/commands
+│       │   │       ├── ./src/ralph/dashboards/management/commands/__init__.py
+│       │   │       └── ./src/ralph/dashboards/management/commands/push_graphs_to_statsd.py
+│       │   ├── ./src/ralph/dashboards/models.py
+│       │   ├── ./src/ralph/dashboards/renderers.py
+│       │   ├── ./src/ralph/dashboards/templates
+│       │   │   ├── ./src/ralph/dashboards/templates/admin
+│       │   │   │   └── ./src/ralph/dashboards/templates/admin/filters
+│       │   │   │       └── ./src/ralph/dashboards/templates/admin/filters/by-graph.html
+│       │   │   └── ./src/ralph/dashboards/templates/dashboard
+│       │   │       ├── ./src/ralph/dashboards/templates/dashboard/dashboard.html
+│       │   │       └── ./src/ralph/dashboards/templates/dashboard/templatetags
+│       │   │           └── ./src/ralph/dashboards/templates/dashboard/templatetags/chartist_render_graph.html
+│       │   ├── ./src/ralph/dashboards/templatetags
+│       │   │   ├── ./src/ralph/dashboards/templatetags/__init__.py
+│       │   │   └── ./src/ralph/dashboards/templatetags/graph_tags.py
+│       │   ├── ./src/ralph/dashboards/tests
+│       │   │   ├── ./src/ralph/dashboards/tests/__init__.py
+│       │   │   ├── ./src/ralph/dashboards/tests/factories.py
+│       │   │   ├── ./src/ralph/dashboards/tests/test_api.py
+│       │   │   ├── ./src/ralph/dashboards/tests/test_models.py
+│       │   │   ├── ./src/ralph/dashboards/tests/test_parser.py
+│       │   │   └── ./src/ralph/dashboards/tests/test_renderer.py
+│       │   ├── ./src/ralph/dashboards/urls.py
+│       │   └── ./src/ralph/dashboards/views.py
+│       ├── ./src/ralph/data_center
+│       │   ├── ./src/ralph/data_center/__init__.py
+│       │   ├── ./src/ralph/data_center/admin.py
+│       │   ├── ./src/ralph/data_center/api
+│       │   │   ├── ./src/ralph/data_center/api/__init__.py
+│       │   │   ├── ./src/ralph/data_center/api/routers.py
+│       │   │   ├── ./src/ralph/data_center/api/serializers.py
+│       │   │   └── ./src/ralph/data_center/api/views.py
+│       │   ├── ./src/ralph/data_center/apps.py
+│       │   ├── ./src/ralph/data_center/forms.py
+│       │   ├── ./src/ralph/data_center/models
+│       │   │   ├── ./src/ralph/data_center/models/__init__.py
+│       │   │   ├── ./src/ralph/data_center/models/choices.py
+│       │   │   ├── ./src/ralph/data_center/models/components.py
+│       │   │   ├── ./src/ralph/data_center/models/hosts.py
+│       │   │   ├── ./src/ralph/data_center/models/mixins.py
+│       │   │   ├── ./src/ralph/data_center/models/physical.py
+│       │   │   └── ./src/ralph/data_center/models/virtual.py
+│       │   ├── ./src/ralph/data_center/publishers.py
+│       │   ├── ./src/ralph/data_center/subscribers.py
+│       │   ├── ./src/ralph/data_center/templates
+│       │   │   ├── ./src/ralph/data_center/templates/admin
+│       │   │   │   └── ./src/ralph/data_center/templates/admin/data_center
+│       │   │   │       ├── ./src/ralph/data_center/templates/admin/data_center/dchost
+│       │   │   │       │   └── ./src/ralph/data_center/templates/admin/data_center/dchost/change_list.html
+│       │   │   │       └── ./src/ralph/data_center/templates/admin/data_center/network
+│       │   │   │           └── ./src/ralph/data_center/templates/admin/data_center/network/change_form.html
+│       │   │   └── ./src/ralph/data_center/templates/data_center
+│       │   │       └── ./src/ralph/data_center/templates/data_center/datacenterasset
+│       │   │           ├── ./src/ralph/data_center/templates/data_center/datacenterasset/add_form.html
+│       │   │           ├── ./src/ralph/data_center/templates/data_center/datacenterasset/components.html
+│       │   │           ├── ./src/ralph/data_center/templates/data_center/datacenterasset/relations.html
+│       │   │           └── ./src/ralph/data_center/templates/data_center/datacenterasset/software.html
+│       │   ├── ./src/ralph/data_center/tests
+│       │   │   ├── ./src/ralph/data_center/tests/__init__.py
+│       │   │   ├── ./src/ralph/data_center/tests/factories.py
+│       │   │   ├── ./src/ralph/data_center/tests/test_admin.py
+│       │   │   ├── ./src/ralph/data_center/tests/test_api.py
+│       │   │   ├── ./src/ralph/data_center/tests/test_forms.py
+│       │   │   ├── ./src/ralph/data_center/tests/test_models.py
+│       │   │   ├── ./src/ralph/data_center/tests/test_publishers.py
+│       │   │   ├── ./src/ralph/data_center/tests/test_signals.py
+│       │   │   ├── ./src/ralph/data_center/tests/test_subscribers.py
+│       │   │   └── ./src/ralph/data_center/tests/test_view.py
+│       │   └── ./src/ralph/data_center/views.py
+│       ├── ./src/ralph/data_importer
+│       │   ├── ./src/ralph/data_importer/__init__.py
+│       │   ├── ./src/ralph/data_importer/data
+│       │   │   └── ./src/ralph/data_importer/data/release.odt
+│       │   ├── ./src/ralph/data_importer/fields.py
+│       │   ├── ./src/ralph/data_importer/management
+│       │   │   ├── ./src/ralph/data_importer/management/__init__.py
+│       │   │   └── ./src/ralph/data_importer/management/commands
+│       │   │       ├── ./src/ralph/data_importer/management/commands/__init__.py
+│       │   │       ├── ./src/ralph/data_importer/management/commands/create_network.py
+│       │   │       ├── ./src/ralph/data_importer/management/commands/create_preboot_configuration.py
+│       │   │       ├── ./src/ralph/data_importer/management/commands/create_server_model.py
+│       │   │       ├── ./src/ralph/data_importer/management/commands/create_transitions.py
+│       │   │       ├── ./src/ralph/data_importer/management/commands/demodata.py
+│       │   │       ├── ./src/ralph/data_importer/management/commands/import_attachments.py
+│       │   │       ├── ./src/ralph/data_importer/management/commands/importer.py
+│       │   │       └── ./src/ralph/data_importer/management/commands/initial_data.py
+│       │   ├── ./src/ralph/data_importer/mixins.py
+│       │   ├── ./src/ralph/data_importer/models.py
+│       │   ├── ./src/ralph/data_importer/resources.py
+│       │   ├── ./src/ralph/data_importer/tests
+│       │   │   ├── ./src/ralph/data_importer/tests/__init__.py
+│       │   │   ├── ./src/ralph/data_importer/tests/samples
+│       │   │   │   ├── ./src/ralph/data_importer/tests/samples/back_office_assets.csv
+│       │   │   │   ├── ./src/ralph/data_importer/tests/samples/ipxe_file
+│       │   │   │   ├── ./src/ralph/data_importer/tests/samples/kickstart_file
+│       │   │   │   ├── ./src/ralph/data_importer/tests/samples/management_ip_blank.csv
+│       │   │   │   ├── ./src/ralph/data_importer/tests/samples/management_ip_existing.csv
+│       │   │   │   ├── ./src/ralph/data_importer/tests/samples/rack.csv
+│       │   │   │   ├── ./src/ralph/data_importer/tests/samples/regions.csv
+│       │   │   │   ├── ./src/ralph/data_importer/tests/samples/server_room.csv
+│       │   │   │   ├── ./src/ralph/data_importer/tests/samples/warehouses
+│       │   │   │   │   ├── ./src/ralph/data_importer/tests/samples/warehouses/1_Warehouse.csv
+│       │   │   │   │   └── ./src/ralph/data_importer/tests/samples/warehouses/2_Warehouse.csv
+│       │   │   │   ├── ./src/ralph/data_importer/tests/samples/warehouses.csv
+│       │   │   │   ├── ./src/ralph/data_importer/tests/samples/warehouses.zip
+│       │   │   │   ├── ./src/ralph/data_importer/tests/samples/warehouses_semicolon.csv
+│       │   │   │   ├── ./src/ralph/data_importer/tests/samples/warehouses_skipid.csv
+│       │   │   │   └── ./src/ralph/data_importer/tests/samples/warehouses_tab.csv
+│       │   │   ├── ./src/ralph/data_importer/tests/test_commands.py
+│       │   │   ├── ./src/ralph/data_importer/tests/test_demo_data.py
+│       │   │   ├── ./src/ralph/data_importer/tests/test_export.py
+│       │   │   ├── ./src/ralph/data_importer/tests/test_fields.py
+│       │   │   └── ./src/ralph/data_importer/tests/test_widgets.py
+│       │   └── ./src/ralph/data_importer/widgets.py
+│       ├── ./src/ralph/dc_view
+│       │   ├── ./src/ralph/dc_view/__init__.py
+│       │   ├── ./src/ralph/dc_view/apps.py
+│       │   ├── ./src/ralph/dc_view/serializers
+│       │   │   ├── ./src/ralph/dc_view/serializers/__init__.py
+│       │   │   └── ./src/ralph/dc_view/serializers/models_serializer.py
+│       │   ├── ./src/ralph/dc_view/static
+│       │   │   ├── ./src/ralph/dc_view/static/js
+│       │   │   │   └── ./src/ralph/dc_view/static/js/app
+│       │   │   │       ├── ./src/ralph/dc_view/static/js/app/apps.js
+│       │   │   │       ├── ./src/ralph/dc_view/static/js/app/common
+│       │   │   │       │   ├── ./src/ralph/dc_view/static/js/app/common/directives.js
+│       │   │   │       │   └── ./src/ralph/dc_view/static/js/app/common/filters.js
+│       │   │   │       ├── ./src/ralph/dc_view/static/js/app/rack
+│       │   │   │       │   ├── ./src/ralph/dc_view/static/js/app/rack/controllers.js
+│       │   │   │       │   ├── ./src/ralph/dc_view/static/js/app/rack/directives.js
+│       │   │   │       │   └── ./src/ralph/dc_view/static/js/app/rack/services.js
+│       │   │   │       └── ./src/ralph/dc_view/static/js/app/server_room
+│       │   │   │           ├── ./src/ralph/dc_view/static/js/app/server_room/controllers.js
+│       │   │   │           ├── ./src/ralph/dc_view/static/js/app/server_room/directives.js
+│       │   │   │           └── ./src/ralph/dc_view/static/js/app/server_room/services.js
+│       │   │   └── ./src/ralph/dc_view/static/partials
+│       │   │       ├── ./src/ralph/dc_view/static/partials/rack
+│       │   │       │   ├── ./src/ralph/dc_view/static/partials/rack/device_item.html
+│       │   │       │   ├── ./src/ralph/dc_view/static/partials/rack/device_types
+│       │   │       │   │   ├── ./src/ralph/dc_view/static/partials/rack/device_types/accessory.html
+│       │   │       │   │   ├── ./src/ralph/dc_view/static/partials/rack/device_types/asset.html
+│       │   │       │   │   └── ./src/ralph/dc_view/static/partials/rack/device_types/empty.html
+│       │   │       │   ├── ./src/ralph/dc_view/static/partials/rack/listing.html
+│       │   │       │   ├── ./src/ralph/dc_view/static/partials/rack/pdu_item.html
+│       │   │       │   └── ./src/ralph/dc_view/static/partials/rack/rack.html
+│       │   │       └── ./src/ralph/dc_view/static/partials/server_room
+│       │   │           ├── ./src/ralph/dc_view/static/partials/server_room/rack.html
+│       │   │           ├── ./src/ralph/dc_view/static/partials/server_room/rack_list.html
+│       │   │           ├── ./src/ralph/dc_view/static/partials/server_room/server_room.detail.rack.html
+│       │   │           ├── ./src/ralph/dc_view/static/partials/server_room/server_room.html
+│       │   │           └── ./src/ralph/dc_view/static/partials/server_room/sr.html
+│       │   ├── ./src/ralph/dc_view/templates
+│       │   │   └── ./src/ralph/dc_view/templates/dc_view
+│       │   │       ├── ./src/ralph/dc_view/templates/dc_view/angular_scripts.html
+│       │   │       ├── ./src/ralph/dc_view/templates/dc_view/server_room_view.html
+│       │   │       └── ./src/ralph/dc_view/templates/dc_view/settings_for_angular.js
+│       │   ├── ./src/ralph/dc_view/tests.py
+│       │   ├── ./src/ralph/dc_view/urls
+│       │   │   ├── ./src/ralph/dc_view/urls/__init__.py
+│       │   │   ├── ./src/ralph/dc_view/urls/api.py
+│       │   │   └── ./src/ralph/dc_view/urls/ui.py
+│       │   └── ./src/ralph/dc_view/views
+│       │       ├── ./src/ralph/dc_view/views/__init__.py
+│       │       ├── ./src/ralph/dc_view/views/api.py
+│       │       └── ./src/ralph/dc_view/views/ui.py
+│       ├── ./src/ralph/deployment
+│       │   ├── ./src/ralph/deployment/__init__.py
+│       │   ├── ./src/ralph/deployment/admin.py
+│       │   ├── ./src/ralph/deployment/apps.py
+│       │   ├── ./src/ralph/deployment/deployment.py
+│       │   ├── ./src/ralph/deployment/forms.py
+│       │   ├── ./src/ralph/deployment/mixins.py
+│       │   ├── ./src/ralph/deployment/models.py
+│       │   ├── ./src/ralph/deployment/tests
+│       │   │   ├── ./src/ralph/deployment/tests/__init__.py
+│       │   │   ├── ./src/ralph/deployment/tests/factories.py
+│       │   │   ├── ./src/ralph/deployment/tests/test_deployment.py
+│       │   │   ├── ./src/ralph/deployment/tests/test_forms.py
+│       │   │   └── ./src/ralph/deployment/tests/test_transitions.py
+│       │   ├── ./src/ralph/deployment/urls.py
+│       │   ├── ./src/ralph/deployment/utils.py
+│       │   └── ./src/ralph/deployment/views.py
+│       ├── ./src/ralph/dhcp
+│       │   ├── ./src/ralph/dhcp/__init__.py
+│       │   ├── ./src/ralph/dhcp/admin.py
+│       │   ├── ./src/ralph/dhcp/api.py
+│       │   ├── ./src/ralph/dhcp/models.py
+│       │   ├── ./src/ralph/dhcp/templates
+│       │   │   └── ./src/ralph/dhcp/templates/dhcp
+│       │   │       ├── ./src/ralph/dhcp/templates/dhcp/entries.conf
+│       │   │       └── ./src/ralph/dhcp/templates/dhcp/networks.conf
+│       │   ├── ./src/ralph/dhcp/tests
+│       │   │   ├── ./src/ralph/dhcp/tests/__init__.py
+│       │   │   ├── ./src/ralph/dhcp/tests/factories.py
+│       │   │   ├── ./src/ralph/dhcp/tests/test_agent.py
+│       │   │   ├── ./src/ralph/dhcp/tests/test_models.py
+│       │   │   └── ./src/ralph/dhcp/tests/test_views.py
+│       │   ├── ./src/ralph/dhcp/urls.py
+│       │   └── ./src/ralph/dhcp/views.py
+│       ├── ./src/ralph/dns
+│       │   ├── ./src/ralph/dns/__init__.py
+│       │   ├── ./src/ralph/dns/apps.py
+│       │   ├── ./src/ralph/dns/dnsaas.py
+│       │   ├── ./src/ralph/dns/forms.py
+│       │   ├── ./src/ralph/dns/management
+│       │   │   ├── ./src/ralph/dns/management/__init__.py
+│       │   │   └── ./src/ralph/dns/management/commands
+│       │   │       ├── ./src/ralph/dns/management/commands/__init__.py
+│       │   │       └── ./src/ralph/dns/management/commands/dns_find_inconsistencies.py
+│       │   ├── ./src/ralph/dns/publishers.py
+│       │   ├── ./src/ralph/dns/templates
+│       │   │   └── ./src/ralph/dns/templates/dns
+│       │   │       └── ./src/ralph/dns/templates/dns/dns_edit.html
+│       │   ├── ./src/ralph/dns/tests.py
+│       │   └── ./src/ralph/dns/views.py
+│       ├── ./src/ralph/domains
+│       │   ├── ./src/ralph/domains/__init__.py
+│       │   ├── ./src/ralph/domains/admin.py
+│       │   ├── ./src/ralph/domains/api.py
+│       │   ├── ./src/ralph/domains/apps.py
+│       │   ├── ./src/ralph/domains/filters.py
+│       │   ├── ./src/ralph/domains/forms.py
+│       │   ├── ./src/ralph/domains/models
+│       │   │   ├── ./src/ralph/domains/models/__init__.py
+│       │   │   └── ./src/ralph/domains/models/domains.py
+│       │   ├── ./src/ralph/domains/publishers.py
+│       │   └── ./src/ralph/domains/tests
+│       │       ├── ./src/ralph/domains/tests/__init__.py
+│       │       ├── ./src/ralph/domains/tests/factories.py
+│       │       └── ./src/ralph/domains/tests/tests.py
+│       ├── ./src/ralph/health_check.py
+│       ├── ./src/ralph/helpers.py
+│       ├── ./src/ralph/js_tests
+│       │   ├── ./src/ralph/js_tests/angular_runner.html
+│       │   ├── ./src/ralph/js_tests/dc_view
+│       │   │   └── ./src/ralph/js_tests/dc_view/server_room
+│       │   │       └── ./src/ralph/js_tests/dc_view/server_room/controllers.test.js
+│       │   ├── ./src/ralph/js_tests/test_runner.html
+│       │   └── ./src/ralph/js_tests/widgets
+│       │       └── ./src/ralph/js_tests/widgets/ralph-autocomplete.test.js
+│       ├── ./src/ralph/lib
+│       │   ├── ./src/ralph/lib/__init__.py
+│       │   ├── ./src/ralph/lib/api
+│       │   │   ├── ./src/ralph/lib/api/__init__.py
+│       │   │   ├── ./src/ralph/lib/api/exception_handler.py
+│       │   │   ├── ./src/ralph/lib/api/exceptions.py
+│       │   │   └── ./src/ralph/lib/api/utils.py
+│       │   ├── ./src/ralph/lib/cache
+│       │   │   ├── ./src/ralph/lib/cache/__init__.py
+│       │   │   └── ./src/ralph/lib/cache/django_connection_pool_redis_cache.py
+│       │   ├── ./src/ralph/lib/custom_fields
+│       │   │   ├── ./src/ralph/lib/custom_fields/__init__.py
+│       │   │   ├── ./src/ralph/lib/custom_fields/admin.py
+│       │   │   ├── ./src/ralph/lib/custom_fields/api
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/api/__init__.py
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/api/custom_fields_api.py
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/api/fields.py
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/api/filters.py
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/api/routers.py
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/api/serializers.py
+│       │   │   │   └── ./src/ralph/lib/custom_fields/api/viewsets.py
+│       │   │   ├── ./src/ralph/lib/custom_fields/fields.py
+│       │   │   ├── ./src/ralph/lib/custom_fields/forms.py
+│       │   │   ├── ./src/ralph/lib/custom_fields/models.py
+│       │   │   ├── ./src/ralph/lib/custom_fields/signals.py
+│       │   │   ├── ./src/ralph/lib/custom_fields/templates
+│       │   │   │   └── ./src/ralph/lib/custom_fields/templates/custom_fields
+│       │   │   │       └── ./src/ralph/lib/custom_fields/templates/custom_fields/edit_inline
+│       │   │   │           └── ./src/ralph/lib/custom_fields/templates/custom_fields/edit_inline/tabular.html
+│       │   │   ├── ./src/ralph/lib/custom_fields/tests
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/tests/__init__.py
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/tests/admin.py
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/tests/api.py
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/tests/apps.py
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/tests/factories.py
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/tests/models.py
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/tests/test_admin.py
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/tests/test_api.py
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/tests/test_custom_fields_api.py
+│       │   │   │   ├── ./src/ralph/lib/custom_fields/tests/test_models.py
+│       │   │   │   └── ./src/ralph/lib/custom_fields/tests/urls.py
+│       │   │   └── ./src/ralph/lib/custom_fields/views.py
+│       │   ├── ./src/ralph/lib/error_pages
+│       │   │   ├── ./src/ralph/lib/error_pages/__ini__.py
+│       │   │   └── ./src/ralph/lib/error_pages/views.py
+│       │   ├── ./src/ralph/lib/external_services
+│       │   │   ├── ./src/ralph/lib/external_services/__init__.py
+│       │   │   ├── ./src/ralph/lib/external_services/base.py
+│       │   │   ├── ./src/ralph/lib/external_services/helpers.py
+│       │   │   ├── ./src/ralph/lib/external_services/models.py
+│       │   │   ├── ./src/ralph/lib/external_services/tests.py
+│       │   │   └── ./src/ralph/lib/external_services/worker.py
+│       │   ├── ./src/ralph/lib/field_validation
+│       │   │   ├── ./src/ralph/lib/field_validation/__init__.py
+│       │   │   └── ./src/ralph/lib/field_validation/form_fields.py
+│       │   ├── ./src/ralph/lib/foundation
+│       │   │   ├── ./src/ralph/lib/foundation/__init__.py
+│       │   │   ├── ./src/ralph/lib/foundation/templates
+│       │   │   │   ├── ./src/ralph/lib/foundation/templates/foundation_alert
+│       │   │   │   │   └── ./src/ralph/lib/foundation/templates/foundation_alert/alert.html
+│       │   │   │   └── ./src/ralph/lib/foundation/templates/foundation_form
+│       │   │   │       ├── ./src/ralph/lib/foundation/templates/foundation_form/form_errors.html
+│       │   │   │       ├── ./src/ralph/lib/foundation/templates/foundation_form/form_field.html
+│       │   │   │       └── ./src/ralph/lib/foundation/templates/foundation_form/form_label.html
+│       │   │   └── ./src/ralph/lib/foundation/templatetags
+│       │   │       ├── ./src/ralph/lib/foundation/templatetags/__init__.py
+│       │   │       ├── ./src/ralph/lib/foundation/templatetags/foundation_alert.py
+│       │   │       └── ./src/ralph/lib/foundation/templatetags/foundation_form.py
+│       │   ├── ./src/ralph/lib/hooks
+│       │   │   ├── ./src/ralph/lib/hooks/__init__.py
+│       │   │   ├── ./src/ralph/lib/hooks/apps.py
+│       │   │   ├── ./src/ralph/lib/hooks/checks.py
+│       │   │   ├── ./src/ralph/lib/hooks/main.py
+│       │   │   └── ./src/ralph/lib/hooks/management
+│       │   │       ├── ./src/ralph/lib/hooks/management/__init__.py
+│       │   │       └── ./src/ralph/lib/hooks/management/commands
+│       │   │           ├── ./src/ralph/lib/hooks/management/commands/__init__.py
+│       │   │           └── ./src/ralph/lib/hooks/management/commands/show_hooks_configuration.py
+│       │   ├── ./src/ralph/lib/metrics
+│       │   │   ├── ./src/ralph/lib/metrics/__init__.py
+│       │   │   ├── ./src/ralph/lib/metrics/collector.py
+│       │   │   ├── ./src/ralph/lib/metrics/middlewares.py
+│       │   │   └── ./src/ralph/lib/metrics/utils.py
+│       │   ├── ./src/ralph/lib/mixins
+│       │   │   ├── ./src/ralph/lib/mixins/__init__.py
+│       │   │   ├── ./src/ralph/lib/mixins/admin.py
+│       │   │   ├── ./src/ralph/lib/mixins/api.py
+│       │   │   ├── ./src/ralph/lib/mixins/fields.py
+│       │   │   ├── ./src/ralph/lib/mixins/forms.py
+│       │   │   ├── ./src/ralph/lib/mixins/models.py
+│       │   │   └── ./src/ralph/lib/mixins/tests
+│       │   │       ├── ./src/ralph/lib/mixins/tests/__init__.py
+│       │   │       ├── ./src/ralph/lib/mixins/tests/apps.py
+│       │   │       ├── ./src/ralph/lib/mixins/tests/models.py
+│       │   │       ├── ./src/ralph/lib/mixins/tests/test_api.py
+│       │   │       ├── ./src/ralph/lib/mixins/tests/test_fields.py
+│       │   │       └── ./src/ralph/lib/mixins/tests/test_models.py
+│       │   ├── ./src/ralph/lib/network
+│       │   │   └── ./src/ralph/lib/network/__init__.py
+│       │   ├── ./src/ralph/lib/openstack
+│       │   │   ├── ./src/ralph/lib/openstack/__init__.py
+│       │   │   └── ./src/ralph/lib/openstack/client.py
+│       │   ├── ./src/ralph/lib/permissions
+│       │   │   ├── ./src/ralph/lib/permissions/__init__.py
+│       │   │   ├── ./src/ralph/lib/permissions/admin.py
+│       │   │   ├── ./src/ralph/lib/permissions/api.py
+│       │   │   ├── ./src/ralph/lib/permissions/apps.py
+│       │   │   ├── ./src/ralph/lib/permissions/models.py
+│       │   │   ├── ./src/ralph/lib/permissions/tests
+│       │   │   │   ├── ./src/ralph/lib/permissions/tests/__init__.py
+│       │   │   │   ├── ./src/ralph/lib/permissions/tests/_base.py
+│       │   │   │   ├── ./src/ralph/lib/permissions/tests/admin.py
+│       │   │   │   ├── ./src/ralph/lib/permissions/tests/api.py
+│       │   │   │   ├── ./src/ralph/lib/permissions/tests/apps.py
+│       │   │   │   ├── ./src/ralph/lib/permissions/tests/models.py
+│       │   │   │   ├── ./src/ralph/lib/permissions/tests/test_admin.py
+│       │   │   │   ├── ./src/ralph/lib/permissions/tests/test_api.py
+│       │   │   │   ├── ./src/ralph/lib/permissions/tests/test_permission_view.py
+│       │   │   │   ├── ./src/ralph/lib/permissions/tests/test_permissions_by_field.py
+│       │   │   │   └── ./src/ralph/lib/permissions/tests/test_permissions_per_object.py
+│       │   │   └── ./src/ralph/lib/permissions/views.py
+│       │   ├── ./src/ralph/lib/polymorphic
+│       │   │   ├── ./src/ralph/lib/polymorphic/__init__.py
+│       │   │   ├── ./src/ralph/lib/polymorphic/fields.py
+│       │   │   ├── ./src/ralph/lib/polymorphic/models.py
+│       │   │   └── ./src/ralph/lib/polymorphic/tests
+│       │   │       ├── ./src/ralph/lib/polymorphic/tests/__init__.py
+│       │   │       ├── ./src/ralph/lib/polymorphic/tests/apps.py
+│       │   │       ├── ./src/ralph/lib/polymorphic/tests/models.py
+│       │   │       └── ./src/ralph/lib/polymorphic/tests/tests_models.py
+│       │   ├── ./src/ralph/lib/redis
+│       │   │   └── ./src/ralph/lib/redis/__init__.py
+│       │   ├── ./src/ralph/lib/serializers
+│       │   │   └── ./src/ralph/lib/serializers/__init__.py
+│       │   ├── ./src/ralph/lib/table
+│       │   │   ├── ./src/ralph/lib/table/__init__.py
+│       │   │   ├── ./src/ralph/lib/table/static
+│       │   │   │   └── ./src/ralph/lib/table/static/js
+│       │   │   │       └── ./src/ralph/lib/table/static/js/admin-table.js
+│       │   │   ├── ./src/ralph/lib/table/table.py
+│       │   │   ├── ./src/ralph/lib/table/templates
+│       │   │   │   └── ./src/ralph/lib/table/templates/table.html
+│       │   │   ├── ./src/ralph/lib/table/templatetags
+│       │   │   │   ├── ./src/ralph/lib/table/templatetags/__init__.py
+│       │   │   │   └── ./src/ralph/lib/table/templatetags/table.py
+│       │   │   └── ./src/ralph/lib/table/tests.py
+│       │   ├── ./src/ralph/lib/template
+│       │   │   ├── ./src/ralph/lib/template/__init__.py
+│       │   │   └── ./src/ralph/lib/template/loaders.py
+│       │   ├── ./src/ralph/lib/threadlocal
+│       │   │   ├── ./src/ralph/lib/threadlocal/__init__.py
+│       │   │   └── ./src/ralph/lib/threadlocal/middleware.py
+│       │   └── ./src/ralph/lib/transitions
+│       │       ├── ./src/ralph/lib/transitions/__init__.py
+│       │       ├── ./src/ralph/lib/transitions/admin.py
+│       │       ├── ./src/ralph/lib/transitions/api
+│       │       │   ├── ./src/ralph/lib/transitions/api/routers.py
+│       │       │   ├── ./src/ralph/lib/transitions/api/serializers.py
+│       │       │   └── ./src/ralph/lib/transitions/api/views.py
+│       │       ├── ./src/ralph/lib/transitions/apps.py
+│       │       ├── ./src/ralph/lib/transitions/async.py
+│       │       ├── ./src/ralph/lib/transitions/checks.py
+│       │       ├── ./src/ralph/lib/transitions/conf.py
+│       │       ├── ./src/ralph/lib/transitions/decorators.py
+│       │       ├── ./src/ralph/lib/transitions/exceptions.py
+│       │       ├── ./src/ralph/lib/transitions/fields.py
+│       │       ├── ./src/ralph/lib/transitions/forms.py
+│       │       ├── ./src/ralph/lib/transitions/migration.py
+│       │       ├── ./src/ralph/lib/transitions/models.py
+│       │       ├── ./src/ralph/lib/transitions/templates
+│       │       │   └── ./src/ralph/lib/transitions/templates/transitions
+│       │       │       ├── ./src/ralph/lib/transitions/templates/transitions/_transition_jobs_table.html
+│       │       │       ├── ./src/ralph/lib/transitions/templates/transitions/_transition_jobs_table_body.html
+│       │       │       ├── ./src/ralph/lib/transitions/templates/transitions/async_transitions_awaiter.html
+│       │       │       ├── ./src/ralph/lib/transitions/templates/transitions/current_transitions.html
+│       │       │       ├── ./src/ralph/lib/transitions/templates/transitions/run_transition.html
+│       │       │       └── ./src/ralph/lib/transitions/templates/transitions/templatetags
+│       │       │           └── ./src/ralph/lib/transitions/templates/transitions/templatetags/available_transitions.html
+│       │       ├── ./src/ralph/lib/transitions/templatetags
+│       │       │   ├── ./src/ralph/lib/transitions/templatetags/__init__.py
+│       │       │   └── ./src/ralph/lib/transitions/templatetags/transitions_tags.py
+│       │       ├── ./src/ralph/lib/transitions/tests
+│       │       │   ├── ./src/ralph/lib/transitions/tests/__init__.py
+│       │       │   ├── ./src/ralph/lib/transitions/tests/factories.py
+│       │       │   ├── ./src/ralph/lib/transitions/tests/test_actions.py
+│       │       │   ├── ./src/ralph/lib/transitions/tests/test_admin.py
+│       │       │   ├── ./src/ralph/lib/transitions/tests/test_async.py
+│       │       │   ├── ./src/ralph/lib/transitions/tests/test_checks.py
+│       │       │   ├── ./src/ralph/lib/transitions/tests/test_forms.py
+│       │       │   ├── ./src/ralph/lib/transitions/tests/test_models.py
+│       │       │   └── ./src/ralph/lib/transitions/tests/test_utils.py
+│       │       ├── ./src/ralph/lib/transitions/urls.py
+│       │       ├── ./src/ralph/lib/transitions/utils.py
+│       │       └── ./src/ralph/lib/transitions/views.py
+│       ├── ./src/ralph/licences
+│       │   ├── ./src/ralph/licences/__init__.py
+│       │   ├── ./src/ralph/licences/admin.py
+│       │   ├── ./src/ralph/licences/api.py
+│       │   ├── ./src/ralph/licences/api_simple.py
+│       │   ├── ./src/ralph/licences/models.py
+│       │   └── ./src/ralph/licences/tests
+│       │       ├── ./src/ralph/licences/tests/__init__.py
+│       │       ├── ./src/ralph/licences/tests/factories.py
+│       │       ├── ./src/ralph/licences/tests/test_api.py
+│       │       ├── ./src/ralph/licences/tests/test_functional.py
+│       │       └── ./src/ralph/licences/tests/tests_models.py
+│       ├── ./src/ralph/locale
+│       │   ├── ./src/ralph/locale/cs
+│       │   │   └── ./src/ralph/locale/cs/LC_MESSAGES
+│       │   │       └── ./src/ralph/locale/cs/LC_MESSAGES/django.po
+│       │   ├── ./src/ralph/locale/en
+│       │   │   └── ./src/ralph/locale/en/LC_MESSAGES
+│       │   │       └── ./src/ralph/locale/en/LC_MESSAGES/django.po
+│       │   ├── ./src/ralph/locale/ko
+│       │   │   └── ./src/ralph/locale/ko/LC_MESSAGES
+│       │   │       └── ./src/ralph/locale/ko/LC_MESSAGES/django.po
+│       │   └── ./src/ralph/locale/pl
+│       │       └── ./src/ralph/locale/pl/LC_MESSAGES
+│       │           └── ./src/ralph/locale/pl/LC_MESSAGES/django.po
+│       ├── ./src/ralph/networks
+│       │   ├── ./src/ralph/networks/__init__.py
+│       │   ├── ./src/ralph/networks/admin.py
+│       │   ├── ./src/ralph/networks/api.py
+│       │   ├── ./src/ralph/networks/api_simple.py
+│       │   ├── ./src/ralph/networks/apps.py
+│       │   ├── ./src/ralph/networks/fields.py
+│       │   ├── ./src/ralph/networks/filters.py
+│       │   ├── ./src/ralph/networks/forms.py
+│       │   ├── ./src/ralph/networks/models
+│       │   │   ├── ./src/ralph/networks/models/__init__.py
+│       │   │   ├── ./src/ralph/networks/models/choices.py
+│       │   │   └── ./src/ralph/networks/models/networks.py
+│       │   ├── ./src/ralph/networks/receivers.py
+│       │   ├── ./src/ralph/networks/tests
+│       │   │   ├── ./src/ralph/networks/tests/__init__.py
+│       │   │   ├── ./src/ralph/networks/tests/factories.py
+│       │   │   ├── ./src/ralph/networks/tests/test_admin.py
+│       │   │   ├── ./src/ralph/networks/tests/test_api.py
+│       │   │   ├── ./src/ralph/networks/tests/test_filters.py
+│       │   │   ├── ./src/ralph/networks/tests/test_forms.py
+│       │   │   ├── ./src/ralph/networks/tests/test_models.py
+│       │   │   └── ./src/ralph/networks/tests/test_receivers.py
+│       │   └── ./src/ralph/networks/views.py
+│       ├── ./src/ralph/notifications
+│       │   ├── ./src/ralph/notifications/__init__.py
+│       │   ├── ./src/ralph/notifications/apps.py
+│       │   ├── ./src/ralph/notifications/sender.py
+│       │   ├── ./src/ralph/notifications/templates
+│       │   │   └── ./src/ralph/notifications/templates/notifications
+│       │   │       ├── ./src/ralph/notifications/templates/notifications/html
+│       │   │       │   └── ./src/ralph/notifications/templates/notifications/html/message.html
+│       │   │       └── ./src/ralph/notifications/templates/notifications/txt
+│       │   │           └── ./src/ralph/notifications/templates/notifications/txt/message.txt
+│       │   └── ./src/ralph/notifications/test_notification.py
+│       ├── ./src/ralph/operations
+│       │   ├── ./src/ralph/operations/__init__.py
+│       │   ├── ./src/ralph/operations/admin.py
+│       │   ├── ./src/ralph/operations/api.py
+│       │   ├── ./src/ralph/operations/apps.py
+│       │   ├── ./src/ralph/operations/changemanagement
+│       │   │   ├── ./src/ralph/operations/changemanagement/__init__.py
+│       │   │   ├── ./src/ralph/operations/changemanagement/exceptions.py
+│       │   │   ├── ./src/ralph/operations/changemanagement/jira.py
+│       │   │   └── ./src/ralph/operations/changemanagement/subscribtions.py
+│       │   ├── ./src/ralph/operations/filters.py
+│       │   ├── ./src/ralph/operations/fixtures
+│       │   │   ├── ./src/ralph/operations/fixtures/operation_statuses.json
+│       │   │   └── ./src/ralph/operations/fixtures/operation_types.json
+│       │   ├── ./src/ralph/operations/models.py
+│       │   ├── ./src/ralph/operations/tests
+│       │   │   ├── ./src/ralph/operations/tests/__init__.py
+│       │   │   ├── ./src/ralph/operations/tests/factories.py
+│       │   │   ├── ./src/ralph/operations/tests/sample_jira_event.json
+│       │   │   ├── ./src/ralph/operations/tests/test_admin.py
+│       │   │   ├── ./src/ralph/operations/tests/test_api.py
+│       │   │   ├── ./src/ralph/operations/tests/test_event_receiver.py
+│       │   │   ├── ./src/ralph/operations/tests/test_jira_processor.py
+│       │   │   └── ./src/ralph/operations/tests/test_models.py
+│       │   └── ./src/ralph/operations/views.py
+│       ├── ./src/ralph/reports
+│       │   ├── ./src/ralph/reports/__init__.py
+│       │   ├── ./src/ralph/reports/admin.py
+│       │   ├── ./src/ralph/reports/apps.py
+│       │   ├── ./src/ralph/reports/base.py
+│       │   ├── ./src/ralph/reports/factories.py
+│       │   ├── ./src/ralph/reports/forms.py
+│       │   ├── ./src/ralph/reports/helpers.py
+│       │   ├── ./src/ralph/reports/management
+│       │   │   └── ./src/ralph/reports/management/commands
+│       │   │       └── ./src/ralph/reports/management/commands/send_data_center_asset_export.py
+│       │   ├── ./src/ralph/reports/models.py
+│       │   ├── ./src/ralph/reports/resources.py
+│       │   ├── ./src/ralph/reports/templates
+│       │   │   └── ./src/ralph/reports/templates/reports
+│       │   │       ├── ./src/ralph/reports/templates/reports/report_detail.html
+│       │   │       ├── ./src/ralph/reports/templates/reports/report_relations.html
+│       │   │       └── ./src/ralph/reports/templates/reports/report_tree.html
+│       │   ├── ./src/ralph/reports/tests
+│       │   │   ├── ./src/ralph/reports/tests/__init__.py
+│       │   │   ├── ./src/ralph/reports/tests/test_email_reports.py
+│       │   │   ├── ./src/ralph/reports/tests/test_reports.py
+│       │   │   └── ./src/ralph/reports/tests/test_resources.py
+│       │   ├── ./src/ralph/reports/urls.py
+│       │   └── ./src/ralph/reports/views.py
+│       ├── ./src/ralph/security
+│       │   ├── ./src/ralph/security/__init__.py
+│       │   ├── ./src/ralph/security/api.py
+│       │   ├── ./src/ralph/security/apps.py
+│       │   ├── ./src/ralph/security/management
+│       │   │   ├── ./src/ralph/security/management/__init__.py
+│       │   │   └── ./src/ralph/security/management/commands
+│       │   │       ├── ./src/ralph/security/management/commands/__init__.py
+│       │   │       └── ./src/ralph/security/management/commands/update_is_patched.py
+│       │   ├── ./src/ralph/security/models.py
+│       │   ├── ./src/ralph/security/templates
+│       │   │   └── ./src/ralph/security/templates/security
+│       │   │       └── ./src/ralph/security/templates/security/securityinfo
+│       │   │           └── ./src/ralph/security/templates/security/securityinfo/security_info.html
+│       │   ├── ./src/ralph/security/tests
+│       │   │   ├── ./src/ralph/security/tests/__init__.py
+│       │   │   ├── ./src/ralph/security/tests/factories.py
+│       │   │   ├── ./src/ralph/security/tests/test_api.py
+│       │   │   └── ./src/ralph/security/tests/test_serializers.py
+│       │   ├── ./src/ralph/security/transitions.py
+│       │   └── ./src/ralph/security/views.py
+│       ├── ./src/ralph/settings
+│       │   ├── ./src/ralph/settings/__init__.py
+│       │   ├── ./src/ralph/settings/base.py
+│       │   ├── ./src/ralph/settings/dev.py
+│       │   ├── ./src/ralph/settings/hooks.py
+│       │   ├── ./src/ralph/settings/local.template
+│       │   ├── ./src/ralph/settings/prod.py
+│       │   └── ./src/ralph/settings/test.py
+│       ├── ./src/ralph/signals.py
+│       ├── ./src/ralph/sim_cards
+│       │   ├── ./src/ralph/sim_cards/__init__.py
+│       │   ├── ./src/ralph/sim_cards/admin.py
+│       │   ├── ./src/ralph/sim_cards/api.py
+│       │   ├── ./src/ralph/sim_cards/forms.py
+│       │   ├── ./src/ralph/sim_cards/models.py
+│       │   └── ./src/ralph/sim_cards/tests
+│       │       ├── ./src/ralph/sim_cards/tests/__init__.py
+│       │       ├── ./src/ralph/sim_cards/tests/factories.py
+│       │       └── ./src/ralph/sim_cards/tests/test_admin.py
+│       ├── ./src/ralph/ssl_certificates
+│       │   ├── ./src/ralph/ssl_certificates/__init__.py
+│       │   ├── ./src/ralph/ssl_certificates/admin.py
+│       │   ├── ./src/ralph/ssl_certificates/api.py
+│       │   ├── ./src/ralph/ssl_certificates/apps.py
+│       │   ├── ./src/ralph/ssl_certificates/forms.py
+│       │   ├── ./src/ralph/ssl_certificates/management
+│       │   │   ├── ./src/ralph/ssl_certificates/management/__init__.py
+│       │   │   └── ./src/ralph/ssl_certificates/management/commands
+│       │   │       ├── ./src/ralph/ssl_certificates/management/commands/__init__.py
+│       │   │       ├── ./src/ralph/ssl_certificates/management/commands/import_ssl_certificates.py
+│       │   │       └── ./src/ralph/ssl_certificates/management/commands/update_dns_service_env_from_dnsaas.py
+│       │   ├── ./src/ralph/ssl_certificates/models.py
+│       │   └── ./src/ralph/ssl_certificates/tests
+│       │       ├── ./src/ralph/ssl_certificates/tests/__init__.py
+│       │       ├── ./src/ralph/ssl_certificates/tests/api.py
+│       │       ├── ./src/ralph/ssl_certificates/tests/factories.py
+│       │       ├── ./src/ralph/ssl_certificates/tests/samples
+│       │       │   ├── ./src/ralph/ssl_certificates/tests/samples/site.pl.crt
+│       │       │   ├── ./src/ralph/ssl_certificates/tests/samples/unproper
+│       │       │   │   └── ./src/ralph/ssl_certificates/tests/samples/unproper/fake_ssl.crt
+│       │       │   ├── ./src/ralph/ssl_certificates/tests/samples/wildcard_lewitowanie.com.pl.crt
+│       │       │   └── ./src/ralph/ssl_certificates/tests/samples/wildcard_lewitowanie.com.pl.crt.config
+│       │       └── ./src/ralph/ssl_certificates/tests/tests.py
+│       ├── ./src/ralph/static
+│       │   ├── ./src/ralph/static/README
+│       │   ├── ./src/ralph/static/favicons
+│       │   │   ├── ./src/ralph/static/favicons/apple-touch-icon-114x114.png
+│       │   │   ├── ./src/ralph/static/favicons/apple-touch-icon-120x120.png
+│       │   │   ├── ./src/ralph/static/favicons/apple-touch-icon-144x144.png
+│       │   │   ├── ./src/ralph/static/favicons/apple-touch-icon-152x152.png
+│       │   │   ├── ./src/ralph/static/favicons/apple-touch-icon-57x57.png
+│       │   │   ├── ./src/ralph/static/favicons/apple-touch-icon-72x72.png
+│       │   │   ├── ./src/ralph/static/favicons/favicon-16x16.png
+│       │   │   ├── ./src/ralph/static/favicons/favicon-32x32.png
+│       │   │   ├── ./src/ralph/static/favicons/favicon.ico
+│       │   │   └── ./src/ralph/static/favicons/mstile-144x144.png
+│       │   ├── ./src/ralph/static/js
+│       │   │   └── ./src/ralph/static/js/chartist-plugin-barlabels.js
+│       │   └── ./src/ralph/static/src
+│       │       ├── ./src/ralph/static/src/js
+│       │       │   ├── ./src/ralph/static/src/js/fill-fields.js
+│       │       │   ├── ./src/ralph/static/src/js/foundation-datepicker-init.js
+│       │       │   ├── ./src/ralph/static/src/js/multi.js
+│       │       │   ├── ./src/ralph/static/src/js/ralph-assistant.js
+│       │       │   ├── ./src/ralph/static/src/js/ralph-autocomplete.js
+│       │       │   ├── ./src/ralph/static/src/js/ralph.init.js
+│       │       │   └── ./src/ralph/static/src/js/widgets.js
+│       │       └── ./src/ralph/static/src/scss
+│       │           ├── ./src/ralph/static/src/scss/_chartist-settings.scss
+│       │           ├── ./src/ralph/static/src/scss/_colors.scss
+│       │           ├── ./src/ralph/static/src/scss/_overrides.scss
+│       │           ├── ./src/ralph/static/src/scss/_settings.scss
+│       │           ├── ./src/ralph/static/src/scss/_styles.scss
+│       │           ├── ./src/ralph/static/src/scss/chat-widget.scss
+│       │           ├── ./src/ralph/static/src/scss/components
+│       │           │   ├── ./src/ralph/static/src/scss/components/_accordions.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/_admin-bottom.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/_alert-boxes.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/_change-list.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/_forms.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/_functions.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/_variables.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/autocomplete_field.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/bulk_edit.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/circles.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/contextual_search.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/current_transitions.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/dashboard.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/data_center.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/date_hierarchy.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/fieldsets.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/header.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/labels.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/login.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/rack.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/related_widget.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/security.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/select_filter.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/tables.scss
+│       │           │   ├── ./src/ralph/static/src/scss/components/tabs.scss
+│       │           │   └── ./src/ralph/static/src/scss/components/visualization.scss
+│       │           └── ./src/ralph/static/src/scss/ralph.scss
+│       ├── ./src/ralph/supports
+│       │   ├── ./src/ralph/supports/__init__.py
+│       │   ├── ./src/ralph/supports/admin.py
+│       │   ├── ./src/ralph/supports/api.py
+│       │   ├── ./src/ralph/supports/models.py
+│       │   └── ./src/ralph/supports/tests
+│       │       ├── ./src/ralph/supports/tests/__init__.py
+│       │       ├── ./src/ralph/supports/tests/factories.py
+│       │       ├── ./src/ralph/supports/tests/test_api.py
+│       │       └── ./src/ralph/supports/tests/test_autocomplete.py
+│       ├── ./src/ralph/tests
+│       │   ├── ./src/ralph/tests/__init__.py
+│       │   ├── ./src/ralph/tests/admin.py
+│       │   ├── ./src/ralph/tests/base.py
+│       │   ├── ./src/ralph/tests/factories.py
+│       │   ├── ./src/ralph/tests/mixins.py
+│       │   ├── ./src/ralph/tests/models.py
+│       │   └── ./src/ralph/tests/templates
+│       │       └── ./src/ralph/tests/templates/tests
+│       │           └── ./src/ralph/tests/templates/tests/foo
+│       │               ├── ./src/ralph/tests/templates/tests/foo/detail.html
+│       │               └── ./src/ralph/tests/templates/tests/foo/list.html
+│       ├── ./src/ralph/trade_marks
+│       │   ├── ./src/ralph/trade_marks/__init__.py
+│       │   ├── ./src/ralph/trade_marks/admin.py
+│       │   ├── ./src/ralph/trade_marks/forms.py
+│       │   ├── ./src/ralph/trade_marks/models.py
+│       │   └── ./src/ralph/trade_marks/tests
+│       │       ├── ./src/ralph/trade_marks/tests/__init__.py
+│       │       └── ./src/ralph/trade_marks/tests/factories.py
+│       ├── ./src/ralph/urls
+│       │   ├── ./src/ralph/urls/__init__.py
+│       │   ├── ./src/ralph/urls/base.py
+│       │   ├── ./src/ralph/urls/dev.py
+│       │   └── ./src/ralph/urls/test.py
+│       ├── ./src/ralph/virtual
+│       │   ├── ./src/ralph/virtual/__init__.py
+│       │   ├── ./src/ralph/virtual/admin.py
+│       │   ├── ./src/ralph/virtual/api.py
+│       │   ├── ./src/ralph/virtual/cloudsync.py
+│       │   ├── ./src/ralph/virtual/forms.py
+│       │   ├── ./src/ralph/virtual/management
+│       │   │   └── ./src/ralph/virtual/management/commands
+│       │   │       └── ./src/ralph/virtual/management/commands/openstack_sync.py
+│       │   ├── ./src/ralph/virtual/models.py
+│       │   ├── ./src/ralph/virtual/processors
+│       │   │   ├── ./src/ralph/virtual/processors/__init__.py
+│       │   │   └── ./src/ralph/virtual/processors/noop.py
+│       │   ├── ./src/ralph/virtual/tests
+│       │   │   ├── ./src/ralph/virtual/tests/__init__.py
+│       │   │   ├── ./src/ralph/virtual/tests/factories.py
+│       │   │   ├── ./src/ralph/virtual/tests/samples
+│       │   │   │   ├── ./src/ralph/virtual/tests/samples/__init__.py
+│       │   │   │   └── ./src/ralph/virtual/tests/samples/openstack_data.py
+│       │   │   ├── ./src/ralph/virtual/tests/test_admin.py
+│       │   │   ├── ./src/ralph/virtual/tests/test_api.py
+│       │   │   ├── ./src/ralph/virtual/tests/test_cloudsync.py
+│       │   │   ├── ./src/ralph/virtual/tests/test_models.py
+│       │   │   └── ./src/ralph/virtual/tests/test_openstack_sync.py
+│       │   └── ./src/ralph/virtual/urls.py
+│       └── ./src/ralph/wsgi.py
+└── ./terraform
+    ├── ./terraform/ALB
+    │   ├── ./terraform/ALB/ALB_main.tf
+    │   ├── ./terraform/ALB/outputs.tf
+    │   └── ./terraform/ALB/variables.tf
+    ├── ./terraform/EC2
+    │   ├── ./terraform/EC2/EC2_main.tf
+    │   ├── ./terraform/EC2/deploy.sh
+    │   ├── ./terraform/EC2/docker-compose.yml
+    │   ├── ./terraform/EC2/nvidia_preinstall.sh
+    │   ├── ./terraform/EC2/outputs.tf
+    │   └── ./terraform/EC2/variables.tf
+    ├── ./terraform/RDS
+    │   ├── ./terraform/RDS/RDS_main.tf
+    │   ├── ./terraform/RDS/outputs.tf
+    │   └── ./terraform/RDS/variables.tf
+    ├── ./terraform/VPC
+    │   ├── ./terraform/VPC/VPC_main.tf
+    │   └── ./terraform/VPC/outputs.tf
+    ├── ./terraform/install-terraform.sh
+    ├── ./terraform/main.tf
+    ├── ./terraform/terraform.tfstate
+    ├── ./terraform/terraform.tfstate.backup
+    ├── ./terraform/terraform.tfvars
+    └── ./terraform/variables.tf
+
+261 directories, 967 files
