@@ -15,13 +15,6 @@ requests==2.31.0
 websockets==12.0
 asgiref==3.7.2
 uvicorn==0.27.0
-
-# Additional dependencies for model
-unsloth==2024.11.10
-transformers==4.31.0
-peft==0.3.0
-bitsandbytes==0.41.1
-xformers==0.0.20
 packaging
 einops
 ninja
