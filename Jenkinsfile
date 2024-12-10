@@ -41,47 +41,37 @@ pipeline {
             }
         }
 
-        stage('Get Infrastructure Outputs') {
+        stage('Verify Instance Setup') {
             steps {
                 script {
-                    // Get instance IPs, bastion IP, and ALB URL from Terraform outputs dynamically
-                    ec2_ips = sh(
+                    def ec2_ips = sh(
                         script: "cd terraform && terraform output -json private_instance_ips | jq -r '.[]'",
                         returnStdout: true
                     ).trim().split('\n')
 
-                    bastionIp = sh(
+                    def bastionIp = sh(
                         script: "cd terraform && terraform output -json bastion_public_ip | jq -r '.'",
                         returnStdout: true
                     ).trim()
 
-                    albUrl = sh(
-                        script: "cd terraform && terraform output -json alb_dns_name | jq -r '.'",
-                        returnStdout: true
-                    ).trim()
+                    def sshOptions = "-o StrictHostKeyChecking=no -o 'ProxyCommand=ssh -o StrictHostKeyChecking=no -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}' -i ${SSH_KEY_PATH}"
 
-                    // Construct SSH options now that we have bastionIp
-                    sshOptions = "-o StrictHostKeyChecking=no -o 'ProxyCommand=ssh -o StrictHostKeyChecking=no -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}' -i ${SSH_KEY_PATH}"
-                }
-            }
-        }
-
-        stage('Verify Instance Setup') {
-            steps {
-                script {
                     ec2_ips.each { ip ->
                         timeout(time: 5, unit: 'MINUTES') {
                             waitUntil {
-                                def setupComplete = (sh(
+                                def setupComplete = sh(
                                     script: """
+                                        set -x
+                                        echo "Verifying setup on ${ip} through bastion ${bastionIp}..."
                                         ssh ${sshOptions} ubuntu@${ip} '
                                             test -f /home/ubuntu/.setup_complete && 
                                             systemctl is-active --quiet docker && 
                                             systemctl is-active --quiet node_exporter
                                         '
+                                        echo "Verification completed successfully"
                                     """,
                                     returnStatus: true
-                                ) == 0)
+                                ) == 0
 
                                 if (!setupComplete) {
                                     sleep(15)
@@ -101,6 +91,18 @@ pipeline {
                         string(credentialsId: 'RALPH_SUPERUSER_USERNAME', variable: 'SUPERUSER_NAME'),
                         string(credentialsId: 'RALPH_SUPERUSER_PASSWORD', variable: 'SUPERUSER_PASSWORD')
                     ]) {
+                        def ec2_ips = sh(
+                            script: "cd terraform && terraform output -json private_instance_ips | jq -r '.[]'",
+                            returnStdout: true
+                        ).trim().split('\n')
+
+                        def bastionIp = sh(
+                            script: "cd terraform && terraform output -json bastion_public_ip | jq -r '.'",
+                            returnStdout: true
+                        ).trim()
+
+                        def sshOptions = "-o StrictHostKeyChecking=no -o 'ProxyCommand=ssh -o StrictHostKeyChecking=no -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}' -i ${SSH_KEY_PATH}"
+
                         ec2_ips.each { ip ->
                             def isRalphRunning = sh(
                                 script: """
@@ -116,19 +118,20 @@ pipeline {
                             ).trim()
 
                             if (isRalphRunning == 'false') {
-                                echo "📦 Ralph not found on ${ip}, deploying fresh..."
+                                echo "📦 Time to deploy Ralph on ${ip}!"
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu
-                                        rm -rf ralph
                                         git clone https://github.com/allegro/ralph.git
                                         cd ralph/docker
                                         
-                                        docker compose pull
                                         docker compose up -d
                                         sleep 30
-
+                                        
+                                        # Run migrations
                                         docker compose exec -T web ralphctl migrate
+
+                                        # Create or update superuser
                                         docker compose exec -T web ralphctl shell -c "
 from django.contrib.auth import get_user_model; 
 User = get_user_model(); 
@@ -137,44 +140,30 @@ user.is_staff = True
 user.is_superuser = True
 user.set_password(\\"${SUPERUSER_PASSWORD}\\")
 user.save()
+print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_superuser}\\")
 "
 
+                                        # Load demo data
                                         docker compose exec -T web ralphctl demodata
                                         docker compose exec -T web ralphctl sitetree_resync_apps
 
-                                        # Write the full configuration once, using the ALB URL retrieved dynamically
-                                        docker compose exec -T -u root web bash -c "cat > /etc/ralph/conf.d/settings.conf <<EOF
-LOGIN_REDIRECT_URL = \\"/\\"
-ALLOWED_HOSTS = [\\"*\\"] 
-CSRF_TRUSTED_ORIGINS = [\\"http://${albUrl}\\"] 
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-EOF"
-
-                                        docker compose restart web
+                                        # Adjust permissions for /etc/ralph/conf.d/settings.conf
+                                        docker compose exec -T -u root web bash -c "mkdir -p /etc/ralph/conf.d && touch /etc/ralph/conf.d/settings.conf && chown root:root /etc/ralph/conf.d/settings.conf && chmod 666 /etc/ralph/conf.d/settings.conf"
+                                        docker compose exec -T -u root web bash -c "echo \\"LOGIN_REDIRECT_URL = \\"/\\"\\" >> /etc/ralph/conf.d/settings.conf"
+                                        docker compose exec -T -u root web bash -c "echo \\"ALLOWED_HOSTS = [\\"*\\"]\\" >> /etc/ralph/conf.d/settings.conf"
+                                        docker compose exec -T -u root web bash -c "chmod 644 /etc/ralph/conf.d/settings.conf"
                                     '
                                 """
                                 echo "🌟 Ralph is now configured and ready on ${ip}!"
                             } else {
-                                echo "🔄 Ralph is running on ${ip}, updating..."
+                                echo "🔄 Just refreshing Ralph on ${ip}"
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
-                                        cd /home/ubuntu/ralph
+                                        cd /home/ubuntu/ralph/docker
                                         git pull
-                                        cd docker
                                         docker compose pull
                                         docker compose up -d
                                         docker compose exec -T web ralphctl migrate
-
-                                        # Overwrite settings.conf again with the updated ALB URL
-                                        docker compose exec -T -u root web bash -c "cat > /etc/ralph/conf.d/settings.conf <<EOF
-LOGIN_REDIRECT_URL = \\"/\\"
-ALLOWED_HOSTS = [\\"*\\"] 
-CSRF_TRUSTED_ORIGINS = [\\"http://${albUrl}\\"] 
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
-EOF"
-                                        docker compose restart web
                                     '
                                 """
                             }

@@ -51,8 +51,6 @@ LOG_FILEPATH = os.environ.get('LOG_FILEPATH', '/tmp/ralph.log')
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['*']
-
 # Only for deployment
 RALPH_INSTANCE = os.environ.get('RALPH_INSTANCE', 'http://127.0.0.1:8000')
 
@@ -187,6 +185,12 @@ DATABASES = {
 
 AUTH_USER_MODEL = 'accounts.RalphUser'
 LOGIN_URL = '/login/'
+
+LOGIN_REDIRECT_URL = os.environ.get('LOGIN_REDIRECT_URL', '/')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False') == 'True'
+CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False') == 'True'
 
 LANGUAGE_CODE = 'en-us'
 LOCALE_PATHS = (os.path.join(BASE_DIR, 'locale'), )
