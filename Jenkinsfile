@@ -47,7 +47,7 @@ pipeline {
                     def ec2_ips = sh(
                         script: "cd terraform && terraform output -json private_instance_ips | jq -r '.[]'",
                         returnStdout: true
-                    ).trim().split('\n')
+                    ).trim().split('\\n')
 
                     def bastionIp = sh(
                         script: "cd terraform && terraform output -json bastion_public_ip | jq -r '.'",
@@ -59,7 +59,7 @@ pipeline {
                     ec2_ips.each { ip ->
                         timeout(time: 5, unit: 'MINUTES') {
                             waitUntil {
-                                def setupComplete = sh(
+                                def setupComplete = (sh(
                                     script: """
                                         set -x
                                         echo "Verifying setup on ${ip} through bastion ${bastionIp}..."
@@ -71,7 +71,7 @@ pipeline {
                                         echo "Verification completed successfully"
                                     """,
                                     returnStatus: true
-                                ) == 0
+                                ) == 0)
 
                                 if (!setupComplete) {
                                     sleep(15)
@@ -94,7 +94,7 @@ pipeline {
                         def ec2_ips = sh(
                             script: "cd terraform && terraform output -json private_instance_ips | jq -r '.[]'",
                             returnStdout: true
-                        ).trim().split('\n')
+                        ).trim().split('\\n')
 
                         def bastionIp = sh(
                             script: "cd terraform && terraform output -json bastion_public_ip | jq -r '.'",
@@ -164,21 +164,18 @@ print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_sup
             }
         }
 
-        // Configure Ralph Cookies and Settings
         stage('Configure Ralph Cookies') {
             steps {
                 script {
-                    // Get the ALB DNS name
                     def albUrl = sh(
                         script: "cd terraform && terraform output -json alb_dns_name | jq -r '.'",
                         returnStdout: true
                     ).trim()
 
-                    // Get instance IPs and bastion IP again
                     def ec2_ips = sh(
                         script: "cd terraform && terraform output -json private_instance_ips | jq -r '.[]'",
                         returnStdout: true
-                    ).trim().split('\n')
+                    ).trim().split('\\n')
 
                     def bastionIp = sh(
                         script: "cd terraform && terraform output -json bastion_public_ip | jq -r '.'",
@@ -190,18 +187,17 @@ print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_sup
                     ec2_ips.each { ip ->
                         echo "📜 Configuring Ralph cookies and CSRF on ${ip}"
 
-                        // Write all settings in a .py file with proper Python syntax
+                        def settingsContent = """CSRF_TRUSTED_ORIGINS = ['http://${albUrl}']
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+LOGIN_REDIRECT_URL = '/'
+ALLOWED_HOSTS = ['*']
+"""
+
                         sh """
                             ssh ${sshOptions} ubuntu@${ip} '
                                 cd /home/ubuntu/ralph/docker
-                                docker compose exec -T -u root web bash -c "echo \\"CSRF_TRUSTED_ORIGINS = ['http://${albUrl}']\\" > /etc/ralph/conf.d/settings.py"
-                                docker compose exec -T -u root web bash -c "echo \\"SESSION_COOKIE_SECURE = False\\" >> /etc/ralph/conf.d/settings.py"
-                                docker compose exec -T -u root web bash -c "echo \\"CSRF_COOKIE_SECURE = False\\" >> /etc/ralph/conf.d/settings.py"
-
-                                # Also set the LOGIN_REDIRECT_URL and ALLOWED_HOSTS here instead of in the Deploy Ralph step
-                                docker compose exec -T -u root web bash -c "echo \\"LOGIN_REDIRECT_URL = '/'\\" >> /etc/ralph/conf.d/settings.py"
-                                docker compose exec -T -u root web bash -c "echo \\"ALLOWED_HOSTS = ['*']\\" >> /etc/ralph/conf.d/settings.py"
-
+                                echo "${settingsContent}" | docker compose exec -T -u root web bash -c "cat > /etc/ralph/conf.d/settings.py"
                                 docker compose restart web
                             '
                         """
