@@ -6,8 +6,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'your-secret-key-here')
 DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 
-# Ensure localhost and 127.0.0.1 are always allowed
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALB_DOMAIN = os.getenv('ALB_DOMAIN', '')
+if ALB_DOMAIN and ALB_DOMAIN not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(ALB_DOMAIN)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -31,7 +33,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Add your chatbot middleware as needed
 ]
 
 ROOT_URLCONF = 'chatbot.urls'
