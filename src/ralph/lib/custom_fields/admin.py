@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from from django.urls import re_path as url
+from django.urls import re_path as url
 from django.contrib.admin.utils import unquote
 from django.contrib.contenttypes.models import ContentType
 

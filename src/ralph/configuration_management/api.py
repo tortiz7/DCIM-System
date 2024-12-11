@@ -1,7 +1,7 @@
 import operator
 from functools import reduce
 
-from from django.urls import re_path as url
+from django.urls import re_path as url
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from rest_framework import status
