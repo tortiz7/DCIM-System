@@ -1,8 +1,6 @@
-
 -r base.txt
 gunicorn>=20.2.0,<23.0.0
 django-redis-sessions>=0.5.6,<1.0.0
-django-redis-cache>=2.1.0,<3.0.0
 hiredis>=2.0.0,<3.0.0
 statsd>=3.3.0,<5.0.0
 channels-redis>=4.1.0,<5.0.0

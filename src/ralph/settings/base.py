@@ -392,6 +392,18 @@ else:
 
 USE_CACHE = bool_from_env('USE_CACHE', True)
 
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis:6379/1",  # Update as per your Redis setup
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "IGNORE_EXCEPTIONS": True,  # Optional: to make cache operations fail silently
+        }
+    }
+}
+
+
 SENTRY_ENABLED = bool_from_env('SENTRY_ENABLED')
 
 BACK_OFFICE_ASSET_AUTO_ASSIGN_HOSTNAME = bool_from_env(
