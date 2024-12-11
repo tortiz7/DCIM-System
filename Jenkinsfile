@@ -74,7 +74,7 @@ pipeline {
                                 ) == 0
 
                                 if (!setupComplete) {
-                                    sleep(15)
+                                    sleep 15
                                 }
                                 return setupComplete
                             }
@@ -118,7 +118,8 @@ pipeline {
                 script {
                     withCredentials([
                         string(credentialsId: 'RALPH_SUPERUSER_USERNAME', variable: 'SUPERUSER_NAME'),
-                        string(credentialsId: 'RALPH_SUPERUSER_PASSWORD', variable: 'SUPERUSER_PASSWORD')
+                        string(credentialsId: 'RALPH_SUPERUSER_PASSWORD', variable: 'SUPERUSER_PASSWORD'),
+                        string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')
                     ]) {
                         def ec2_ips = sh(
                             script: "cd terraform && terraform output -json private_instance_ips | jq -r '.[]'",
@@ -151,11 +152,11 @@ pipeline {
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu
-                                        # Clone your own repo with the docker-compose and configs
-                                        git clone https://github.com/shafeeshafee/ralph-pipeline-test.git
+                                        # Clone using GitHub token
+                                        git clone https://shafeeshafee:${GITHUB_TOKEN}@github.com/shafeeshafee/ralph-pipeline-test.git
                                         cd ralph-pipeline-test/docker
 
-                                        # Pull and run the image (now from your own registry!)
+                                        # Pull and run the image
                                         docker compose pull
                                         docker compose up -d
                                         sleep 30
@@ -165,15 +166,15 @@ pipeline {
 
                                         # Create or update superuser
                                         docker compose exec -T web ralphctl shell -c "
-from django.contrib.auth import get_user_model; 
-User = get_user_model(); 
-user, created = User.objects.get_or_create(username=\\"${SUPERUSER_NAME}\\", defaults={\\"email\\":\\"team@cloudega.com\\"});
-user.is_staff = True
-user.is_superuser = True
-user.set_password(\\"${SUPERUSER_PASSWORD}\\")
-user.save()
-print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_superuser}\\")
-"
+                        from django.contrib.auth import get_user_model; 
+                        User = get_user_model(); 
+                        user, created = User.objects.get_or_create(username=\\"${SUPERUSER_NAME}\\", defaults={\\"email\\":\\"team@cloudega.com\\"});
+                        user.is_staff = True
+                        user.is_superuser = True
+                        user.set_password(\\"${SUPERUSER_PASSWORD}\\")
+                        user.save()
+                        print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_superuser}\\")
+                        "
 
                                         # Load demo data
                                         docker compose exec -T web ralphctl demodata
