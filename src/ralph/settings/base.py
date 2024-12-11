@@ -94,7 +94,6 @@ INSTALLED_APPS = (
     'ralph.notifications',
     'ralph.ssl_certificates',
     'ralph.assistant',
-    'chatbot',
     'rest_framework',
     'rest_framework.authtoken',
     'taggit_serializer',
