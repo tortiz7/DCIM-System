@@ -56,7 +56,6 @@ resource "aws_lb_target_group" "app_tg" {
   # Enable stickiness:
   stickiness {
     type            = "lb_cookie"
-    # cookie_duration is in seconds. Example: 86400 = 24 hours
     cookie_duration = 604800
   }
 

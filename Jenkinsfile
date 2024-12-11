@@ -83,7 +83,35 @@ pipeline {
                 }
             }
         }
-        // TEST
+
+        stage('Test') {
+            steps {
+                script {
+                    echo "🔧 Running placeholder tests..."
+                    sh 'echo "No real tests yet. Passing by default."'
+                }
+            }
+        }
+
+        stage('Build and Push Docker Image') {
+            steps {
+                script {
+                    withCredentials([
+                        string(credentialsId: 'TF_VAR_dockerhub_user', variable: 'DOCKERHUB_USER'),
+                        string(credentialsId: 'TF_VAR_dockerhub_pass', variable: 'DOCKERHUB_PASS')
+                    ]) {
+                        echo "🔨 Building Docker image for Ralph..."
+                        sh """
+                            docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
+                            docker build -t shafeekuralabs/ralph:latest -f Dockerfile-prod .
+                            docker push shafeekuralabs/ralph:latest
+                        """
+                        echo "✅ Docker image pushed to DockerHub as shafeekuralabs/ralph:latest"
+                    }
+                }
+            }
+        }
+
         stage('Deploy Ralph') {
             steps {
                 script {
@@ -122,12 +150,15 @@ pipeline {
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu
-                                        git clone https://github.com/allegro/ralph.git
-                                        cd ralph/docker
-                                        
+                                        # Clone your own repo with the docker-compose and configs
+                                        git clone https://github.com/shafeeshafee/ralph-pipeline-test.git
+                                        cd ralph-pipeline-test/docker
+
+                                        # Pull and run the image
+                                        docker compose pull
                                         docker compose up -d
                                         sleep 30
-                                        
+
                                         # Run migrations
                                         docker compose exec -T web ralphctl migrate
 
@@ -153,10 +184,10 @@ print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_sup
                                 """
                                 echo "🌟 Ralph is now configured and ready on ${ip}!"
                             } else {
-                                echo "🔄 Just refreshing Ralph on ${ip}"
+                                echo "🔄 Ralph is already running on ${ip}, updating it..."
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
-                                        cd /home/ubuntu/ralph/docker
+                                        cd /home/ubuntu/ralph-pipeline-test/docker
                                         git pull
                                         docker compose pull
                                         docker compose up -d
