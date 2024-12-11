@@ -8,7 +8,6 @@ services:
     volumes:
       - ralph_media:/var/local/ralph/media
       - ralph_static:/usr/share/ralph/static
-    # Remove the links line entirely
     environment:
       DATABASE_NAME: ralph_ng
       DATABASE_USER: ralph_ng
