@@ -16,6 +16,7 @@ services:
       DATABASE_HOST: ${DATABASE_HOST}
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
+      ALB_DOMAIN: ${ALB_DOMAIN}
       CHATBOT_ENABLED: "true"
       CHATBOT_URL: "http://chatbot:8001"
     healthcheck:
@@ -42,6 +43,7 @@ services:
       RALPH_API_TOKEN: "${RALPH_API_TOKEN}"
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
+      ALB_DOMAIN: ${ALB_DOMAIN}
       NVIDIA_VISIBLE_DEVICES: all
       CUDA_VISIBLE_DEVICES: "0"
     depends_on:
@@ -67,6 +69,7 @@ services:
     environment:
       DJANGO_DEBUG: "false"
       DJANGO_SETTINGS_MODULE: "ralph.settings.prod"
+      ALB_DOMAIN: ${ALB_DOMAIN}
     depends_on:
       web:
         condition: service_healthy
@@ -87,6 +90,7 @@ services:
       REDIS_PASSWORD: ""
       REDIS_PORT: ${REDIS_PORT}
       REDIS_DB: 0
+      ALB_DOMAIN: ${ALB_DOMAIN} 
 
 volumes:
   ralph_media:

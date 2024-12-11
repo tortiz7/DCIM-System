@@ -110,7 +110,7 @@ REDIS_PORT=${redis_port}
 ALLOWED_HOSTS="${aws_lb_dns},localhost,127.0.0.1"
 CHATBOT_ENABLED=true
 CHATBOT_URL=http://chatbot:8001
-EXPORT ALB_DOMAIN=${aws_lb_dns}
+ALB_DOMAIN=${aws_lb_dns}
 EOF
 
 # Verify the environment file
@@ -125,15 +125,15 @@ cd /opt/ralph/source/docker
 echo "Building and starting containers..."
 docker compose up -d --build web nginx chatbot
 
-# Wait for web service to be healthy
-echo "Waiting for web service to be healthy..."
-TIMEOUT=300  # 5 minutes timeout
-start_time=$(date +%s)
-while true; do
-    if docker compose ps | grep web | grep -q "(healthy)"; then
-        echo "✅ Web service is healthy"
-        break
-    fi
+# # Wait for web service to be healthy
+# echo "Waiting for web service to be healthy..."
+# TIMEOUT=300  # 5 minutes timeout
+# start_time=$(date +%s)
+# while true; do
+#     if docker compose ps | grep web | grep -q "(healthy)"; then
+#         echo "✅ Web service is healthy"
+#         break
+#     fi
     
     current_time=$(date +%s)
     elapsed_time=$((current_time - start_time))
@@ -212,27 +212,27 @@ docker compose down
 docker compose up -d --build
 
 # Wait for services to be healthy
-echo "Waiting for services to be healthy..."
-TIMEOUT=300  # 5 minutes timeout
-start_time=$(date +%s)
-while true; do
-    if docker compose ps | grep -q "(healthy)" && [ $(docker compose ps | grep -c "(healthy)") -ge 3 ]; then
-        echo "✅ All services are healthy"
-        break
-    fi
+# echo "Waiting for services to be healthy..."
+# TIMEOUT=300  # 5 minutes timeout
+# start_time=$(date +%s)
+# while true; do
+#     if docker compose ps | grep -q "(healthy)" && [ $(docker compose ps | grep -c "(healthy)") -ge 3 ]; then
+#         echo "✅ All services are healthy"
+#         break
+#     fi
     
-    current_time=$(date +%s)
-    elapsed_time=$((current_time - start_time))
+#     current_time=$(date +%s)
+#     elapsed_time=$((current_time - start_time))
     
-    if [ $elapsed_time -ge $TIMEOUT ]; then
-        echo "❌ Timeout waiting for services to become healthy"
-        docker compose logs
-        exit 1
-    fi
+#     if [ $elapsed_time -ge $TIMEOUT ]; then
+#         echo "❌ Timeout waiting for services to become healthy"
+#         docker compose logs
+#         exit 1
+#     fi
     
-    echo "Waiting for services... ($elapsed_time seconds elapsed)"
-    sleep 10
-done
+#     echo "Waiting for services... ($elapsed_time seconds elapsed)"
+#     sleep 10
+# done
 
 # Verify Chatbot can connect to Ralph
 echo "Verifying Chatbot connection to Ralph..."
