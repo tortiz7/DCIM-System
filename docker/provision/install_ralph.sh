@@ -25,7 +25,7 @@ install_release() {
     mv "${RALPH_IMAGE_TMP_DIR}/ralph.list" /etc/apt/sources.list.d/ralph.list
 
     apt-get update
-    apt-get -y install ralph-core="${RALPH_VERSION}"
+    apt-get -y install ralph-core
 }
 
 
