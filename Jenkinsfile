@@ -101,9 +101,10 @@ pipeline {
                         string(credentialsId: 'TF_VAR_dockerhub_pass', variable: 'DOCKERHUB_PASS')
                     ]) {
                         echo "🔨 Building Docker image for Ralph..."
+
                         sh """
                             docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
-                            docker build -t shafeekuralabs/ralph:latest -f docker/Dockerfile-prod docker/
+                            docker build -t shafeekuralabs/ralph:latest -f docker/Dockerfile-prod .
                             docker push shafeekuralabs/ralph:latest
                         """
                         echo "✅ Docker image pushed to DockerHub as shafeekuralabs/ralph:latest"
@@ -154,7 +155,7 @@ pipeline {
                                         git clone https://github.com/shafeeshafee/ralph-pipeline-test.git
                                         cd ralph-pipeline-test/docker
 
-                                        # Pull and run the image
+                                        # Pull and run the image (now from your own registry!)
                                         docker compose pull
                                         docker compose up -d
                                         sleep 30
