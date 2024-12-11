@@ -1,5 +1,16 @@
 # syntax=docker/dockerfile:1.4
 FROM nvidia/cuda:12.4.0-devel-ubuntu22.04
+
+# Set environment variables for Redis/Elasticache
+ENV REDIS_HOST="my-redis-replication-group.9fmuyw.ng.0001.use1.cache.amazonaws.com:6379"
+ENV REDIS_PORT=6379
+
+ENV DB_NAME=ralph_ng
+ENV DB_USER=cloudega2024
+ENV DB_PASSWORD=cloudega2024!
+ENV DB_HOST=ralphng.ct0guqq467p6.us-east-1.rds.amazonaws.com
+ENV DB_PORT=5432
+
 # Set environment variables for CUDA
 ENV PYTHONUNBUFFERED=1
 ENV DEBIAN_FRONTEND=noninteractive

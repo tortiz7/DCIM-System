@@ -59,15 +59,15 @@ ASGI_APPLICATION = 'chatbot.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', 'ralph_chatbot'),
-        'USER': os.getenv('DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', 'localhost'),
+        'NAME': os.getenv('DB_NAME', 'ralph_ng'),
+        'USER': os.getenv('DB_USER', 'cloudega2024'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'cloudega2024!'),
+        'HOST': os.getenv('DB_HOST', 'ralphng.ct0guqq467p6.us-east-1.rds.amazonaws.com'),
         'PORT': os.getenv('DB_PORT', '5432'),
     }
 }
 
-REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_HOST = os.getenv('REDIS_HOST', 'my-redis-replication-group.9fmuyw.ng.0001.use1.cache.amazonaws.com:6379')
 REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
 
 REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/0"
