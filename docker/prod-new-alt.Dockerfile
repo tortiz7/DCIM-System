@@ -65,10 +65,7 @@ RUN pip3 install --no-cache-dir \
 ENV RALPH_VERSION=3.0.0
 
 # Install critical dependencies
-RUN pip3 install --no-cache-dir \
-    Django==3.2.18 \
-    pytz==2023.3 \
-    six>=1.16.0
+RUN pip3 install --no-cache-dir setuptools==59.6.0 wheel==0.37.1 six>=1.16.0
 
 # Install Ralph's requirements
 RUN pip3 install --no-cache-dir -r requirements/base.txt && \
