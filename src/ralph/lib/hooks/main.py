@@ -2,7 +2,8 @@ from typing import Any, Callable, Optional
 
 import pkg_resources
 from django.conf import settings
-from django.utils import lru_cache
+from django.utils.functional import lru_cache
+
 
 
 def hook_name_to_env_name(name, prefix='HOOKS'):
