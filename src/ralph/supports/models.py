@@ -4,7 +4,7 @@ from datetime import datetime
 from dj.choices import Choices
 from django.contrib.humanize.templatetags.humanize import naturaltime
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from ralph.accounts.models import Regionalizable
 from ralph.admin.autocomplete import AutocompleteTooltipMixin

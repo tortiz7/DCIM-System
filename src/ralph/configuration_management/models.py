@@ -1,7 +1,7 @@
 from dj.choices import Choices
 from dj.choices.fields import ChoiceField
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from ralph.assets.models import BaseObject
 from ralph.lib.mixins.models import TimeStampMixin

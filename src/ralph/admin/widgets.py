@@ -19,7 +19,7 @@ from django.template.defaultfilters import slugify, title
 from django.urls import reverse
 from django.utils.encoding import force_text
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from ralph.admin.autocomplete import get_results
 from ralph.admin.helpers import get_field_by_relation_path

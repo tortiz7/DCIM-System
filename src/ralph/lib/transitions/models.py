@@ -22,7 +22,7 @@ from django.db.models.signals import (
 from django.dispatch import receiver
 from django.utils.functional import curry
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django_extensions.db.fields.json import JSONField
 from reversion import revisions as reversion
 

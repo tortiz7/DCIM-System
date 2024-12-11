@@ -18,7 +18,7 @@ from django.db.models import Q
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from ralph.accounts.models import Region
 from ralph.admin.autocomplete import AutocompleteTooltipMixin

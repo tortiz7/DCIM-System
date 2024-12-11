@@ -2,7 +2,7 @@
 from dj.choices import Choices, Country
 from django.conf import settings
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from ralph.assets.models import AssetHolder, BaseObject
 from ralph.attachments.helpers import get_file_path

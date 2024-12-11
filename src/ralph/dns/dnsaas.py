@@ -8,7 +8,7 @@ from urllib.parse import parse_qs, urlencode, urljoin,  urlsplit
 import requests
 from dj.choices import Choices
 from django.conf import settings
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from oauthlib.oauth2 import BackendApplicationClient
 from oauthlib.oauth2.rfc6749.errors import CustomOAuth2Error
 from requests_oauthlib import OAuth2Session

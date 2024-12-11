@@ -6,7 +6,7 @@ from django.db.models.signals import post_migrate
 from django.dispatch import receiver
 from django.forms import ValidationError
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from mptt.models import MPTTModel, TreeForeignKey
 
 from ralph.assets.models.base import BaseObject

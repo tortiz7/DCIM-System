@@ -4,7 +4,7 @@ from django.contrib.auth.management import _get_all_permissions
 from django.core import exceptions
 from django.db import DEFAULT_DB_ALIAS, models, router, transaction
 from django.db.models.base import ModelBase
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 
 def get_perm_key(action, class_name, field_name):

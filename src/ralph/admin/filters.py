@@ -17,7 +17,7 @@ from django.urls import reverse
 from django.utils.encoding import smart_text
 from django.utils.formats import get_format
 from django.utils.html import conditional_escape, mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from mptt.fields import TreeForeignKey
 from mptt.settings import DEFAULT_LEVEL_INDICATOR
 from taggit.managers import TaggableManager

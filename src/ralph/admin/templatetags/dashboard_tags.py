@@ -8,7 +8,7 @@ from django.db.models import Count, Prefetch, Q, Sum
 from django.template import Library
 from django.urls import reverse
 from django.utils.text import slugify
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from ralph.accounts.helpers import (
     get_acceptance_url,

@@ -4,11 +4,11 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.urls import NoReverseMatch
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
-from ralph.admin.filters import custom_title_filter
-from ralph.admin.helpers import get_admin_url
-from ralph.admin.views.extra import RalphDetailView
+from ralph.filters import custom_title_filter
+from ralph.helpers import get__url
+from ralph.views.extra import RalphDetailView
 from ralph.configuration_management.models import SCMCheckResult
 # NOTE(romcheg): These functions could be moved to a common place
 from ralph.security.views import _linkify, _url_name_for_change_view
@@ -84,7 +84,7 @@ class SCMStatusCheckInChangeListMixin(object):
                 logger.error("No scm info view for obj of type: %s", type(obj))
             else:
                 try:
-                    url = get_admin_url(obj, url_name)
+                    url = get__url(obj, url_name)
                     html = _linkify(html, url)
                 except NoReverseMatch:
                     logger.error(
@@ -92,4 +92,4 @@ class SCMStatusCheckInChangeListMixin(object):
                     )
         return mark_safe(html)
     scm_status_check.short_description = _('SCM status')
-    scm_status_check.admin_order_field = 'scmstatuscheck'
+    scm_status_check._order_field = 'scmstatuscheck'

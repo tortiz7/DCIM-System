@@ -17,7 +17,7 @@ from django.utils.datastructures import MultiValueDict
 from django.utils.decorators import classonlymethod
 from django.utils.http import urlencode
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.views.generic import View
 
 from ralph.admin.helpers import get_admin_url

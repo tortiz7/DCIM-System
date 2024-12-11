@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Count, Prefetch
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from ralph.admin.decorators import register
 from ralph.admin.filters import BaseObjectHostnameFilter, TagsListFilter
