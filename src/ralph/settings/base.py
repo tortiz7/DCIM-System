@@ -51,7 +51,6 @@ INSTALLED_APPS = (
     'taggit',
     'django.contrib.auth',
     'ralph.admin',
-    'django.contrib.admin',
     'django.contrib.humanize',
     'django.contrib.sessions',
     'django.contrib.messages',
