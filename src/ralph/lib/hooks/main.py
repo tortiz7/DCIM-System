@@ -1,9 +1,7 @@
 from typing import Any, Callable, Optional
-
 import pkg_resources
 from django.conf import settings
 from functools import lru_cache
-
 
 
 def hook_name_to_env_name(name, prefix='HOOKS'):
@@ -16,7 +14,7 @@ def hook_name_to_env_name(name, prefix='HOOKS'):
     return '_'.join([prefix, name.upper().replace('.', '_')])
 
 
-@lru_cache.lru_cache(maxsize=None)
+@lru_cache(maxsize=None)  # Changed from @lru_cache.lru_cache to @lru_cache
 def get_hook(name: str, variant: Optional[str]=None) -> Callable[..., Any]:
     """Returns function based on configuration and entry_points."""
     loaded_func = None
