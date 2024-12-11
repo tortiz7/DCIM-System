@@ -4,6 +4,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 ARG RALPH_LOCAL_DIR="/var/local/ralph"
 ARG SNAPSHOT="0"
+ARG RALPH_VERSION=""   # Define RALPH_VERSION as empty so it won't be unbound
+ENV RALPH_VERSION=$RALPH_VERSION
 ENV PATH=/opt/ralph/ralph-core/bin/:$PATH
 ENV RALPH_CONF_DIR="/etc/ralph"
 ENV RALPH_LOCAL_DIR="$RALPH_LOCAL_DIR"
@@ -18,7 +20,6 @@ RUN apt-get clean && \
     apt-get -y install apt-transport-https ca-certificates gnupg2 locales curl && \
     rm -rf /var/lib/apt/lists/*
 
-# Set UTF-8 locale
 RUN locale-gen en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US:en
@@ -32,12 +33,8 @@ COPY contrib/common/apt/ralph.list \
      docker/provision/install_ralph.sh \
      docker/provision/init-ralph.sh $RALPH_IMAGE_TMP_DIR/
 
-# NOTE:
-# Modify install_ralph.sh to remove version pinning.
-# For example, if install_ralph.sh originally had:
-# apt-get -y install ralph-core=$RALPH_VERSION
-# Change it to:
-# apt-get -y install ralph-core
+#NOTE (shaf): Make sure `install_ralph.sh` does not attempt to reference $RALPH_VERSION if it's not needed.
+# If the script still references $RALPH_VERSION, ensure it has a default, e.g. ${RALPH_VERSION:-""}
 
 RUN "$RALPH_IMAGE_TMP_DIR/install_ralph.sh"
 
