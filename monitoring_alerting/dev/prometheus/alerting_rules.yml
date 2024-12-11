@@ -28,4 +28,15 @@ groups:
           severity: warning
         annotations:
           summary: "High CPU Usage in Ralph Container"
-          description: "Ralph container CPU usage has been >80% for more than 5 minutes."    
+          description: "Ralph container CPU usage has been >80% for more than 5 minutes."
+
+  - name: test_alerts
+    rules:
+      - alert: TestEmailAlert
+        expr: vector(1)
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Test Email Alert"
+          description: "This is a test alert to verify Alertmanager email functionality."
