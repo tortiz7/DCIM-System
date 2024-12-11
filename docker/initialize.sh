@@ -1,24 +1,24 @@
 #!/bin/bash
 set -e
 
-echo "Waiting for database..."
-until python3 -c "import MySQLdb; MySQLdb.connect(
-    host='${DATABASE_HOST}', 
-    user='${DATABASE_USER}', 
-    passwd='${DATABASE_PASSWORD}', 
-    db='${DATABASE_NAME}'
-)" 2>/dev/null
-do
-    echo "Database is unavailable - sleeping"
-    sleep 3
-done
+# echo "Waiting for database..."
+# until python3 -c "import MySQLdb; MySQLdb.connect(
+#     host='${DATABASE_HOST}', 
+#     user='${DATABASE_USER}', 
+#     passwd='${DATABASE_PASSWORD}', 
+#     db='${DATABASE_NAME}'
+# )" 2>/dev/null
+# do
+#     echo "Database is unavailable - sleeping"
+#     sleep 3
+# done
 
-echo "Waiting for Redis..."
-until redis-cli -h "${REDIS_HOST}" -p "${REDIS_PORT}" ping 2>/dev/null | grep -q "PONG"
-do
-    echo "Redis is unavailable - sleeping"
-    sleep 3
-done
+# echo "Waiting for Redis..."
+# until redis-cli -h "${REDIS_HOST}" -p "${REDIS_PORT}" ping 2>/dev/null | grep -q "PONG"
+# do
+#     echo "Redis is unavailable - sleeping"
+#     sleep 3
+# done
 
 echo "Initializing Ralph..."
 ralph migrate --noinput
