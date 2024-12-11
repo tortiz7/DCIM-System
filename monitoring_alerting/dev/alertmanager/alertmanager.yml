@@ -1,8 +1,8 @@
 global:
   smtp_smarthost: 'smtp.gmail.com:587'
   smtp_from: 'cloudega.alertmanager@gmail.com'
-  smtp_auth_username: '${SMTP_USERNAME}'
-  smtp_auth_password: '${SMTP_PASSWORD}'
+  smtp_auth_username: "cloudega.alertmanager@gmail.com"
+  smtp_auth_password: "icqlbopubfbxxgcs"
   smtp_require_tls: true
 
 route:
