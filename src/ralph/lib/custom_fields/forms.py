@@ -4,7 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
-from django.utils.translation import ugettext
+from django.utils.translation import gettext
 
 
 class CustomFieldValueForm(forms.ModelForm):
@@ -106,7 +106,7 @@ class CustomFieldValueFormSet(BaseGenericInlineFormSet):
         return form
 
     def get_unique_error_message(self, unique_check):
-        return ugettext(
+        return gettext(
             'Please correct the duplicate data for custom fields (only one '
             'value for particular custom field is possible).'
         )
