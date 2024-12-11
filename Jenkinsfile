@@ -112,7 +112,7 @@ pipeline {
                 }
             }
         }
-
+        // TODO: This is a test, delete this after.
         stage('Deploy Ralph') {
             steps {
                 script {
@@ -165,17 +165,8 @@ pipeline {
                                         # Run migrations
                                         docker compose exec -T web ralphctl migrate
 
-                                        # Create or update superuser
-                                        docker compose exec -T web ralphctl shell -c "
-                        from django.contrib.auth import get_user_model; 
-                        User = get_user_model(); 
-                        user, created = User.objects.get_or_create(username=\\"${SUPERUSER_NAME}\\", defaults={\\"email\\":\\"team@cloudega.com\\"});
-                        user.is_staff = True
-                        user.is_superuser = True
-                        user.set_password(\\"${SUPERUSER_PASSWORD}\\")
-                        user.save()
-                        print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_superuser}\\")
-                        "
+                                        # Create or update superuser (all in one line)
+                                        docker compose exec -T web ralphctl shell -c "from django.contrib.auth import get_user_model; User=get_user_model(); user,created=User.objects.get_or_create(username=\\"${SUPERUSER_NAME}\\", defaults={\\"email\\":\\"team@cloudega.com\\"}); user.is_staff=True; user.is_superuser=True; user.set_password(\\"${SUPERUSER_PASSWORD}\\"); user.save(); print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_superuser}\\")"
 
                                         # Load demo data
                                         docker compose exec -T web ralphctl demodata
