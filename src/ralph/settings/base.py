@@ -93,7 +93,7 @@ INSTALLED_APPS = (
     'ralph.lib.hooks',
     'ralph.notifications',
     'ralph.ssl_certificates',
-    'ralph-assistant',
+    'ralph.assistant',
     'chatbot',
     'rest_framework',
     'rest_framework.authtoken',
@@ -283,7 +283,9 @@ LOGGING = {
     },
 }
 
-RALPH_CHATBOT_URL = os.environ.get('RALPH_CHATBOT_URL', 'http://chatbot:8001')
+CHATBOT_URL = os.environ.get('RALPH_CHATBOT_URL', 'http://chatbot:8001')
+CHATBOT_WS_URL = os.getenv('CHATBOT_WS_URL', 'ws://chatbot:8001/ws/')
+CHATBOT_ENABLED = True
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8001",

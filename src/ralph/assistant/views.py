@@ -1,6 +1,7 @@
 import requests
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.views.generic import TemplateView
 from django.conf import settings
 from ralph.data_center.models import DataCenterAsset
 from ralph.back_office.models import BackOfficeAsset
@@ -35,3 +36,11 @@ class MetricsView(APIView):
             }
         }
         return Response(metrics)
+
+class AssistantWidgetView(TemplateView):
+    template_name = 'assistant/widget.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['chatbot_url'] = settings.CHATBOT_URL
+        return context
