@@ -103,7 +103,7 @@ pipeline {
                         echo "🔨 Building Docker image for Ralph..."
                         sh """
                             docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
-                            docker build -t shafeekuralabs/ralph:latest -f Dockerfile-prod .
+                            docker build -t shafeekuralabs/ralph:latest -f docker/Dockerfile-prod docker/
                             docker push shafeekuralabs/ralph:latest
                         """
                         echo "✅ Docker image pushed to DockerHub as shafeekuralabs/ralph:latest"
