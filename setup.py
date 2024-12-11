@@ -13,11 +13,15 @@ def read(fname):
 
 
 def get_version():
-    script = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)), 'get_version.sh'
-    )
-    ver = subprocess.check_output([script], shell=True)
-    return ver.decode().strip()
+    try:
+        script = os.path.join(
+            os.path.abspath(os.path.dirname(__file__)), 'get_version.sh'
+        )
+        ver = subprocess.check_output([script, 'show'], shell=True)
+        return ver.decode().strip()
+    except:
+        # Fallback to environment variable
+        return os.getenv('RALPH_VERSION', '3.0.0')
 
 
 setup(

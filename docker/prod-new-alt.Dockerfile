@@ -61,6 +61,24 @@ RUN --mount=type=ssh git clone --branch $RALPH_BRANCH $RALPH_REPO .
 ENV DJANGO_SETTINGS_MODULE=ralph.settings.prod
 ENV PATH=/usr/local/bin:$PATH
 
+# Set up version handling
+ENV RALPH_VERSION=3.0.0
+RUN chmod +x get_version.sh && \
+    git config --global --add safe.directory /app
+
+# Modify setup.py installation approach
+RUN sed -i 's/subprocess.check_output(\[script\], shell=True)/os.getenv("RALPH_VERSION", "3.0.0").encode()/' setup.py && \
+    pip3 install -e . && \
+    which ralph && \
+    ralph --version
+
+# Alternative approach if the above doesn't work:
+RUN echo '#!/bin/bash\necho "$RALPH_VERSION"' > get_version.sh && \
+    chmod +x get_version.sh && \
+    pip3 install -e . && \
+    which ralph && \
+    ralph --version
+
 # Install Python dependencies including chatbot
 RUN pip3 install --no-cache-dir \
     channels==3.0.4 \
@@ -76,11 +94,24 @@ RUN pip3 install --no-cache-dir \
 RUN pip3 install --no-cache-dir -r requirements/base.txt && \
     pip3 install --no-cache-dir -r requirements/openstack.txt && \
     pip3 install --no-cache-dir -r requirements/prod.txt && \
-    pip3 install --no-cache-dir keystoneauth1>=3.18.0 && \
-    pip3 install --no-cache-dir .
+    pip3 install --no-cache-dir keystoneauth1>=3.18.0
+    
+RUN python3 setup.py develop && \
+    which ralph && \
+    ralph --version
+
+RUN echo "Verifying Ralph installation..." && \
+    if ! command -v ralph &> /dev/null; then \
+        echo "Ralph command not found! Installing entry points directly..." && \
+        pip3 install --no-cache-dir -e . && \
+        if ! command -v ralph &> /dev/null; then \
+            echo "Failed to install Ralph command" && \
+            exit 1; \
+        fi \
+    fi
 
 # Copy the initialization script and make it executable
-COPY docker/initialize.sh /usr/local/bin/initialize.sh
+COPY initialize.sh /usr/local/bin/initialize.sh
 RUN chmod +x /usr/local/bin/initialize.sh
 
 # Add healthcheck to ensure Ralph is running
