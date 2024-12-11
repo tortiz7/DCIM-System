@@ -9,7 +9,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.forms.utils import flatatt
-from django.utils import six
+import six
 from django.utils.html import format_html, smart_urlquote
 from django.utils.translation import gettext_lazy as _
 from taggit.forms import TagField

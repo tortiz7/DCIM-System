@@ -4,7 +4,7 @@ import sys
 
 from django.core.serializers.base import DeserializationError
 from django.core.serializers.json import Serializer as JSONSerializer
-from django.utils import six
+import six
 from djmoney.models.fields import MoneyField
 
 from djmoney.money import Money
