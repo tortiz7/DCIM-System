@@ -5,7 +5,7 @@ from functools import reduce
 
 from dj.choices import Choices
 from django.apps import apps
-from from django.urls import re_path as url
+from django.urls import re_path as url
 from django.core.exceptions import FieldDoesNotExist
 from django.db.models import Manager, Q
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
