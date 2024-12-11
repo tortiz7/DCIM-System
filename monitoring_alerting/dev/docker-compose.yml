@@ -3,7 +3,6 @@ version: '3.7'
 services:
   prometheus:
     image: prom/prometheus:v2.49.0
-    container_name: prometheus
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/alerting_rules.yml:/etc/prometheus/alerting_rules.yml:ro
@@ -11,45 +10,42 @@ services:
     ports:
       - "9090:9090"
     networks:
-      - monitoring
+      monitoring: {}
 
   alertmanager:
     image: prom/alertmanager:v0.26.0
-    container_name: alertmanager
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
     command: [ "--config.file=/etc/alertmanager/alertmanager.yml" ]
     ports:
       - "9093:9093"
     networks:
-      - monitoring
+      monitoring: {}
 
   grafana:
     image: grafana/grafana:latest
-    container_name: grafana
     volumes:
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
     environment:
+      GF_SECURITY_ADMIN_USER: "admin"
       GF_SECURITY_ADMIN_PASSWORD: "admin"
     ports:
       - "3000:3000"
     networks:
-      - monitoring
+      monitoring: {}
     depends_on:
       - prometheus
 
   pushgateway:
     image: prom/pushgateway:latest
-    container_name: pushgateway
     ports:
       - "9091:9091"
     networks:
-      - monitoring
+      monitoring: {}
 
   machine_learning:
-    build: ./machine_learning
-    container_name: ml_jobs
+    image: cgordondev/machine_learning:latest
     environment:
       PROMETHEUS_URL: http://prometheus:9090
       PUSHGATEWAY_URL: http://pushgateway:9091
@@ -57,19 +53,17 @@ services:
       - prometheus
       - pushgateway
     networks:
-      - monitoring
+      monitoring: {}
 
   node_exporter:
     image: prom/node-exporter:v1.6.0
-    container_name: node_exporter
     ports:
       - "9100:9100"
     networks:
-      - monitoring
+      monitoring: {}
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
-    container_name: cadvisor
     ports:
       - "8080:8080"
     volumes:
@@ -77,44 +71,25 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/kmsg:/dev/kmsg
     networks:
-      - monitoring
+      monitoring: {}
 
-  # agent:
-    build: ./agent
-    container_name: monitoring_agent
+  agent:
+    image: cgordondev/agent:latest
     environment:
-      # JENKINS_URL: "http://jenkins:8080"
-      # JENKINS_USER: "jenkins_user"
-      AWS_DEFAULT_REGION: "us-east-1"
-    depends_on:
-      - prometheus
-      - alertmanager
-      - grafana
-      - pushgateway
-    networks:
-      - monitoring
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PROMETHEUS_URL=http://prometheus:9090
     ports:
       - "7000:7000"
-    secrets:
-      # - slack_token
-      # - jenkins_token
-      - aws_access_key_id
-      - aws_secret_access_key
-      - openai_api_key
+    depends_on:
+      - prometheus
+    networks:
+      monitoring: {}
+    command: tail -f /dev/null
 
 networks:
   monitoring:
-
-
-secrets:
-  # slack_token:
-  #   external: true
-  # jenkins_token:
-  #   external: true
-  aws_access_key_id:
-    external: true
-  aws_secret_access_key:
-    external: true
-  openai_api_key:
-    external: true
+    driver: bridge

@@ -61,7 +61,7 @@ ANOMALY_METRICS = [
     'node_nf_conntrack_entries',
 
     # Error and Success Metrics
-    'node_scrape_collector_success',
+    # 'node_scrape_collector_success',
     # Replace with actual metric names if available
     # 'node_netstat_tcp_errors',
     # 'node_netstat_udp_errors',
