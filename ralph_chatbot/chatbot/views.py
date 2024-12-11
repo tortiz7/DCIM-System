@@ -3,8 +3,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
 from django.http import HttpResponse
-from .api.client import RalphAPIClient
-from .api.metrics import MetricsCollector
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from peft import PeftModel
@@ -16,11 +14,12 @@ class ChatbotView(APIView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         try:
+            # Load base model
             self.model = AutoModelForCausalLM.from_pretrained(
                 settings.MODEL_PATH['base_path'],
                 device_map="auto"
             )
-            # Load adapter model with PeftModel
+            # Load adapter model
             self.model = PeftModel.from_pretrained(
                 self.model, 
                 settings.MODEL_PATH['adapters_path']
@@ -28,11 +27,6 @@ class ChatbotView(APIView):
             self.tokenizer = AutoTokenizer.from_pretrained(
                 settings.MODEL_PATH['base_path']
             )
-            self.api_client = RalphAPIClient(
-                base_url=settings.RALPH_API_URL,
-                token=settings.RALPH_API_TOKEN
-            )
-            self.metrics_collector = MetricsCollector()
         except Exception as e:
             logger.error(f"Error initializing ChatbotView: {str(e)}")
             raise
@@ -46,8 +40,9 @@ class ChatbotView(APIView):
             )
 
         try:
-            metrics = self.metrics_collector.get_relevant_metrics(question)
-            
+            # Just a placeholder metrics dictionary since we are standalone
+            metrics = {"info": "No external metrics available in standalone mode"}
+
             inputs = self.tokenizer(
                 question,
                 return_tensors="pt",
@@ -67,10 +62,10 @@ class ChatbotView(APIView):
                     repetition_penalty=1.2
                 )
             
-            response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            response_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
             
             return Response({
-                'response': response,
+                'response': response_text,
                 'metrics': metrics
             })
         except Exception as e:
@@ -82,8 +77,8 @@ class ChatbotView(APIView):
 
 class MetricsView(APIView):
     def get(self, request):
-        # Return a simple JSON response for now
-        return Response({'status': 'OK', 'message': 'Metrics endpoint placeholder'}, status=200)
+        # Standalone placeholder response
+        return Response({'status': 'OK', 'message': 'Standalone metrics placeholder'}, status=200)
 
 def health_check(request):
     return HttpResponse("healthy", status=200)
