@@ -5,6 +5,7 @@ from django.urls import NoReverseMatch
 from rest_framework import routers
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
+from rest_framework.urlpatterns import format_suffix_patterns
 
 from ralph.lib.custom_fields.api.routers import NestedCustomFieldsRouterMixin
 from ralph.lib.permissions.api import RalphPermission

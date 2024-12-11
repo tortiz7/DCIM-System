@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.conf.urls import url
+from from django.urls import re_path as url
 
 from ralph.api import router
 from ralph.lib.transitions.api.views import (

@@ -14,7 +14,7 @@ from django.db import models
 from django.db.models import Q
 from django.forms.utils import flatatt
 from django.urls import reverse
-from django.utils.encoding import smart_text
+from django.utils.encoding import smart_str as smart_text
 from django.utils.formats import get_format
 from django.utils.html import conditional_escape, mark_safe
 from django.utils.translation import gettext_lazy as _

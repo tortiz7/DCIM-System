@@ -57,7 +57,6 @@ RUN mkdir -p ~/.ssh && \
 # Note: Ensure that you have SSH keys set up properly for private repo access, or use a public repo/HTTPS token.
 RUN --mount=type=ssh git clone --branch $RALPH_BRANCH $RALPH_REPO .
 
-COPY src/ralph/lib/utils/compatibility.py /app/src/ralph/lib/utils/
 RUN python3 -m pip install --no-cache-dir 'Django>=4.2.9,<5.0' \
     && python3 -m pip install --no-cache-dir -r requirements/prod.txt
 

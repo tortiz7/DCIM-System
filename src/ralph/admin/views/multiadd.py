@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from django import forms
-from django.conf.urls import url
+from from django.urls import re_path as url
 from django.contrib import messages
 from django.db import IntegrityError, models, transaction
 from django.forms import ValidationError

@@ -2,7 +2,7 @@
 from collections import defaultdict
 
 from django.conf import settings
-from django.conf.urls import url
+from from django.urls import re_path as url
 from django.contrib.admin.sites import AdminSite
 
 

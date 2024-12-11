@@ -1,4 +1,4 @@
-from django.conf.urls import url
+from from django.urls import re_path as url
 
 from ralph.lib.transitions.views import (
     AsyncBulkTransitionsAwaiterView,
