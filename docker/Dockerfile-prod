@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Ralph configuration and paths
 ARG RALPH_LOCAL_DIR="/var/local/ralph"
-ARG RALPH_VERSION=""
+ARG RALPH_VERSION="20230810"    # <-- Set a proper default version here
 ARG SNAPSHOT="0"
 ENV PATH=/opt/ralph/ralph-core/bin/:$PATH
 ENV RALPH_CONF_DIR="/etc/ralph"
@@ -27,7 +27,6 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-# Removed the build/*$RALPH_VERSION*.deb line since it causes an error if build/ doesn't exist
 COPY contrib/common/apt/ralph.list \
      docker/provision/docker-entrypoint.sh \
      docker/provision/createsuperuser.py \
