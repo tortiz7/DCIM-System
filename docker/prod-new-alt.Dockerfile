@@ -1,12 +1,14 @@
+# Dockerfile for the web container running Ralph and Chatbot integrated from source
 FROM ubuntu:jammy
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG=en_US.UTF-8 LANGUAGE=en_US:en LC_ALL=en_US.UTF-8
 
-# Ralph repository information
+# Build arguments
 ARG RALPH_REPO=git@github.com:tortiz7/DCIM-System.git
 ARG RALPH_BRANCH=deployment-test
 
-# Install system dependencies - Updated for Ubuntu 22.04
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-transport-https \
     ca-certificates \
@@ -36,32 +38,30 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     liblcms2-dev \
     libwebp-dev \
     zlib1g-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && locale-gen en_US.UTF-8
+    netcat \
+    redis-tools \
+ && rm -rf /var/lib/apt/lists/* \
+ && locale-gen en_US.UTF-8
 
-# Upgrade pip and install build tools
-RUN python3 -m pip install --no-cache-dir pip setuptools wheel --upgrade
+# Upgrade pip and setuptools/wheel
+RUN python3 -m pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# Clone the Ralph repository from GitHub
 WORKDIR /app
-RUN echo "Repo: $RALPH_REPO" && echo "Branch: $RALPH_BRANCH"
+
+# Set up SSH known_hosts for GitHub
 RUN mkdir -p ~/.ssh && \
     ssh-keyscan github.com >> ~/.ssh/known_hosts && \
     chmod 600 ~/.ssh/known_hosts
+
+# Clone the Ralph repo
+# Note: Ensure that you have SSH keys set up properly for private repo access, or use a public repo/HTTPS token.
 RUN --mount=type=ssh git clone --branch $RALPH_BRANCH $RALPH_REPO .
 
-# Ralph configuration paths (set AFTER git clone)
-ENV PATH=/debian:$PATH \
-    RALPH_CONF_DIR="/app/contrib/common/etc/ralph/conf.d" \
-    RALPH_IMAGE_TMP_DIR="/tmp" \
-    LANG=en_US.UTF-8 \
-    LANGUAGE=en_US:en \
-    LC_ALL=en_US.UTF-8
+# Set environment variables for Ralph
+ENV DJANGO_SETTINGS_MODULE=ralph.settings.prod
+ENV PATH=/usr/local/bin:$PATH
 
-# Debug step: Verify that requirements directory is present
-RUN ls -la && ls -la requirements
-
-# Install Python dependencies for chatbot integration
+# Install Python dependencies including chatbot
 RUN pip3 install --no-cache-dir \
     channels==3.0.4 \
     channels-redis==3.3.0 \
@@ -71,24 +71,20 @@ RUN pip3 install --no-cache-dir \
     hiredis==2.0.0 \
     mysqlclient==2.1.1
 
-# Set up Ralph scripts and configuration
-RUN mkdir -p /var/log/ralph && \
-    chmod +x /app/docker/provision/*.sh
+# Install Ralph from source
+# This will install the `ralph` command line tool
+RUN pip3 install --no-cache-dir -r requirements/base.txt && \
+    pip3 install --no-cache-dir -r requirements/openstack.txt && \
+    pip3 install --no-cache-dir -r requirements/prod.txt && \
+    pip3 install --no-cache-dir keystoneauth1>=3.18.0 && \
+    pip3 install --no-cache-dir .
 
-# Install Ralph dependencies
-RUN pip3 install --no-cache-dir mysqlclient && \
-    pip3 install --no-cache-dir 'Django>=2.2,<3.0' && \
-    pip3 install --no-cache-dir 'channels==3.0.4' && \
-    pip3 install --no-cache-dir -r ./requirements/base.txt && \
-    pip3 install --no-cache-dir 'keystoneauth1>=3.18.0' && \
-    pip3 install --no-cache-dir -r ./requirements/openstack.txt && \
-    pip3 install --no-cache-dir -r ./requirements/prod.txt
+# Copy the initialization script and make it executable
+COPY docker/initialize.sh /usr/local/bin/initialize.sh
+RUN chmod +x /usr/local/bin/initialize.sh
 
-# Add healthcheck
+# Add healthcheck to ensure Ralph is running
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/ || exit 1
+  CMD curl -f http://localhost:8000/ || exit 1
 
-
-RUN chmod +x docker/initialize.sh
-
-ENTRYPOINT ["docker/initialize.sh"]
+ENTRYPOINT ["/usr/local/bin/initialize.sh"]
