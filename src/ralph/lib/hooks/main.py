@@ -2,7 +2,7 @@ from typing import Any, Callable, Optional
 
 import pkg_resources
 from django.conf import settings
-from django.utils.functional import lru_cache
+from functools import lru_cache
 
 
 
