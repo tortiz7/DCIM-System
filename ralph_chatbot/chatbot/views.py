@@ -6,6 +6,7 @@ from django.http import HttpResponse
 import torch
 from transformers import LlamaTokenizer, LlamaForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
+from transformers import AutoConfig
 import logging
 import os
 
@@ -22,13 +23,14 @@ class ChatbotView(APIView):
                 bnb_4bit_use_double_quant=True,
             )
 
-            # Create model config first
-            model_config = LlamaForCausalLM.config_class.from_pretrained(
+            # Load and modify config
+            model_config = AutoConfig.from_pretrained(
                 "unsloth/Llama-3.2-3B-bnb-4bit",
-                trust_remote_code=True
+                rope_scaling={
+                    "type": "dynamic",
+                    "factor": 32.0
+                }
             )
-            # Override the problematic RoPE settings
-            model_config.rope_scaling = {"type": "dynamic", "factor": 32.0}
 
             # Load base model with our fixed config
             self.model = LlamaForCausalLM.from_pretrained(
