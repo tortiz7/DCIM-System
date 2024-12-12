@@ -4,7 +4,7 @@ from rest_framework import status
 from django.conf import settings
 from django.http import HttpResponse
 import torch
-from transformers import AutoTokenizer, LlamaForCausalLM, BitsAndBytesConfig
+from transformers import LlamaTokenizer, LlamaForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
 import logging
 import os
@@ -29,14 +29,14 @@ class ChatbotView(APIView):
             if not os.path.exists(base_path):
                 raise ValueError(f"Model base path not found: {base_path}")
             if not os.path.exists(adapters_path):
-                logger.warning(f"No adapters path found at: {adapters_path}, will proceed without LoRA adapters.")
+                logger.warning(f"No adapters path found at: {adapters_path}, proceeding without LoRA adapters.")
 
-            # Use AutoTokenizer with use_fast=False
-            self.tokenizer = AutoTokenizer.from_pretrained(
+            # Use LlamaTokenizer with sentencepiece (no fast tokenizer)
+            self.tokenizer = LlamaTokenizer.from_pretrained(
                 base_path,
-                use_fast=False,  # This is the key change
                 trust_remote_code=True,
-                local_files_only=True
+                local_files_only=True,
+                use_fast=False
             )
 
             self.model = LlamaForCausalLM.from_pretrained(
@@ -61,6 +61,7 @@ class ChatbotView(APIView):
         except Exception as e:
             logger.error(f"Error initializing ChatbotView: {e}", exc_info=True)
             self.model = None
+            self.tokenizer = None
 
     def get(self, request):
         return Response({
@@ -71,7 +72,7 @@ class ChatbotView(APIView):
     def post(self, request):
         if self.model is None or self.tokenizer is None:
             return Response(
-                {'error': 'Model not initialized properly'}, 
+                {'error': 'Model not initialized properly'},
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
