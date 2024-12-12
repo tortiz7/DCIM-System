@@ -19,7 +19,7 @@ class ChatbotView(APIView):
             bnb_config = BitsAndBytesConfig(
                 load_in_4bit=True,
                 bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_compute_dtype=torch.bfloat16,
                 bnb_4bit_use_double_quant=True,
             )
 
@@ -41,7 +41,7 @@ class ChatbotView(APIView):
             self.model = LlamaForCausalLM.from_pretrained(
                 base_path,
                 device_map="auto",
-                torch_dtype=torch.float16,
+                torch_dtype=torch.bfloat16,
                 quantization_config=bnb_config
             )
 
