@@ -4,7 +4,7 @@ from rest_framework import status
 from django.conf import settings
 from django.http import HttpResponse
 import torch
-from transformers import AutoTokenizer, LlamaForCausalLM, BitsAndBytesConfig
+from transformers import AutoProcessor, LlamaForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
 import logging
 import os
@@ -31,12 +31,14 @@ class ChatbotView(APIView):
             if not os.path.exists(adapters_path):
                 logger.warning(f"No adapters path found at: {adapters_path}, will proceed without LoRA adapters.")
 
-            # Use AutoTokenizer instead of LlamaTokenizer
-            self.tokenizer = AutoTokenizer.from_pretrained(
+            # Switch to AutoProcessor and add config
+            self.processor = AutoProcessor.from_pretrained(
                 base_path,
                 trust_remote_code=True,
-                local_files_only=True
+                local_files_only=True,
             )
+            # Keep tokenizer reference for compatibility
+            self.tokenizer = self.processor
 
             self.model = LlamaForCausalLM.from_pretrained(
                 base_path,
@@ -56,10 +58,11 @@ class ChatbotView(APIView):
             else:
                 logger.info("No LoRA adapter found, using base model only")
 
-            logger.info("Model and tokenizer loaded successfully.")
+            logger.info("Model and processor loaded successfully.")
         except Exception as e:
             logger.error(f"Error initializing ChatbotView: {e}", exc_info=True)
             self.model = None
+            self.processor = None
             self.tokenizer = None
 
     def get(self, request):
