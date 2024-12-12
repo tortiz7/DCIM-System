@@ -5,7 +5,6 @@
 # 4. use batsion host instead of frontend_server
 # 5. security group for app: alb_sg
 # 6. load balancer to app server
-# 7. open port 80 for the nginx for test
 locals{
   # pub_key = file("kura_public_key.txt")
   app_private_ips = aws_instance.app_server[*].private_ip
@@ -14,32 +13,30 @@ locals{
 # instance for app
 resource "aws_instance" "app_server" {
   count = var.app_count
-  ami = "ami-0866a3c8686eaeeba"                # The Amazon Machine Image (AMI) ID used to launch the EC2 instance.
-                                        # Replace this with a valid AMI ID
-  instance_type = var.instance_type                # Specify the desired EC2 instance size.
-  # Attach an existing security group to the instance.
-  # Security groups control the inbound and outbound traffic to your EC2 instance.
-  vpc_security_group_ids = [aws_security_group.app_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
-  key_name = "keypair-cloudega-k"                # The key pair name for SSH access to the instance.
+  ami   = "ami-0866a3c8686eaeeba"
+  instance_type = var.instance_type
+  vpc_security_group_ids = [aws_security_group.app_sg.id]
+  key_name = "shafee-jenkins-keypair"
   subnet_id = var.private_subnet[count.index % length(var.private_subnet)]
-# user_data = base64encode(templatefile("${path.root}/deploy.sh", {
-#     rds_endpoint = var.rds_endpoint,
-#     docker_user = var.dockerhub_user,
-#     docker_pass = var.dockerhub_pass,
-#     pub_key = local.pub_key,
-#     docker_compose = templatefile("${path.root}/compose.yml", {
-#       rds_endpoint = var.rds_endpoint,
-#       run_migrations = count.index == 0 ? "true" : "false"
-#     }),
-#   }))
+  
+user_data = base64encode(
+  templatefile("${path.module}/deploy.sh", {
+    rds_endpoint   = split(":", var.rds_endpoint)[0],
+    redis_endpoint = var.redis_endpoint,
+    docker_compose = templatefile("${path.root}/../docker/docker-compose.yml", {
+      rds_endpoint   = split(":", var.rds_endpoint)[0],
+      redis_endpoint = var.redis_endpoint
+    })
+  })
+)
 
-  # Tagging the resource with a Name label. Tags help in identifying and organizing resources in AWS.
+
   tags = {
-    "Name" : "ralph_app_az${count.index +1}"         
+    Name = "ralph_app_az${count.index + 1}"
   }
 
   depends_on = [
-    var.postgres_db,
+    var.mysql_db,
     var.nat_gw
   ]
 }
@@ -52,7 +49,7 @@ resource "aws_instance" "bastion_host" {
   # Attach an existing security group to the instance.
   # Security groups control the inbound and outbound traffic to your EC2 instance.
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]         # Replace with the security group ID, e.g., "sg-01297adb7229b5f08".
-  key_name = "keypair-cloudega-k"                # The key pair name for SSH access to the instance.
+  key_name = "shafee-jenkins-keypair"                # The key pair name for SSH access to the instance.
   subnet_id = var.public_subnet[count.index % length(var.public_subnet)]
 #  user_data = templatefile("kura_key_upload.sh", {
 #        pub_key = local.pub_key
@@ -63,7 +60,7 @@ resource "aws_instance" "bastion_host" {
    }
 
    depends_on = [
-    var.postgres_db,
+    var.mysql_db,
     var.nat_gw
   ]
 }
@@ -113,7 +110,7 @@ resource "aws_security_group" "app_sg" { # in order to use securtiy group resouc
   name        = "tf_made_sg_private"
   description = "host gunicorn"
   vpc_id = var.vpc_id
-  # Ingress rules: Define inbound traffic that is allowed.Allow SSH traffic and HTTP traffic on port 8080 from any IP address (use with caution)
+  # Ingress rules: Define inbound traffic that is allowed. Allow SSH traffic and HTTP traffic on port 8080 from any IP address (use with caution)
    
    ingress {
     from_port   = 22
@@ -122,16 +119,16 @@ resource "aws_security_group" "app_sg" { # in order to use securtiy group resouc
     cidr_blocks = ["0.0.0.0/0"]
     } 
 
-  # ingress {
-  #   from_port   = 80
-  #   to_port     = 80
-  #   protocol    = "tcp"
-  #   cidr_blocks = ["0.0.0.0/0"]
-  #   }   
-
- ingress {
+  ingress {
     from_port   = 80
     to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    }   
+
+ ingress {
+    from_port   = 8000
+    to_port     = 8000
     protocol    = "tcp"
     # security_groups = [var.alb_sg_id]
     }
@@ -151,7 +148,7 @@ resource "aws_security_group" "app_sg" { # in order to use securtiy group resouc
     # }
 
 
-     egress {
+    egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"

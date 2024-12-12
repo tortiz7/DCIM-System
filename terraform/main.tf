@@ -3,9 +3,7 @@
 # Note: Hardcoding credentials is not recommended for production use. Instead, use environment variables
 # or IAM roles to manage credentials securely.
 provider "aws" {
-  access_key = var.aws_access_key          # Replace with your AWS access key ID (leave empty if using IAM roles or env vars)
-  secret_key = var.aws_secret_key          # Replace with your AWS secret access key (leave empty if using IAM roles or env vars)
-  region     = var.region              # Specify the AWS region where resources will be created (e.g., us-east-1, us-west-2)
+  region = var.region
 }
 
 
@@ -27,13 +25,16 @@ module "EC2"{
   db_password = var.db_password
   rds_address = module.RDS.rds_address
   rds_endpoint = module.RDS.rds_endpoint
-  postgres_db = module.RDS.postgres_db
+  redis_endpoint = module.RDS.redis_endpoint
+  mysql_db = module.RDS.mysql_db
   rds_sg_id = module.RDS.rds_sg_id
   alb_sg_id = module.ALB.alb_sg_id
   app_port = var.app_port
   dockerhub_user = var.dockerhub_user
   dockerhub_pass = var.dockerhub_pass
   nat_gw = module.VPC.nat_gw
+  # alb_dns_name = module.EC2.alb_dns_name
+
 
 }
 
@@ -62,3 +63,19 @@ module "ALB"{
   vpc_id = module.VPC.vpc_id
 
 }
+
+output "bastion_public_ip" {
+    value       = module.EC2.bastion_public_ip
+    description = "Public IP of the bastion host for SSH access"
+}
+
+output "private_instance_ips" {
+    value       = module.EC2.private_instance_ips
+    description = "Private IPs of all application instances"
+}
+
+# output "alb_dns_name" {
+#     value       = module.ALB.alb_dns_name
+#     description = "DNS name of the Application Load Balancer"
+#     sensitive   = false
+# }

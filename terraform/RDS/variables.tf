@@ -2,6 +2,7 @@ variable "db_instance_class" {
 }
 
 variable "db_name" {
+   default = "ralph_ng"
 }
 
 variable "db_username" {

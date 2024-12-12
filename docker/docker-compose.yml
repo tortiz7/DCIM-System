@@ -1,0 +1,78 @@
+services:
+  web:
+    platform: linux/amd64
+    image: allegro/ralph:latest
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ralph_media:/var/local/ralph/media
+      - ralph_static:/usr/share/ralph/static
+    environment:
+        DATABASE_NAME: ralph_ng
+        DATABASE_USER: "cloudega2024"
+        DATABASE_PASSWORD: "cloudega2024!"
+        DATABASE_HOST: ${rds_endpoint}
+        DATABASE_PORT: 3306
+        REDIS_HOST: ${redis_endpoint}
+        REDIS_PASSWORD: ""
+        REDIS_PORT: 6379
+        REDIS_DB: 0
+
+  nginx:
+    platform: linux/amd64
+    image: allegro/ralph-static-nginx:latest
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ralph_media:/opt/media
+
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+
+
+  # db:
+  #   platform: linux/amd64
+  #   image: mysql:5.7
+  #   environment:
+  #     MYSQL_DATABASE: ralph_ng
+  #     MYSQL_ROOT_PASSWORD: ralph_ng
+  #     MYSQL_USER: ralph_ng
+  #     MYSQL_PASSWORD: ralph_ng
+  #   volumes:
+  #     - ralph_dbdata:/var/lib/mysql
+  #   command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  # redis:
+  #   platform: linux/amd64
+  #   image: redis:3.0
+  #   restart: always
+  #   ports:
+  #     - "6379"
+
+  # inkpy:
+  #   platform: linux/amd64
+  #   image: allegro/inkpy:latest
+  #   restart: always
+  #   links:
+  #     - redis:redis
+  #   environment:
+  #       REDIS_HOST: redis
+  #       REDIS_PASSWORD: ""
+  #       REDIS_PORT: 6379
+  #       REDIS_DB: 0
+
+volumes:
+  ralph_dbdata:
+  ralph_media:
+  ralph_static:

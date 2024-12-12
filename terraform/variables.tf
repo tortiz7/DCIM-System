@@ -1,13 +1,3 @@
- variable aws_access_key{
-    type = string
-    sensitive = true
- }                                                    # Replace with your AWS access key ID (leave empty if using IAM roles or env vars)
- 
- variable aws_secret_key{
-    type = string
-    sensitive = true
- }                                        # Replace with your AWS secret access key (leave empty if using IAM roles or env vars)
-
 variable region{
   type = string
 }
@@ -45,7 +35,7 @@ variable "app_count"{
 variable "db_name" {
   description = "The name of the database to create when the DB instance is created"
   type        = string
-  default     = "ralph"
+  default     = "ralph_ng"
 }
 
 variable "db_username" {

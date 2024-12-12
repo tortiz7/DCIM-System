@@ -33,8 +33,11 @@
 
  variable "rds_endpoint"{
  }
-
- variable "postgres_db"{
+variable "redis_endpoint" {
+  description = "Endpoint for the Redis cache"
+  type        = string
+}
+ variable "mysql_db"{
  }
 
 variable "rds_sg_id" {
@@ -54,3 +57,6 @@ variable "dockerhub_pass"{
 
 variable "nat_gw"{
 }
+# variable "alb_dns_name" {
+  
+# }
