@@ -23,22 +23,28 @@ class ChatbotView(APIView):
                 bnb_4bit_use_double_quant=True,
             )
 
-            # Load and modify config
-            model_config = AutoConfig.from_pretrained(
-                "unsloth/Llama-3.2-3B-bnb-4bit",
-                rope_scaling={
-                    "type": "dynamic",
-                    "factor": 32.0
-                }
+            # Create a clean config without loading from pretrained
+            from transformers import LlamaConfig
+            model_config = LlamaConfig(
+                vocab_size=32000,
+                hidden_size=3072,
+                intermediate_size=8192,
+                num_attention_heads=24,
+                num_hidden_layers=28,
+                num_key_value_heads=8,
+                rope_scaling={"type": "dynamic", "factor": 32.0},  # Clean RoPE config
+                torch_dtype=torch.float16,
+                use_cache=True
             )
 
-            # Load base model with our fixed config
+            # Load base model with our clean config
             self.model = LlamaForCausalLM.from_pretrained(
                 "unsloth/Llama-3.2-3B-bnb-4bit",
                 config=model_config,
                 device_map="auto",
                 torch_dtype=torch.float16,
-                quantization_config=bnb_config
+                quantization_config=bnb_config,
+                trust_remote_code=False  # Force it to use our config
             )
 
             adapters_path = settings.MODEL_PATH['adapters_path']
@@ -90,7 +96,7 @@ class ChatbotView(APIView):
                 truncation=True,
                 max_length=512
             ).to(self.model.device)
-            
+
             with torch.no_grad():
                 outputs = self.model.generate(
                     **inputs,
