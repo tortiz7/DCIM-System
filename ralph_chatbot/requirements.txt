@@ -1,3 +1,11 @@
+# requirements.txt
+
+# PyTorch dependencies for CUDA 12.4
+--find-links https://download.pytorch.org/whl/cu124/torch_stable.html
+torch==2.5.0+cu124
+torchvision==0.20.0+cu124
+torchaudio==2.5.0+cu124
+
 # Django and related dependencies
 Django==4.2.9
 djangorestframework==3.14.0
@@ -18,9 +26,6 @@ asgiref==3.7.2
 uvicorn==0.27.0
 
 # ML and related dependencies
-torch==2.0.1+cu121  # Ensure this matches your CUDA version
-torchvision==0.15.2+cu121
-torchaudio==2.0.2+cu121
 transformers==4.45.0
 peft==0.3.0
 bitsandbytes==0.39.0
