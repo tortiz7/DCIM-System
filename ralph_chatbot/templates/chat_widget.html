@@ -1,24 +1,39 @@
-<div id="ralph-assistant" class="chat-widget">
+<div id="ralph-assistant" class="chat-widget-container">
+    <div class="chat-header">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" fill="white"/>
+            <path d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z" fill="white"/>
+        </svg>
+        <h2>Ralph Assistant</h2>
+    </div>
+
     <div class="metrics-dashboard">
         <div class="metric-card">
             <h3>Assets</h3>
-            <div id="asset-count">Loading...</div>
+            <div id="asset-count" class="metric-value">Loading...</div>
             <div id="asset-status">Loading...</div>
         </div>
         
         <div class="metric-card">
-            <h3>Network</h3>
-            <div id="network-status">Loading...</div>
+            <h3>Network Status</h3>
+            <div id="network-status" class="metric-value">Loading...</div>
         </div>
         
         <div class="metric-card">
             <h3>Power Usage</h3>
-            <div id="power-usage">Loading...</div>
+            <div id="power-usage" class="metric-value">Loading...</div>
         </div>
     </div>
 
-    <div class="chat-window">
-        <!-- Existing chat interface -->
+    <div class="chat-window" id="chat-messages">
+        <!-- Messages will be inserted here -->
+    </div>
+
+    <div class="chat-input">
+        <div class="input-container">
+            <input type="text" id="chat-input" placeholder="Ask Ralph anything..." />
+            <button id="send-message">Send</button>
+        </div>
     </div>
 </div>
 
