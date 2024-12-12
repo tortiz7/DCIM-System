@@ -12,47 +12,56 @@ import os
 logger = logging.getLogger(__name__)
 
 class ChatbotView(APIView):
-  def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
-    try:
-        bnb_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch.float16,
-            bnb_4bit_use_double_quant=True,
-        )
-
-        adapters_path = settings.MODEL_PATH['adapters_path']
-
-        # Load base model directly from HF
-        self.model = LlamaForCausalLM.from_pretrained(
-            "unsloth/Llama-3.2-3B-bnb-4bit",  # Load base model directly
-            device_map="auto",
-            torch_dtype=torch.float16,
-            quantization_config=bnb_config
-        )
-
-        # Load tokenizer
-        self.tokenizer = LlamaTokenizer.from_pretrained(
-            "hf-internal-testing/llama-tokenizer",
-            use_fast=False,
-            local_files_only=False
-        )
-
-        # Apply your custom adapter
-        if os.path.exists(os.path.join(adapters_path, 'adapter_config.json')):
-            self.model = PeftModel.from_pretrained(
-                self.model,
-                adapters_path,  # This points to your adapter files
-                torch_dtype=torch.float16
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        try:
+            bnb_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_use_double_quant=True,
             )
-            logger.info("LoRA adapter loaded successfully")
 
-        logger.info("Model and tokenizer loaded successfully.")
-    except Exception as e:
-        logger.error(f"Error initializing ChatbotView: {e}", exc_info=True)
-        self.model = None
-        self.tokenizer = None
+            # Create model config first
+            model_config = LlamaForCausalLM.config_class.from_pretrained(
+                "unsloth/Llama-3.2-3B-bnb-4bit",
+                trust_remote_code=True
+            )
+            # Override the problematic RoPE settings
+            model_config.rope_scaling = {"type": "dynamic", "factor": 32.0}
+
+            # Load base model with our fixed config
+            self.model = LlamaForCausalLM.from_pretrained(
+                "unsloth/Llama-3.2-3B-bnb-4bit",
+                config=model_config,
+                device_map="auto",
+                torch_dtype=torch.float16,
+                quantization_config=bnb_config
+            )
+
+            adapters_path = settings.MODEL_PATH['adapters_path']
+
+            # Load tokenizer
+            self.tokenizer = LlamaTokenizer.from_pretrained(
+                "hf-internal-testing/llama-tokenizer",
+                use_fast=False,
+                local_files_only=False
+            )
+
+            # Apply your custom adapter
+            if os.path.exists(os.path.join(adapters_path, 'adapter_config.json')):
+                self.model = PeftModel.from_pretrained(
+                    self.model,
+                    adapters_path,  # This points to your adapter files
+                    torch_dtype=torch.float16
+                )
+                logger.info("LoRA adapter loaded successfully")
+
+            logger.info("Model and tokenizer loaded successfully.")
+        except Exception as e:
+            logger.error(f"Error initializing ChatbotView: {e}", exc_info=True)
+            self.model = None
+            self.tokenizer = None
 
     def get(self, request):
         return Response({
@@ -97,12 +106,14 @@ class ChatbotView(APIView):
             logger.error(f"Error generating response: {e}", exc_info=True)
             return Response({'error': 'Error generating response'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 class MetricsView(APIView):
     def get(self, request):
         return Response({
             'status': 'OK',
             'metrics': {'model_loaded': self.model is not None}
         })
+
 
 def health_check(request):
     return HttpResponse("healthy", status=200)
