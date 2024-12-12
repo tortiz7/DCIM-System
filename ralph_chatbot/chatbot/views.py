@@ -4,9 +4,10 @@ from rest_framework import status
 from django.conf import settings
 from django.http import HttpResponse
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -14,24 +15,63 @@ class ChatbotView(APIView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         try:
-            # Load base model
+            # Configure quantization
+            bnb_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.float16,
+                bnb_4bit_use_double_quant=True,
+            )
+
+            # Verify model paths exist
+            if not os.path.exists(settings.MODEL_PATH['base_path']):
+                raise ValueError(f"Model base path does not exist: {settings.MODEL_PATH['base_path']}")
+            if not os.path.exists(settings.MODEL_PATH['adapters_path']):
+                raise ValueError(f"Adapters path does not exist: {settings.MODEL_PATH['adapters_path']}")
+
+            # Load base model with proper configuration
             self.model = AutoModelForCausalLM.from_pretrained(
                 settings.MODEL_PATH['base_path'],
-                device_map="auto"
+                device_map="auto",
+                torch_dtype=torch.float16,
+                quantization_config=bnb_config,
+                rope_scaling={
+                    "name": "dynamic",
+                    "factor": 2.0
+                }
             )
-            # Load adapter model
-            self.model = PeftModel.from_pretrained(
-                self.model, 
-                settings.MODEL_PATH['adapters_path']
-            )
+
+            # Load tokenizer
             self.tokenizer = AutoTokenizer.from_pretrained(
-                settings.MODEL_PATH['base_path']
+                settings.MODEL_PATH['base_path'],
+                trust_remote_code=True
             )
+
+            # Load adapter model
+            if os.path.exists(os.path.join(settings.MODEL_PATH['adapters_path'], 'adapter_config.json')):
+                self.model = PeftModel.from_pretrained(
+                    self.model, 
+                    settings.MODEL_PATH['adapters_path']
+                )
+                logger.info("LoRA adapter loaded successfully")
+            else:
+                logger.warning("No LoRA adapter found, using base model only")
+
+            logger.info("Model initialization completed successfully")
+
         except Exception as e:
-            logger.error(f"Error initializing ChatbotView: {str(e)}")
-            raise
+            logger.error(f"Error initializing ChatbotView: {str(e)}", exc_info=True)
+            # Don't raise the exception - allow the view to initialize but log the error
+            self.model = None
+            self.tokenizer = None
 
     def post(self, request):
+        if self.model is None or self.tokenizer is None:
+            return Response(
+                {'error': 'Model not properly initialized'}, 
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
         question = request.data.get('question')
         if not question:
             return Response(
@@ -40,9 +80,6 @@ class ChatbotView(APIView):
             )
 
         try:
-            # Just a placeholder metrics dictionary since we are standalone
-            metrics = {"info": "No external metrics available in standalone mode"}
-
             inputs = self.tokenizer(
                 question,
                 return_tensors="pt",
@@ -66,19 +103,24 @@ class ChatbotView(APIView):
             
             return Response({
                 'response': response_text,
-                'metrics': metrics
+                'metrics': {'status': 'success'}
             })
         except Exception as e:
-            logger.error(f"Error generating response: {str(e)}")
+            logger.error(f"Error generating response: {str(e)}", exc_info=True)
             return Response(
-                {'error': 'Internal server error'}, 
+                {'error': 'Error generating response'}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 class MetricsView(APIView):
     def get(self, request):
-        # Standalone placeholder response
-        return Response({'status': 'OK', 'message': 'Standalone metrics placeholder'}, status=200)
+        # Implementation for metrics
+        return Response({
+            'status': 'OK', 
+            'metrics': {
+                'model_loaded': hasattr(self, 'model') and self.model is not None
+            }
+        })
 
 def health_check(request):
     return HttpResponse("healthy", status=200)
