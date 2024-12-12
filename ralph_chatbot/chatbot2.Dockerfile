@@ -2,14 +2,17 @@
 FROM nvidia/cuda:12.4.0-devel-ubuntu22.04
 
 # Set environment variables for Redis/Elasticache
-ENV REDIS_HOST="my-redis-replication-group.9fmuyw.ng.0001.use1.cache.amazonaws.com:6379"
+ENV REDIS_HOST=${REDIS_HOST}
 ENV REDIS_PORT=6379
 
-ENV DB_NAME=ralph_ng
-ENV DB_USER=cloudega2024
-ENV DB_PASSWORD=cloudega2024!
-ENV DB_HOST=ralphng.ct0guqq467p6.us-east-1.rds.amazonaws.com
+ENV DB_NAME=${DATABASE_NAME}
+ENV DB_USER=${DATABASE_USER}
+ENV DB_PASSWORD=${DATABASE_PASSWORD}
+ENV DB_HOST=${DATABASE_HOST}
 ENV DB_PORT=5432
+
+ENV ALB_DOMAIN=""
+ENV ALLOWED_HOSTS="*"
 
 # Set environment variables for CUDA
 ENV PYTHONUNBUFFERED=1

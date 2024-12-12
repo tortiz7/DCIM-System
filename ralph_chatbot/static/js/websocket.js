@@ -5,15 +5,14 @@ class RalphWebSocket {
     }
 
     connect() {
-        // Determine WebSocket URL based on current protocol
+        // Use relative path for WebSocket - will work with NGINX
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${wsProtocol}//${window.location.host}:8001/ws/metrics/`;
+        const wsUrl = `${wsProtocol}//${window.location.host}/ws/metrics/`;
 
         this.socket = new WebSocket(wsUrl);
 
         this.socket.onopen = () => {
             console.log('WebSocket connected');
-            // Request initial metrics
             this.requestMetrics('all');
         };
 

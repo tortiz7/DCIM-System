@@ -1,21 +1,29 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Chatbot</title>
-    <link rel="stylesheet" href="{% static 'chatbot/css/chat.css' %}">
+    <title>Ralph Assistant</title>
+    <link rel="stylesheet" href="{% static 'chatbot/css/chat_widget.css' %}">
 </head>
 <body>
-    <div class="chat-widget-container">
+    <div id="ralph-assistant" class="chat-widget-container">
         <div class="metrics-dashboard">
             <div class="metric-card">
-                <h3>Asset Count</h3>
-                <div id="asset-count" class="metric-value">0</div>
+                <h3>Assets</h3>
+                <div id="asset-count">Loading...</div>
+                <div id="asset-status">Loading...</div>
             </div>
+            
             <div class="metric-card">
-                <h3>Asset Status</h3>
-                <div id="asset-status" class="metric-value">In Use: 0 | Free: 0</div>
+                <h3>Network</h3>
+                <div id="network-status">Loading...</div>
+            </div>
+            
+            <div class="metric-card">
+                <h3>Power Usage</h3>
+                <div id="power-usage">Loading...</div>
             </div>
         </div>
 
@@ -29,6 +37,18 @@
         </div>
     </div>
 
+    <script src="{% static 'chatbot/js/websocket.js' %}"></script>
     <script src="{% static 'chatbot/js/chatbot.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const ralphSocket = new RalphWebSocket();
+            ralphSocket.connect();
+            
+            // Update metrics every 30 seconds
+            setInterval(() => {
+                ralphSocket.requestMetrics('all');
+            }, 30000);
+        });
+    </script>
 </body>
 </html>
