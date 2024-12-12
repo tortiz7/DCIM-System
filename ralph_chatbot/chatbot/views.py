@@ -12,55 +12,47 @@ import os
 logger = logging.getLogger(__name__)
 
 class ChatbotView(APIView):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        try:
-            # Configure 4-bit quantization
-            bnb_config = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=torch.bfloat16,
-                bnb_4bit_use_double_quant=True,
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    try:
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.float16,
+            bnb_4bit_use_double_quant=True,
+        )
+
+        adapters_path = settings.MODEL_PATH['adapters_path']
+
+        # Load base model directly from HF
+        self.model = LlamaForCausalLM.from_pretrained(
+            "unsloth/Llama-3.2-3B-bnb-4bit",  # Load base model directly
+            device_map="auto",
+            torch_dtype=torch.float16,
+            quantization_config=bnb_config
+        )
+
+        # Load tokenizer
+        self.tokenizer = LlamaTokenizer.from_pretrained(
+            "hf-internal-testing/llama-tokenizer",
+            use_fast=False,
+            local_files_only=False
+        )
+
+        # Apply your custom adapter
+        if os.path.exists(os.path.join(adapters_path, 'adapter_config.json')):
+            self.model = PeftModel.from_pretrained(
+                self.model,
+                adapters_path,  # This points to your adapter files
+                torch_dtype=torch.float16
             )
+            logger.info("LoRA adapter loaded successfully")
 
-            base_path = settings.MODEL_PATH['base_path']
-            adapters_path = settings.MODEL_PATH['adapters_path']
-
-            if not os.path.exists(base_path):
-                raise ValueError(f"Model base path not found: {base_path}")
-            if not os.path.exists(adapters_path):
-                logger.warning(f"No adapters path found at: {adapters_path}, proceeding without LoRA adapters.")
-
-            # Use LlamaTokenizer with sentencepiece (no fast tokenizer)
-            self.tokenizer = LlamaTokenizer.from_pretrained(
-                "hf-internal-testing/llama-tokenizer",  # This is a stable, known-working tokenizer
-                use_fast=False,
-                local_files_only=False  # Allow download of known-working tokenizer
-            )
-
-            self.model = LlamaForCausalLM.from_pretrained(
-                base_path,
-                device_map="auto",
-                torch_dtype=torch.bfloat16,
-                quantization_config=bnb_config
-            )
-
-            adapter_config_file = os.path.join(adapters_path, 'adapter_config.json')
-            if os.path.exists(adapter_config_file):
-                self.model = PeftModel.from_pretrained(
-                    self.model,
-                    adapters_path,
-                    torch_dtype=torch.float16
-                )
-                logger.info("LoRA adapter loaded successfully")
-            else:
-                logger.info("No LoRA adapter found, using base model only")
-
-            logger.info("Model and tokenizer loaded successfully.")
-        except Exception as e:
-            logger.error(f"Error initializing ChatbotView: {e}", exc_info=True)
-            self.model = None
-            self.tokenizer = None
+        logger.info("Model and tokenizer loaded successfully.")
+    except Exception as e:
+        logger.error(f"Error initializing ChatbotView: {e}", exc_info=True)
+        self.model = None
+        self.tokenizer = None
 
     def get(self, request):
         return Response({

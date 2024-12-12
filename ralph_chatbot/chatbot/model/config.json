@@ -21,7 +21,7 @@
     "quantization_config": {
         "_load_in_4bit": true,
         "_load_in_8bit": false,
-        "bnb_4bit_compute_dtype": "bfloat16",
+        "bnb_4bit_compute_dtype": "float16",
         "bnb_4bit_quant_storage": "uint8",
         "bnb_4bit_quant_type": "nf4",
         "bnb_4bit_use_double_quant": true,
@@ -40,7 +40,7 @@
     },
     "rope_theta": 500000.0,
     "tie_word_embeddings": true,
-    "torch_dtype": "bfloat16",
+    "torch_dtype": "float16",
     "transformers_version": "4.45.0",
     "use_cache": true,
     "vocab_size": 128256
