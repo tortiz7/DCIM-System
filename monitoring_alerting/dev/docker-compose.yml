@@ -37,10 +37,12 @@ services:
       - grafana-storage:/var/lib/grafana
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
       - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/email-grafana.ini:/etc/grafana/grafana.ini:ro
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-oncall-app
     ports:
       - "3000:3000"
     networks:
@@ -165,8 +167,10 @@ services:
     volumes:
       - ./agent/scripts:/app/scripts:rw
       - ./agent/reports:/app/reports:rw
+      - ./agent/logs:/app/logs:rw  # Add this line to mount logs directory
     networks:
       - monitoring
+    user: "${UID:-1000}:${GID:-1000}"
     environment:
       - PROMETHEUS_URL=http://prometheus:9090
       - REPORTS_DIR=/app/reports
@@ -198,6 +202,7 @@ services:
       - PYTHONPATH=/agent
       - LOG_LEVEL=INFO
       - PROMETHEUS_URL=http://prometheus:9090
+      - PUSHGATEWAY_URL=http://pushgateway:9091
       - REPORTS_DIR=/app/reports
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
@@ -205,6 +210,7 @@ services:
       - S3_BUCKET_NAME=${S3_BUCKET_NAME}
     depends_on:
       - prometheus
+      - pushgateway
       - log-analytics-agent
       - monitoring-agent
       - analytics-agent
