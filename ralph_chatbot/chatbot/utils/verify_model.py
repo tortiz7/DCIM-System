@@ -1,7 +1,7 @@
 # verify_model.py
 import os
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import LlamaTokenizer, LlamaForCausalLM
 from peft import PeftModel
 import logging
 
@@ -49,32 +49,46 @@ def verify_model():
         logger.info(f"✓ CUDA is available - Found {torch.cuda.device_count()} device(s)")
         logger.info(f"✓ Using CUDA Device: {torch.cuda.get_device_name(0)}")
 
-        # Test load tokenizer
+        # Test load tokenizer using specific Llama tokenizer
         logger.info("Testing tokenizer loading...")
-        tokenizer = AutoTokenizer.from_pretrained(model_path)
+        tokenizer = LlamaTokenizer.from_pretrained(
+            model_path,
+            local_files_only=True,
+            trust_remote_code=True
+        )
         logger.info("✓ Tokenizer loaded successfully")
 
-        # Test load model
+        # Test load model with specific Llama model class
         logger.info("Testing model loading...")
-        model = AutoModelForCausalLM.from_pretrained(
+        model = LlamaForCausalLM.from_pretrained(
             model_path,
             device_map="auto",
-            torch_dtype=torch.float16
+            torch_dtype=torch.float16,
+            local_files_only=True
         )
         logger.info("✓ Base model loaded successfully")
 
         # Test load adapter
         logger.info("Testing LoRA adapter loading...")
-        model = PeftModel.from_pretrained(model, lora_path)
+        model = PeftModel.from_pretrained(
+            model,
+            lora_path,
+            torch_dtype=torch.float16
+        )
         logger.info("✓ LoRA adapter loaded successfully")
 
         # Test basic inference
         logger.info("Testing basic inference...")
         test_input = tokenizer("Hello, I am Ralph", return_tensors="pt").to(model.device)
         with torch.no_grad():
-            output = model.generate(**test_input, max_length=20)
+            output = model.generate(
+                **test_input,
+                max_length=20,
+                temperature=0.7,
+                num_return_sequences=1
+            )
             result = tokenizer.decode(output[0], skip_special_tokens=True)
-        logger.info("✓ Basic inference successful")
+        logger.info(f"✓ Basic inference successful: Generated text: {result}")
 
         logger.info("🎉 All model verification checks passed successfully!")
         return True
