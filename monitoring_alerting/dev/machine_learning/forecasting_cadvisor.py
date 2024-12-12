@@ -1,4 +1,3 @@
-# forecasting.py
 import os
 import time
 import logging
@@ -20,37 +19,32 @@ STEP = os.getenv('FORECAST_STEP', '60s')  # 1 minute
 HORIZON = int(os.getenv('FORECAST_HORIZON', '60'))  # Forecast horizon in minutes
 MIN_FORECAST_ROWS = int(os.getenv('MIN_FORECAST_ROWS', '2'))  # Minimum rows required for forecasting
 
-# List of Metrics for Forecasting
-FORECAST_METRICS = [
+# List of cAdvisor Metrics for Forecasting
+CADVISOR_METRICS = [
     # CPU Metrics
-    'node_cpu_seconds_total',
-    'node_load1',
-    'node_load5',
-    'node_load15',
+    'container_cpu_usage_seconds_total',  # Total CPU time consumed
+    'container_cpu_cfs_periods_total',  # Total CFS (Completely Fair Scheduler) periods
+    'container_cpu_cfs_throttled_periods_total',  # CFS throttled periods
 
     # Memory Metrics
-    'node_memory_MemTotal_bytes',
-    'node_memory_MemAvailable_bytes',
-    'node_memory_Cached_bytes',
-    'node_memory_Buffers_bytes',
+    'container_memory_usage_bytes',  # Memory usage by container
+    'container_memory_working_set_bytes',  # Memory minus cache, used actively
+    'container_memory_cache',  # Cache memory usage
 
-    # Disk Metrics
-    'node_disk_read_bytes_total',
-    'node_disk_written_bytes_total',
-    'node_disk_io_time_seconds_total',
+    # Disk I/O Metrics
+    'container_fs_reads_bytes_total',  # Total bytes read from filesystem
+    'container_fs_writes_bytes_total',  # Total bytes written to filesystem
+    'container_fs_usage_bytes',  # Total disk space used
 
     # Network Metrics
-    'node_network_receive_bytes_total',
-    'node_network_transmit_bytes_total',
-
-    # Process and Application Metrics
-    'process_cpu_seconds_total',
-    'process_resident_memory_bytes',
-    'go_gc_duration_seconds',
-    'go_goroutines',
+    'container_network_receive_bytes_total',  # Total bytes received
+    'container_network_transmit_bytes_total',  # Total bytes transmitted
+    'container_network_receive_packets_total',  # Total packets received
+    'container_network_transmit_packets_total',  # Total packets transmitted
 
     # Additional Metrics
-    'node_nf_conntrack_entries'
+    'container_processes',  # Number of active processes in container
+    'container_start_time_seconds',  # Start time of container
 ]
 
 def fetch_prometheus_data(query, start_time, end_time, step):
@@ -99,19 +93,19 @@ def push_forecast(predicted_usage, labels):
         registry = CollectorRegistry()
         g = Gauge('predicted_usage', 'Forecasted usage by ML model', labelnames=labels.keys(), registry=registry)
         g.labels(**labels).set(predicted_usage)
-        push_to_gateway(PUSHGATEWAY_URL, job='ml_forecast', registry=registry)
+        push_to_gateway(PUSHGATEWAY_URL, job='cadvisor_forecast', registry=registry)
         logging.info(f"Pushed predicted usage {predicted_usage} with labels {labels}")
     except Exception as e:
         logging.exception("Error pushing forecast to Pushgateway")
 
 def main():
     """
-    Main function to iterate over all forecasting metrics, perform forecasting, and push results.
+    Main function to iterate over all cAdvisor metrics, perform forecasting, and push results.
     """
     end_time = int(time.time())
     start_time = end_time - LOOKBACK_SECONDS
 
-    for metric in FORECAST_METRICS:
+    for metric in CADVISOR_METRICS:
         logging.info(f"Processing metric for forecasting: {metric}")
         results = fetch_prometheus_data(metric, start_time, end_time, STEP)
 

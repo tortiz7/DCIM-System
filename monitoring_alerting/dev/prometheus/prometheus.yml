@@ -20,17 +20,27 @@ scrape_configs:
     metrics_path: '/metrics'
     scheme: 'http'  # Use 'https' if ALB is configured with HTTPS
     static_configs:
-      - targets: ['app-alb-1363988340.us-east-1.elb.amazonaws.com:9100']
-
+      - targets: ['app-alb-1651614373.us-east-1.elb.amazonaws.com:9100']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+  
   - job_name: 'cadvisor'
     metrics_path: '/metrics'
     scheme: 'http'  # Use 'https' if ALB is configured with HTTPS
     static_configs:
-      - targets: ['app-alb-1363988340.us-east-1.elb.amazonaws.com:8080']
+      - targets: ['app-alb-1651614373.us-east-1.elb.amazonaws.com:8080']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
 
   - job_name: 'pushgateway'
     static_configs:
       - targets: ['pushgateway:9091']
+
+  - job_name: 'python-agent'
+    static_configs:
+      - targets: ['agent:7000']
 
       
 
