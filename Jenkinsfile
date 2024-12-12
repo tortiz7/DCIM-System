@@ -112,6 +112,20 @@ pipeline {
                 }
             }
         }
+        
+        stage('Security Scan') {
+            steps {
+                echo "🔒 Scanning Docker image for vulnerabilities..."
+                sh """
+                    mkdir -p /home/ubuntu/trivy-archives
+                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                    aquasec/trivy:latest image --severity HIGH,CRITICAL shafeekuralabs/ralph:latest > trivy-report.txt
+                    cp trivy-report.txt /home/ubuntu/trivy-archives/
+                """
+                archiveArtifacts artifacts: 'trivy-report.txt', fingerprint: true
+                echo "✅ Security scan report saved in both the build artifacts and /home/ubuntu/trivy-archives/"
+            }
+        }
         // TODO: This is a test, delete this after.
         stage('Deploy Ralph') {
             steps {
