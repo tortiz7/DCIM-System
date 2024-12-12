@@ -4,7 +4,7 @@ from rest_framework import status
 from django.conf import settings
 from django.http import HttpResponse
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from transformers import LlamaTokenizer, LlamaForCausalLM, BitsAndBytesConfig
 from peft import PeftModel
 import logging
 import os
@@ -29,29 +29,31 @@ class ChatbotView(APIView):
             if not os.path.exists(settings.MODEL_PATH['adapters_path']):
                 raise ValueError(f"Adapters path does not exist: {settings.MODEL_PATH['adapters_path']}")
 
+            # Load tokenizer
+            self.tokenizer = LlamaTokenizer.from_pretrained(
+                settings.MODEL_PATH['base_path'],
+                trust_remote_code=True,
+                local_files_only=True
+            )
+
             # Load base model with proper configuration
-            self.model = AutoModelForCausalLM.from_pretrained(
+            self.model = LlamaForCausalLM.from_pretrained(
                 settings.MODEL_PATH['base_path'],
                 device_map="auto",
                 torch_dtype=torch.float16,
                 quantization_config=bnb_config,
                 rope_scaling={
-                    "name": "dynamic",
-                    "factor": 2.0
+                    "name": "dynamic",  # Use dynamic scaling
+                    "factor": 2.0       # Scale factor
                 }
-            )
-
-            # Load tokenizer
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                settings.MODEL_PATH['base_path'],
-                trust_remote_code=True
             )
 
             # Load adapter model
             if os.path.exists(os.path.join(settings.MODEL_PATH['adapters_path'], 'adapter_config.json')):
                 self.model = PeftModel.from_pretrained(
                     self.model, 
-                    settings.MODEL_PATH['adapters_path']
+                    settings.MODEL_PATH['adapters_path'],
+                    torch_dtype=torch.float16
                 )
                 logger.info("LoRA adapter loaded successfully")
             else:
@@ -61,9 +63,15 @@ class ChatbotView(APIView):
 
         except Exception as e:
             logger.error(f"Error initializing ChatbotView: {str(e)}", exc_info=True)
-            # Don't raise the exception - allow the view to initialize but log the error
             self.model = None
             self.tokenizer = None
+
+    def get(self, request):
+        """Handle GET requests to /chat/"""
+        return Response({
+            'status': 'ready',
+            'model_loaded': self.model is not None and self.tokenizer is not None
+        })
 
     def post(self, request):
         if self.model is None or self.tokenizer is None:
@@ -114,7 +122,6 @@ class ChatbotView(APIView):
 
 class MetricsView(APIView):
     def get(self, request):
-        # Implementation for metrics
         return Response({
             'status': 'OK', 
             'metrics': {
