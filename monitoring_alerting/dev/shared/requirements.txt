@@ -8,4 +8,5 @@ apscheduler==3.10.2
 pydantic==1.10.8
 pydantic-core==2.14.5
 typing-extensions>=4.5.0
-langgraph==0.0.15
+langchain>=0.1.0
+langgraph>=0.0.15
