@@ -33,10 +33,9 @@ class ChatbotView(APIView):
 
             # Use LlamaTokenizer with sentencepiece (no fast tokenizer)
             self.tokenizer = LlamaTokenizer.from_pretrained(
-                base_path,
-                trust_remote_code=True,
-                local_files_only=True,
-                use_fast=False
+                "hf-internal-testing/llama-tokenizer",  # This is a stable, known-working tokenizer
+                use_fast=False,
+                local_files_only=False  # Allow download of known-working tokenizer
             )
 
             self.model = LlamaForCausalLM.from_pretrained(
