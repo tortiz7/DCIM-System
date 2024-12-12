@@ -1,0 +1,48 @@
+version: '2.4'
+
+services:
+  chatbot:
+    build: 
+      context: .
+      dockerfile: Dockerfile.chatbot
+      ssh:
+        - default=${SSH_AUTH_SOCK:-/tmp/ssh_agent.sock}
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      ALLOWED_HOSTS: "*"
+      NVIDIA_VISIBLE_DEVICES: all
+      CUDA_VISIBLE_DEVICES: 0
+    mem_limit: 12g  # Set memory limit
+    devices:
+      - /dev/nvidia0:/dev/nvidia0  # Map GPU device
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - chatbot_network
+
+  nginx:
+    image: nginx:latest
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - /mnt/ephemeral/nginx_cache:/var/cache/nginx
+      - static_volume:/app/ralph_chatbot/staticfiles:ro
+    depends_on:
+      - chatbot
+    networks:
+      - chatbot_network
+
+networks:
+  chatbot_network:
+    driver: bridge
+
+volumes:
+  static_volume:

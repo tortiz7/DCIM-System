@@ -11,7 +11,7 @@ ENV DB_PASSWORD=${DATABASE_PASSWORD}
 ENV DB_HOST=${DATABASE_HOST}
 ENV DB_PORT=5432
 
-ENV ALB_DOMAIN=""
+ENV ALB_DOMAIN="*"
 ENV ALLOWED_HOSTS="*"
 
 # Set environment variables for CUDA
@@ -59,21 +59,29 @@ ENV NVIDIA_VISIBLE_DEVICES=all
 ENV CUDA_VISIBLE_DEVICES=0
 ENV MODEL_PATH=/app/ralph_chatbot/chatbot/model
 ENV LORA_PATH=/app/ralph_chatbot/chatbot/model/adapters
+
+RUN chmod -R 755 /app/ralph_chatbot/chatbot/model
+RUN ln -s /app/ralph_chatbot/chatbot/model/adapters/adapter_model.safetensors /app/ralph_chatbot/chatbot/model/model.safetensors
+RUN ls -la /app/ralph_chatbot/chatbot/model/
+RUN ls -la /app/ralph_chatbot/chatbot/model/adapters/
+
 # Add model verification on startup
 RUN chmod +x chatbot/utils/verify_model.py
 # Collect static files
 RUN python3 manage.py collectstatic --noinput
+
+VOLUME ["/app/ralph_chatbot/staticfiles"]
+
 ARG DOCKER_BUILDKIT=1
 ARG SKIP_HEALTHCHECK=true
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD if [ "$SKIP_HEALTHCHECK" = "true" ]; then exit 0; else curl -f http://localhost:8001/health/ || exit 1; fi
 EXPOSE 8001 9100
-CMD ["gunicorn", \
-     "--bind", "0.0.0.0:8001", \
-     "--workers", "4", \
-     "--timeout", "120", \
-     "--keep-alive", "65", \
-     "--log-level", "info", \
-     "--access-logfile", "-", \
-     "--error-logfile", "-", \
-     "chatbot.wsgi:application"]
+
+CMD ["daphne", \
+     "-b", "0.0.0.0", \
+     "-p", "8001", \
+     "--proxy-headers", \
+     "--access-log", "-", \
+     "--http-timeout", "300", \
+     "chatbot.asgi:application"]
