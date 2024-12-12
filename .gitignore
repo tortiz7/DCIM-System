@@ -1,0 +1,41 @@
+# General
+config.env
+*.pem
+*.key
+logs/
+
+# For local testing
+*compose.local.yml
+*datadump.json
+
+# Python
+__pycache__/
+*.pyc
+app.db
+app/**/__pycache__/
+app/translations/**/*.mo
+migrations/**/__pycache__/
+venv/
+**venv
+*initial_data_loaded
+
+# Node.js
+node_modules/
+
+# Terraform
+*.tfvars
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
+.terraform.lock.hcl
+.terraform.tfstate.lock.info
+planfile
+*.tfplan
+
+# Environment Files
+.env
+*.env
+
+# Ignore all migration files
+**/migrations/*.py
+!**/migrations/__init__.py  # Keep the __init__.py files

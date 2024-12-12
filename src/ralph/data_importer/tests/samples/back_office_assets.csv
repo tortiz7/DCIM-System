@@ -1,0 +1,3 @@
+id,sn,model,force_depreciation,warehouse,service_env,region
+112122,bo_asset_sn,1,1,1,service_1|environment_1,1
+212312,bo_asset_sn2,1,1,1,service_1|environment_1,1

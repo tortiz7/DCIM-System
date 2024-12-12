@@ -1,0 +1,13 @@
+{% load i18n %}
+<auto-complete
+  name="{{name}}"
+  {{ attrs }}
+  value="{{ value }}"
+  {{multi}}
+  {% if prefetch_data %}prefetch-data='{{ prefetch_data | safe }}'{% endif %}
+  query-ajax-url="{{ data_suggest_url }}"
+  detailsurl="{{ data_details_url }}"
+  related-url="{{ related_url }}"
+  add-related-url="{{ add_related_url }}"
+  search-tooltip="{{ search_fields_info }}"
+></auto-complete>

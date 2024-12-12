@@ -1,0 +1,19 @@
+{% extends "admin/filters/_filter_base.html" %}
+
+{% block filter_after_header %}
+  {% if i.separators %}
+    <i
+      data-tooltip
+      class="has-tip fa fa-info-circle"
+      title='Use {{ i.separators }} separator{{ i.separators|length|pluralize }} to search{% if i.multiple %} for multiple values{% endif %}'
+      aria-hidden="true">
+    </i>
+    <span class="show-for-sr">
+      Use {{ i.separators }} separator{{ i.separators|length|pluralize }} to search{% if i.multiple %} for multiple values{% endif %}
+    </span>
+  {% endif %}
+{% endblock %}
+
+{% block filter_choices %}
+  <input type="text" name="{{ i.parameter_name }}" value="{{ i.selected|default_if_none:"" }}" />
+{% endblock %}
