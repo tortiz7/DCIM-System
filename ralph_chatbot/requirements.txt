@@ -16,13 +16,11 @@ websockets==12.0
 asgiref==3.7.2
 uvicorn==0.27.0
 
-# Additional dependencies for model
-unsloth==2024.11.10
-transformers==4.31.0
-peft==0.3.0
-bitsandbytes==0.41.1
-xformers==0.0.20
-flash-attn==1.0.9
+# Model dependencies - removing duplicates that are handled in Dockerfile
 packaging
 einops
 ninja
+transformers==4.31.0
+peft==0.3.0
+bitsandbytes==0.41.1
+flash-attn==1.0.9
