@@ -31,7 +31,10 @@ class ChatbotView(View):
 
     def _ensure_model_initialized(self):
         if not ChatbotView._model_initialized:
-            threading.Thread(target=self.initialize_model).start()
+            # Start model initialization in a background thread
+            init_thread = threading.Thread(target=self.initialize_model)
+            init_thread.start()
+            init_thread.join()  # Wait for the model to finish loading
 
     def initialize_model(self):
         if ChatbotView._model_initialized:
@@ -46,7 +49,6 @@ class ChatbotView(View):
                 base_path = settings.MODEL_PATH['base_path']
                 adapters_path = settings.MODEL_PATH['adapters_path']
 
-                # Verify paths exist
                 if not os.path.exists(base_path):
                     raise ValueError(f"Base model path not found: {base_path}")
                 if not os.path.exists(adapters_path):
@@ -56,11 +58,11 @@ class ChatbotView(View):
                 quantization_config = BitsAndBytesConfig(
                     load_in_4bit=True,
                     bnb_4bit_compute_dtype=torch.float16,
-                    bnb_4bit_quant_storage="fp16"  # Fix incorrect storage type
+                    bnb_4bit_use_double_quant=True,
+                    bnb_4bit_quant_type="nf4"
                 )
 
                 logger.info(f"Loading tokenizer from {base_path}")
-                # Load tokenizer from local path
                 self.tokenizer = AutoTokenizer.from_pretrained(
                     base_path,
                     trust_remote_code=True,
@@ -68,7 +70,6 @@ class ChatbotView(View):
                 )
 
                 logger.info(f"Loading base model from {base_path}")
-                # Load base model with quantization
                 base_model = AutoModelForCausalLM.from_pretrained(
                     base_path,
                     quantization_config=quantization_config,
@@ -79,7 +80,6 @@ class ChatbotView(View):
                 )
 
                 logger.info(f"Loading LoRA adapters from {adapters_path}")
-                # Load LoRA adapters
                 self.model = PeftModel.from_pretrained(
                     base_model,
                     adapters_path,
@@ -95,16 +95,16 @@ class ChatbotView(View):
                 logger.error(f"Error initializing model: {e}", exc_info=True)
                 self.model = None
                 self.tokenizer = None
-                raise
 
     def generate_response(self, question, metrics=None):
         if self.model is None or self.tokenizer is None:
             return "Model not initialized properly."
 
-        # Create a prompt that includes metrics if available
-        prompt = "You are Ralph Assistant, an expert in Ralph DCIM and asset management.\n"
+        prompt = ("You are Ralph Assistant, an expert in Ralph DCIM and asset management.\n"
+                  "Please answer the user's questions using the given system metrics when relevant.\n\n")
         if metrics:
-            prompt += f"System Metrics:\nAssets: {metrics['assets']['total_count']} total, {metrics['assets']['status_summary']}\nNetwork: {metrics['networks']['status']}\nPower: {metrics['power']['total_consumption']} kW\n\n"
+            prompt += f"System Metrics:\nAssets: {metrics['assets']['total_count']} total, {metrics['assets']['status_summary']}\n"
+            prompt += f"Network: {metrics['networks']['status']}\nPower: {metrics['power']['total_consumption']} kW\n\n"
         prompt += f"Question: {question}\nAnswer:"
 
         try:
@@ -128,7 +128,6 @@ class ChatbotView(View):
                 )
 
             response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            # Extract the answer part
             if "Answer:" in response:
                 response = response.split("Answer:")[-1].strip()
             return response
@@ -137,6 +136,7 @@ class ChatbotView(View):
             return "I encountered an error generating the response."
 
     def get(self, request):
+        # Render the chat widget template
         return render(request, 'chat_widget.html')
 
     def post(self, request):
@@ -163,7 +163,6 @@ class MetricsView(APIView):
 
 
 def health_check(request):
-    # Simple health check
-    if torch.cuda.is_available():
+    if torch.cuda.is_available() and ChatbotView._model_initialized:
         return HttpResponse("healthy", status=200)
     return HttpResponse("unhealthy", status=503)

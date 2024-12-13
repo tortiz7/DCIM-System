@@ -1,0 +1,61 @@
+.
+├── README.md
+├── chatbot_repo.txt
+├── ralph_chatbot
+│   ├── Dockefile.chatbot
+│   ├── Dockerfile.chatbot
+│   ├── chatbot
+│   │   ├── __init__.py
+│   │   ├── api
+│   │   │   ├── __init__.py
+│   │   │   ├── client.py
+│   │   │   └── metrics.py
+│   │   ├── asgi.py
+│   │   ├── consumers.py
+│   │   ├── health_checks.py
+│   │   ├── middleware.py
+│   │   ├── model
+│   │   │   ├── adapters
+│   │   │   │   ├── adapter_config.json
+│   │   │   │   └── adapter_model.safetensors
+│   │   │   ├── config.json
+│   │   │   ├── generation_config.json
+│   │   │   ├── model.safetensors.gz
+│   │   │   ├── special_tokens_map.json
+│   │   │   ├── tokenizer.json
+│   │   │   └── tokenizer_config.json
+│   │   ├── routing.py
+│   │   ├── scaling.py
+│   │   ├── services.py
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   ├── utils
+│   │   │   └── verify_model.py
+│   │   ├── views.py
+│   │   └── wsgi.py
+│   ├── chatbot2.Dockerfile
+│   ├── chatbot_repo.txt
+│   ├── docker_compose.yml
+│   ├── init_chatbot.sh
+│   ├── manage.py
+│   ├── requirements.txt
+│   ├── static
+│   │   ├── css
+│   │   │   └── chat_widget.css
+│   │   └── js
+│   │       ├── chatbot.js
+│   │       └── websocket.js
+│   └── templates
+│       ├── chat_widget.html
+│       └── chatbot
+│           └── index.html
+└── temp
+    └── EC2
+        ├── EC2_main.tf
+        ├── deploy.sh
+        ├── docker-compose.yml
+        ├── nvidia_preinstall.sh
+        ├── outputs.tf
+        └── variables.tf
+
+14 directories, 45 files
