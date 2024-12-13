@@ -31,6 +31,7 @@ RUN apt-get update && apt-get install -y \
     git-lfs \
     curl \
     ninja-build \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Verify CUDA installation early
@@ -52,6 +53,14 @@ RUN --mount=type=ssh git clone --branch $CHATBOT_BRANCH $CHATBOT_REPO . && \
     git lfs pull
 
 WORKDIR /app/ralph_chatbot
+
+# Unzip the model file if it exists
+RUN if [ -f "chatbot/model/model.safetensors.gz" ]; then \
+        echo "Unzipping model.safetensors.gz..."; \
+        gunzip -k chatbot/model/model.safetensors.gz; \
+    else \
+        echo "No model.safetensors.gz found, skipping unzipping step."; \
+    fi
 
 # Install Python dependencies in the correct order
 RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel && \

@@ -13,7 +13,6 @@ from django.conf import settings
 from .api.client import RalphAPIClient
 from .api.metrics import MetricsCollector
 import threading
-from django.template.response import TemplateResponse
 import os
 
 logger = logging.getLogger(__name__)
@@ -41,7 +40,7 @@ class ChatbotView(View):
         with ChatbotView._model_lock:
             if ChatbotView._model_initialized:
                 return
-                
+
             try:
                 logger.info("Starting model initialization...")
                 base_path = settings.MODEL_PATH['base_path']
@@ -57,9 +56,7 @@ class ChatbotView(View):
                 quantization_config = BitsAndBytesConfig(
                     load_in_4bit=True,
                     bnb_4bit_compute_dtype=torch.float16,
-                    bnb_4bit_use_double_quant=True,
-                    bnb_4bit_quant_type="nf4",
-                    bnb_4bit_quant_storage=True
+                    bnb_4bit_quant_storage="fp16"  # Fix incorrect storage type
                 )
 
                 logger.info(f"Loading tokenizer from {base_path}")
@@ -99,9 +96,6 @@ class ChatbotView(View):
                 self.model = None
                 self.tokenizer = None
                 raise
-
-    # Rest of the code remains the same...
-    # [Previous generate_response, get, and post methods stay unchanged]
 
     def generate_response(self, question, metrics=None):
         if self.model is None or self.tokenizer is None:
@@ -164,12 +158,12 @@ class MetricsView(APIView):
     def get(self, request):
         return Response({
             'status': 'OK',
-            'metrics': {'model_loaded': True}
+            'metrics': {'model_loaded': ChatbotView._model_initialized}
         })
 
 
 def health_check(request):
     # Simple health check
-    if torch.cuda.is_available() and True:  # Add any other checks here
+    if torch.cuda.is_available() and ChatbotView._model_initialized:
         return HttpResponse("healthy", status=200)
     return HttpResponse("unhealthy", status=503)

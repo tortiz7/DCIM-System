@@ -1,3 +1,5 @@
+{% load static %}
+
 <div id="ralph-assistant" class="chat-widget-container">
     <div class="chat-header">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -40,11 +42,4 @@
 <script src="{% static 'js/websocket.js' %}"></script>
 <script>
     // Initialize WebSocket connection
-    const ralphSocket = new RalphWebSocket();
-    ralphSocket.connect();
-    
-    // Update metrics every 30 seconds
-    setInterval(() => {
-        ralphSocket.requestMetrics('all');
-    }, 30000);
-</script>
+    const ralphSocket = new Ralph
