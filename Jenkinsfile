@@ -112,7 +112,7 @@ pipeline {
                 }
             }
         }
-        
+
         stage('Security Scan') {
             steps {
                 echo "🔒 Scanning Docker image for vulnerabilities..."
@@ -181,7 +181,7 @@ pipeline {
                                         # Run migrations
                                         docker compose exec -T web ralphctl migrate
 
-                                        # Create or update superuser (all in one line)
+                                        # Create or update superuser
                                         docker compose exec -T web ralphctl shell -c "from django.contrib.auth import get_user_model; User=get_user_model(); user,created=User.objects.get_or_create(username=\\"${SUPERUSER_NAME}\\", defaults={\\"email\\":\\"team@cloudega.com\\"}); user.is_staff=True; user.is_superuser=True; user.set_password(\\"${SUPERUSER_PASSWORD}\\"); user.save(); print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_superuser}\\")"
 
                                         # Load demo data
@@ -212,27 +212,28 @@ pipeline {
             }
         }
 
-    //     stage('Smoke Test') {
-    //         steps {
-    //             script {
-    //                 echo "🔎 Running a smoke test against the load balancer..."
-    //                 def alb_dns = sh(
-    //                     script: "cd terraform && terraform output -json alb_dns_name | jq -r '.'",
-    //                     returnStdout: true
-    //                 ).trim()
+        // stage('Smoke Test') {
+        //     steps {
+        //         script {
+        //             echo "🔎 Running a smoke test against the load balancer..."
+        //             def alb_dns = sh(
+        //                 script: "cd terraform && terraform output -json alb_dns_name | jq -r '.'",
+        //                 returnStdout: true
+        //             ).trim()
 
-    //                 // Simple curl check to verify a 200 response from the Ralph login page
-    //                 def status = sh(script: "curl -s -o /dev/null -w '%{http_code}' http://${alb_dns}/login/", returnStdout: true).trim()
+        //             // Simple curl check to verify a 200 response from the Ralph login page
+        //             def status = sh(script: "curl -s -o /dev/null -w '%{http_code}' http://${alb_dns}/login/", returnStdout: true).trim()
 
-    //                 if (status != '200') {
-    //                     error("Smoke test failed! Expected 200 OK from ${alb_dns}/login/ but got ${status}")
-    //                 }
+        //             if (status != '200') {
+        //                 error("Smoke test failed! Expected 200 OK from ${alb_dns}/login/ but got ${status}")
+        //             }
 
-    //                 echo "✅ Smoke test passed! The Ralph application is responding as expected."
-    //             }
-    //         }
-    //     }
-    // }
+        //             echo "✅ Smoke test passed! The Ralph application is responding as expected."
+        //         }
+        //     }
+        // }
+
+    } 
 
     post {
         success {
