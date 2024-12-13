@@ -1,0 +1,71 @@
+{% load i18n ralph_tags %}
+
+<div class="row">
+  <div class="large-12 columns">
+    {% if transition_history_in_fieldset %}
+      <fieldset>
+        <legend>{% trans "Transition history" %}</legend>
+    {% endif %}
+    {% if transitions_history %}
+    <table class="large-12 columns">
+      <thead>
+      <tr>
+        <th>{% trans "Date" %}</th>
+        <th>{% trans "Author" %}</th>
+        <th>{% trans "Transition" %}</th>
+        <th>{% trans "Source" %}</th>
+        <th>{% trans "Target" %}</th>
+        <th>{% trans "Actions" %}</th>
+        <th>{% trans "Data" %}</th>
+        <th>{% trans "Attachment" %}</th>
+      </tr>
+      </thead>
+      <tbody>
+        {% for history in transitions_history %}
+          <tr>
+            <td>{{ history.created }}</td>
+            <td>{{ history.logged_user }}</td>
+            <td>{{ history.transition_name }}</td>
+            <td>{{ history.source|default:"&mdash;" }}</td>
+            <td>{{ history.target|default:"&mdash;" }}</td>
+            <td>
+              {% if history.actions %}
+                {% for action in history.actions %}
+                  {{ action }}<br />
+                {% endfor %}
+              {% else %}
+                &mdash;
+              {% endif %}
+            </td>
+            <td>
+              {% for value in history.kwargs.items %}
+                {{ value.0 }}: <strong>{{ value.1 }}</strong><br />
+              {% endfor %}
+            </td>
+            <td>
+                {% if history.attachments.all %}
+                  <ol>
+                    {% for attachment in history.attachments.all %}
+                      <li>
+                        <a href="{% url 'serve_attachment' attachment.id attachment.original_filename %}">
+                          {{ attachment.original_filename }}
+                        </a>
+                      </li>
+                    {% endfor %}
+                  </ol>
+                {% else %}
+                   &mdash;
+                {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      {% trans "Transition history is empty" %}
+    {% endif %}
+  {% if transition_history_in_fieldset %}
+    </fieldset>
+  {% endif %}
+  </div>
+</div>

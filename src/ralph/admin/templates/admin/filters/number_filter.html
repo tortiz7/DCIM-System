@@ -1,0 +1,6 @@
+{% extends "admin/filters/_filter_base.html" %}
+
+{% block filter_choices %}
+    <input type="number" step="{{ i.step }}" name="{{ i.parameter_name_start }}" placeholder="From" value="{{ i.start_value }}" />
+    <input type="number" step="{{ i.step }}" name="{{ i.parameter_name_end }}" placeholder="To" value="{{ i.end_value }}" />
+{% endblock %}

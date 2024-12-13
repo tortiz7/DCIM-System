@@ -106,7 +106,11 @@ resource "aws_security_group" "redis_sg" {
   }
 }
 
+output "redis_primary_endpoint" {
+  description = "Primary endpoint of the Redis Replication Group"
+  value       = aws_elasticache_replication_group.redis.primary_endpoint_address
+}
 
-
-
-
+output "redis_reader_endpoint" {
+  description = "Reader endpoint for the Redis Replication Group"
+  value       = aws_elasticache_replication_group.redis.reader_endpoint_address

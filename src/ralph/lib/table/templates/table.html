@@ -1,0 +1,34 @@
+{% load table %}
+
+<table class="admin-table">
+  {% if show_header %}
+    <thead>
+      <tr>
+        {% for header in headers %}
+          <th>{{ header.value|title }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+  {% endif %}
+  <tbody>
+  {% for items in rows %}
+    <tr class="{% if forloop.counter > LIMIT %}hide can-hide{% endif %}">
+      {% for item in items %}
+        <td{{ item.html_attributes }}>
+          {{ item.value|safe|linebreaksbr }}
+        </td>
+      {% endfor %}
+    </tr>
+    {% if forloop.counter == LIMIT %}
+      <tr class="control" data-control>
+        <td colspan="{{ headers_count }}"><a class="expand">Expand to {{ rows_count }} rows</a></td>
+      </tr>
+    {% endif %}
+    {% if forloop.last %}
+      <tr class="control hide" data-control>
+        <td colspan="{{ headers_count }}"><a class="collapse">Collapse to {{ LIMIT }} rows</a></td>
+      </tr>
+    {% endif %}
+  {% endfor %}
+  </tbody>
+</table>

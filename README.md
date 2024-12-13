@@ -96,4 +96,3 @@ Our team’s roles:
 - Include instructions for running and testing Ralph locally.
 
 **This README is a work-in-progress.** As we iterate, we’ll add more details, visuals, and clarifications to ensure this resource becomes an informative guide for both our team and future stakeholders.
-

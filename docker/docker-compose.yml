@@ -9,15 +9,21 @@ services:
       - ralph_media:/var/local/ralph/media
       - ralph_static:/usr/share/ralph/static
     environment:
-        DATABASE_NAME: ralph_ng
-        DATABASE_USER: "cloudega2024"
-        DATABASE_PASSWORD: "cloudega2024!"
-        DATABASE_HOST: ${rds_endpoint}
-        DATABASE_PORT: 3306
-        REDIS_HOST: ${redis_endpoint}
-        REDIS_PASSWORD: ""
-        REDIS_PORT: 6379
-        REDIS_DB: 0
+      # Use Terraform-endpoints if provided, else fallback to local services
+      DATABASE_NAME: ralph_ng
+      DATABASE_USER: "${DATABASE_USER:-ralph_ng}"
+      DATABASE_PASSWORD: "${DATABASE_PASSWORD:-ralph_ng}"
+      DATABASE_HOST: "${rds_endpoint:-db}"
+      DATABASE_PORT: 3306
+      REDIS_HOST: "${redis_endpoint:-redis}"
+      REDIS_PASSWORD: ""
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   nginx:
     platform: linux/amd64
@@ -27,7 +33,14 @@ services:
       - "80:80"
     volumes:
       - ralph_media:/opt/media
-
+      - ralph_static:/opt/static
+    depends_on:
+      - web
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
@@ -40,37 +53,46 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
 
+  db:
+    platform: linux/amd64
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: ralph_ng
+      MYSQL_ROOT_PASSWORD: ralph_ng
+      MYSQL_USER: ralph_ng
+      MYSQL_PASSWORD: ralph_ng
+    volumes:
+      - ralph_dbdata:/var/lib/mysql
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # db:
-  #   platform: linux/amd64
-  #   image: mysql:5.7
-  #   environment:
-  #     MYSQL_DATABASE: ralph_ng
-  #     MYSQL_ROOT_PASSWORD: ralph_ng
-  #     MYSQL_USER: ralph_ng
-  #     MYSQL_PASSWORD: ralph_ng
-  #   volumes:
-  #     - ralph_dbdata:/var/lib/mysql
-  #   command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+  redis:
+    platform: linux/amd64
+    image: redis:3.0
+    restart: always
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # redis:
-  #   platform: linux/amd64
-  #   image: redis:3.0
-  #   restart: always
-  #   ports:
-  #     - "6379"
-
-  # inkpy:
-  #   platform: linux/amd64
-  #   image: allegro/inkpy:latest
-  #   restart: always
-  #   links:
-  #     - redis:redis
-  #   environment:
-  #       REDIS_HOST: redis
-  #       REDIS_PASSWORD: ""
-  #       REDIS_PORT: 6379
-  #       REDIS_DB: 0
+  inkpy:
+    platform: linux/amd64
+    image: allegro/inkpy:latest
+    restart: always
+    depends_on:
+      - redis
+    environment:
+      REDIS_HOST: "${redis_endpoint:-redis}"
+      REDIS_PASSWORD: ""
+      REDIS_PORT: 6379
+      REDIS_DB: 0
 
 volumes:
   ralph_dbdata:

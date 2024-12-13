@@ -30,7 +30,6 @@ user_data = base64encode(
   })
 )
 
-
   tags = {
     Name = "ralph_app_az${count.index + 1}"
   }

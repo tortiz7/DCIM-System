@@ -16,7 +16,6 @@ output "redis_reader_endpoint" {
   value       = aws_elasticache_replication_group.redis.reader_endpoint_address
 }
 
-
 output "rds_sg_id" {
     value = aws_security_group.rds_sg.id
 }

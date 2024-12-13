@@ -1,0 +1,18 @@
+{% load ralph_tags i18n admin_static %}
+
+{% if search_fields and search_url %}
+  <div class="contextual_search">
+    <form id="changelist-search" action="{{ search_url }}" method="get" class="row collapse">
+      <div class="small-10 columns">
+        <input type="text" size="40" name="{{ search_var }}" value="{{ cl.query }}" id="searchbar" placeholder="{% blocktrans %}Search {{ verbose_name }} by{% endblocktrans %} {{ search_fields|join:", " }}" />
+      </div>
+      <div class="small-2 columns">
+        <button type="submit" class="button expand search">
+          <i class="fa fa-search" aria-hidden="true"></i>
+        </button>
+      </div>
+      {% for pair in cl.params.items %}
+        {% ifnotequal pair.0 search_var %}<input type="hidden" name="{{ pair.0 }}" value="{{ pair.1 }}"/>{% endifnotequal %}
+      {% endfor %}
+    </form>
+{% endif %}
