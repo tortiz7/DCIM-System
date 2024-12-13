@@ -47,7 +47,7 @@ pipeline {
                     def ec2_ips = sh(
                         script: "cd terraform && terraform output -json private_instance_ips | jq -r '.[]'",
                         returnStdout: true
-                    ).trim().split('\\n')
+                    ).trim().split('\n')
 
                     def bastionIp = sh(
                         script: "cd terraform && terraform output -json bastion_public_ip | jq -r '.'",
@@ -59,7 +59,7 @@ pipeline {
                     ec2_ips.each { ip ->
                         timeout(time: 5, unit: 'MINUTES') {
                             waitUntil {
-                                def setupComplete = (sh(
+                                def setupComplete = sh(
                                     script: """
                                         set -x
                                         echo "Verifying setup on ${ip} through bastion ${bastionIp}..."
@@ -71,7 +71,7 @@ pipeline {
                                         echo "Verification completed successfully"
                                     """,
                                     returnStatus: true
-                                ) == 0)
+                                ) == 0
 
                                 if (!setupComplete) {
                                     sleep 15
@@ -112,14 +112,14 @@ pipeline {
                 }
             }
         }
-
+        
         stage('Security Scan') {
             steps {
                 echo "🔒 Scanning Docker image for vulnerabilities..."
                 sh """
                     mkdir -p /home/ubuntu/trivy-archives
                     mkdir -p /home/ubuntu/trivy-cache
-                        
+                    
                     # Run the vulnerability scan with caching and vuln-only scanners
                     docker run --rm \
                         -v /var/run/docker.sock:/var/run/docker.sock \
@@ -144,7 +144,7 @@ pipeline {
                         def ec2_ips = sh(
                             script: "cd terraform && terraform output -json private_instance_ips | jq -r '.[]'",
                             returnStdout: true
-                        ).trim().split('\\n')
+                        ).trim().split('\n')
 
                         def bastionIp = sh(
                             script: "cd terraform && terraform output -json bastion_public_ip | jq -r '.'",
@@ -181,7 +181,7 @@ pipeline {
                                         # Run migrations
                                         docker compose exec -T web ralphctl migrate
 
-                                        # Create or update superuser
+                                        # Create or update superuser (all in one line)
                                         docker compose exec -T web ralphctl shell -c "from django.contrib.auth import get_user_model; User=get_user_model(); user,created=User.objects.get_or_create(username=\\"${SUPERUSER_NAME}\\", defaults={\\"email\\":\\"team@cloudega.com\\"}); user.is_staff=True; user.is_superuser=True; user.set_password(\\"${SUPERUSER_PASSWORD}\\"); user.save(); print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_superuser}\\")"
 
                                         # Load demo data
@@ -197,28 +197,10 @@ pipeline {
                                 echo "🔄 Ralph is already running on ${ip}, updating it..."
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
-                                        mkdir -p /home/ubuntu/DCIM-System
-                                        cd /home/ubuntu/DCIM-System
-
-                                        # Check if .git directory exists
-                                        if [ ! -d ".git" ]; then
-                                            echo "📂 Repository not found, cloning now..."
-                                            git clone https://${GITHUB_TOKEN}@github.com/tortiz7/DCIM-System.git .
-                                        else
-                                            echo "🔄 Repository already cloned, pulling latest changes..."
-                                        fi
-
-                                        # Pull the latest changes
+                                        cd /home/ubuntu/DCIM-System/docker
                                         git pull
-
-                                        # Move into docker directory
-                                        cd docker
-
-                                        # Update and restart containers
                                         docker compose pull
                                         docker compose up -d
-
-                                        # Migrate the database
                                         docker compose exec -T web ralphctl migrate
                                     '
                                 """
