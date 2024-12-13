@@ -204,9 +204,14 @@ pipeline {
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu
-                                        docker compose down
 
-                                        # Pull latest image and update containers
+                                        # Bring down the stack defined by docker-compose
+                                        docker compose down --remove-orphans || true
+
+                                        # Force-remove any leftover cadvisor containers, just in case they are orphaned
+                                        docker rm -f cadvisor || true
+
+                                        # Now pull latest image and update containers
                                         docker compose pull
                                         docker compose up -d
                                         sleep 30
