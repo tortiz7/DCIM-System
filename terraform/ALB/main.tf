@@ -10,7 +10,6 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # cAdvisor ingress from ke/terraform
   ingress {
     description = "Allow cAdvisor HTTP traffic"
     from_port   = 8080
@@ -19,9 +18,8 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # nodex ingress from ke/terraform
   ingress {
-    description = "Allow nodex HTTP traffic"
+    description = "Allow noedx HTTP traffic"
     from_port   = 9100
     to_port     = 9100
     protocol    = "tcp"
@@ -55,7 +53,6 @@ resource "aws_lb" "app_alb" {
   }
 }
 
-# App Target Group with both sets of changes merged
 resource "aws_lb_target_group" "app_tg" {
   name     = "app-target-group"
   port     = 80
@@ -72,18 +69,11 @@ resource "aws_lb_target_group" "app_tg" {
     matcher             = "200,302"
   }
 
-  # Stickiness block from main
-  stickiness {
-    type            = "lb_cookie"
-    cookie_duration = 604800
-  }
-
   tags = {
     Name = "Ralph App Target Group"
   }
 }
 
-# cAdvisor Target Group from ke/terraform
 resource "aws_lb_target_group" "cAdvisor_tg" {
   name     = "cAdvisor-target-group"
   port     = 8080
@@ -104,6 +94,43 @@ resource "aws_lb_target_group" "cAdvisor_tg" {
     Name = "cAdvisor Target Group"
   }
 }
+
+resource "aws_lb_target_group_attachment" "app_tg_attachment" {
+  count            = var.app_count  
+  target_group_arn = aws_lb_target_group.app_tg.arn
+  target_id        = var.app_server_ids[count.index]  
+  port             = 80 
+}
+
+resource "aws_lb_target_group_attachment" "cAdvisor_tg_attachment" {
+  count            = var.app_count  
+  target_group_arn = aws_lb_target_group.cAdvisor_tg.arn
+  target_id        = var.app_server_ids[count.index]  
+  port             = 8080 
+}
+
+resource "aws_lb_listener" "app_http_listener" {
+  load_balancer_arn = aws_lb.app_alb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app_tg.arn
+  }
+}
+
+resource "aws_lb_listener" "cAdvisor_http_listener" {
+  load_balancer_arn = aws_lb.app_alb.arn
+  port              = 8080
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.cAdvisor_tg.arn
+  }
+}
+
 
 resource "aws_lb_target_group" "nodex_tg" {
   name     = "nodex-target-group"
