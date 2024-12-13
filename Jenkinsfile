@@ -179,6 +179,10 @@ pipeline {
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu
 
+                                        # Ensure a clean slate for the first run as well
+                                        docker compose down --remove-orphans || true
+                                        docker rm -f cadvisor || true
+
                                         # Pull and run the image
                                         docker compose pull
                                         docker compose up -d
@@ -205,10 +209,10 @@ pipeline {
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu
 
-                                        # Bring down the stack defined by docker-compose
+                                        # Bring down the stack and remove any orphan containers
                                         docker compose down --remove-orphans || true
 
-                                        # Force-remove any leftover cadvisor containers, just in case they are orphaned
+                                        # Force-remove any leftover cadvisor containers, just in case
                                         docker rm -f cadvisor || true
 
                                         # Now pull latest image and update containers
