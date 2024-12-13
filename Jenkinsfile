@@ -62,8 +62,8 @@ pipeline {
                                 def setupComplete = sh(
                                     script: """
                                         set -x
-                                        echo "Verifying setup on ${ip} through bastion ${bastionIp}..."
-                                        ssh ${sshOptions} ubuntu@${ip} '
+                                        echo "Verifying setup on \${ip} through bastion \${bastionIp}..."
+                                        ssh \${sshOptions} ubuntu@\${ip} '
                                             test -f /home/ubuntu/.setup_complete &&
                                             systemctl is-active --quiet docker &&
                                             systemctl is-active --quiet node_exporter
@@ -103,7 +103,7 @@ pipeline {
                         echo "🔨 Building Docker image for Ralph..."
 
                         sh """
-                            docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
+                            docker login -u \$DOCKERHUB_USER -p \$DOCKERHUB_PASS
                             docker build -t shafeekuralabs/ralph:latest -f docker/Dockerfile-prod .
                             docker push shafeekuralabs/ralph:latest
                         """
@@ -156,7 +156,7 @@ pipeline {
                         ec2_ips.each { ip ->
                             def isRalphRunning = sh(
                                 script: """
-                                    ssh ${sshOptions} ubuntu@${ip} '
+                                    ssh \${sshOptions} ubuntu@\${ip} '
                                         if docker ps | grep -q ralph; then
                                             echo "true"
                                         else
@@ -170,7 +170,7 @@ pipeline {
                             if (isRalphRunning == 'false') {
                                 echo "📦 Time to deploy Ralph on ${ip}!"
                                 sh """
-                                    ssh ${sshOptions} ubuntu@${ip} '
+                                    ssh \${sshOptions} ubuntu@\${ip} '
                                         cd /home/ubuntu
 
                                         # Pull and run the image
@@ -196,12 +196,12 @@ pipeline {
                             } else {
                                 echo "🔄 Ralph is already running on ${ip}, updating it..."
                                 sh """
-                                    ssh ${sshOptions} ubuntu@${ip} '
+                                    ssh \${sshOptions} ubuntu@\${ip} '
                                         cd /home/ubuntu/DCIM-System/docker
                                         git pull
                                         # Stop and remove all containers, volumes, networks just to be sure
-                                        docker kill $(docker ps -q) || true
-                                        docker rm $(docker ps -aq) || true
+                                        docker kill \$(docker ps -q) || true
+                                        docker rm \$(docker ps -aq) || true
                                         docker system prune -af || true
 
                                         # Now start fresh
