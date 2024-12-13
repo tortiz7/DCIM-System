@@ -54,6 +54,10 @@ pipeline {
                         returnStdout: true
                     ).trim()
 
+                    // print out the values for debugging
+                    echo "Bastion IP: ${bastionIp}"
+                    echo "EC2 IPs: ${ec2_ips}"
+
                     def sshOptions = "-o StrictHostKeyChecking=no -o 'ProxyCommand=ssh -o StrictHostKeyChecking=no -W %h:%p -i ${SSH_KEY_PATH} ubuntu@${bastionIp}' -i ${SSH_KEY_PATH}"
 
                     ec2_ips.each { ip ->
@@ -62,18 +66,19 @@ pipeline {
                                 def setupComplete = sh(
                                     script: """
                                         set -x
-                                        echo "Verifying setup on \${ip} through bastion \${bastionIp}..."
-                                        ssh \${sshOptions} ubuntu@\${ip} '
+                                        echo "Verifying setup on ${ip} through bastion ${bastionIp}..."
+                                        ssh ${sshOptions} ubuntu@${ip} "
                                             test -f /home/ubuntu/.setup_complete &&
                                             systemctl is-active --quiet docker &&
                                             systemctl is-active --quiet node_exporter
-                                        '
+                                        "
                                         echo "Verification completed successfully"
                                     """,
                                     returnStatus: true
                                 ) == 0
 
                                 if (!setupComplete) {
+                                    echo "Setup not complete yet on ${ip}, sleeping..."
                                     sleep 15
                                 }
                                 return setupComplete
@@ -83,6 +88,7 @@ pipeline {
                 }
             }
         }
+
 
         stage('Test') {
             steps {
