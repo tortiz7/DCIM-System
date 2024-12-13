@@ -80,8 +80,8 @@ CHANNEL_LAYERS = {
     },
 }
 
-MODEL_BASE_PATH = os.getenv('MODEL_PATH', str(BASE_DIR / 'model'))
-MODEL_ADAPTERS_PATH = os.getenv('LORA_PATH', str(BASE_DIR / 'model/adapters'))
+MODEL_BASE_PATH = os.getenv('MODEL_PATH', str(BASE_DIR / 'chatbot/model'))
+MODEL_ADAPTERS_PATH = os.getenv('LORA_PATH', str(BASE_DIR / 'chatbot/model/adapters'))
 MODEL_PATH = {
     'base_path': MODEL_BASE_PATH,
     'adapters_path': MODEL_ADAPTERS_PATH

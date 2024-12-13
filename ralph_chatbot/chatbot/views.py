@@ -5,58 +5,103 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from peft import PeftModel
 import logging
 import json
 from django.conf import settings
 from .api.client import RalphAPIClient
 from .api.metrics import MetricsCollector
+import threading
+from django.template.response import TemplateResponse
+import os
 
 logger = logging.getLogger(__name__)
 
 class ChatbotView(View):
+    _model_initialized = False
+    _model_lock = threading.Lock()
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.client = RalphAPIClient()
         self.metrics_collector = MetricsCollector()
         self.model = None
         self.tokenizer = None
-        self.initialize_model()
+        self._ensure_model_initialized()
+
+    def _ensure_model_initialized(self):
+        if not ChatbotView._model_initialized:
+            threading.Thread(target=self.initialize_model).start()
 
     def initialize_model(self):
-        try:
-            base_path = settings.MODEL_PATH['base_path']
-            adapters_path = settings.MODEL_PATH['adapters_path']
+        if ChatbotView._model_initialized:
+            return
 
-            # Load tokenizer with no fast tokenization
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                "unsloth/Llama-3.2-3B-bnb-4bit",
-                trust_remote_code=True,
-                use_fast=False
-            )
+        with ChatbotView._model_lock:
+            if ChatbotView._model_initialized:
+                return
+                
+            try:
+                logger.info("Starting model initialization...")
+                base_path = settings.MODEL_PATH['base_path']
+                adapters_path = settings.MODEL_PATH['adapters_path']
 
-            base_model = AutoModelForCausalLM.from_pretrained(
-                "unsloth/Llama-3.2-3B-bnb-4bit",
-                torch_dtype=torch.float16,
-                device_map="auto",
-                trust_remote_code=True
-            )
+                # Verify paths exist
+                if not os.path.exists(base_path):
+                    raise ValueError(f"Base model path not found: {base_path}")
+                if not os.path.exists(adapters_path):
+                    raise ValueError(f"Adapters path not found: {adapters_path}")
 
-            # Load LoRA adapters
-            self.model = PeftModel.from_pretrained(
-                base_model,
-                adapters_path,
-                torch_dtype=torch.float16,
-                device_map="auto"
-            )
+                # Configure 4-bit quantization
+                quantization_config = BitsAndBytesConfig(
+                    load_in_4bit=True,
+                    bnb_4bit_compute_dtype=torch.float16,
+                    bnb_4bit_use_double_quant=True,
+                    bnb_4bit_quant_type="nf4",
+                    bnb_4bit_quant_storage=True
+                )
 
-            self.model.eval()
-            logger.info("Model and LoRA adapter loaded successfully.")
-        except Exception as e:
-            logger.error(f"Error initializing model: {e}", exc_info=True)
-            self.model = None
-            self.tokenizer = None
+                logger.info(f"Loading tokenizer from {base_path}")
+                # Load tokenizer from local path
+                self.tokenizer = AutoTokenizer.from_pretrained(
+                    base_path,
+                    trust_remote_code=True,
+                    use_fast=False
+                )
+
+                logger.info(f"Loading base model from {base_path}")
+                # Load base model with quantization
+                base_model = AutoModelForCausalLM.from_pretrained(
+                    base_path,
+                    quantization_config=quantization_config,
+                    torch_dtype=torch.float16,
+                    device_map="auto",
+                    trust_remote_code=True,
+                    use_cache=True
+                )
+
+                logger.info(f"Loading LoRA adapters from {adapters_path}")
+                # Load LoRA adapters
+                self.model = PeftModel.from_pretrained(
+                    base_model,
+                    adapters_path,
+                    torch_dtype=torch.float16,
+                    device_map="auto"
+                )
+
+                self.model.eval()
+                ChatbotView._model_initialized = True
+                logger.info("Model initialization completed successfully")
+
+            except Exception as e:
+                logger.error(f"Error initializing model: {e}", exc_info=True)
+                self.model = None
+                self.tokenizer = None
+                raise
+
+    # Rest of the code remains the same...
+    # [Previous generate_response, get, and post methods stay unchanged]
 
     def generate_response(self, question, metrics=None):
         if self.model is None or self.tokenizer is None:

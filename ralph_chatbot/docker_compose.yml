@@ -1,22 +1,39 @@
 version: '2.4'
-
 services:
   chatbot:
     build: 
       context: .
-      dockerfile: Dockerfile.chatbot
+      dockerfile: chatbot.Dockerfile
       ssh:
         - default=${SSH_AUTH_SOCK:-/tmp/ssh_agent.sock}
     restart: unless-stopped
     ports:
       - "8001:8001"
+      - "9100:9100"  # For Prometheus metrics
     environment:
       ALLOWED_HOSTS: "*"
       NVIDIA_VISIBLE_DEVICES: all
       CUDA_VISIBLE_DEVICES: 0
-    mem_limit: 12g  # Set memory limit
+      MODEL_PATH: /app/ralph_chatbot/chatbot/model
+      LORA_PATH: /app/ralph_chatbot/chatbot/model/adapters
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      DATABASE_NAME: ${DATABASE_NAME:-ralph_ng}
+      DATABASE_USER: ${DATABASE_USER:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-password}
+      DATABASE_HOST: ${DATABASE_HOST:-db}
+    volumes:
+      - static_volume:/app/ralph_chatbot/staticfiles
     devices:
-      - /dev/nvidia0:/dev/nvidia0  # Map GPU device
+      - /dev/nvidia0:/dev/nvidia0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+        limits:
+          memory: 16G
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health/"]
       interval: 30s
@@ -33,10 +50,11 @@ services:
       - "80:80"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - /mnt/ephemeral/nginx_cache:/var/cache/nginx
+      - nginx_cache:/var/cache/nginx
       - static_volume:/app/ralph_chatbot/staticfiles:ro
     depends_on:
-      - chatbot
+      chatbot:
+        condition: service_healthy
     networks:
       - chatbot_network
 
@@ -46,3 +64,4 @@ networks:
 
 volumes:
   static_volume:
+  nginx_cache:

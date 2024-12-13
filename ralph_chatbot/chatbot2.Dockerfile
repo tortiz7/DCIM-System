@@ -18,7 +18,6 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV CUDA_HOME=/usr/local/cuda
 ENV PATH=${CUDA_HOME}/bin:${PATH}
 ENV LD_LIBRARY_PATH=${CUDA_HOME}/lib64:${LD_LIBRARY_PATH}
-# G4DN specific architecture flags
 ENV TORCH_CUDA_ARCH_LIST="7.5"
 ENV FORCE_CUDA="1"
 ENV TORCH_NVCC_FLAGS="-Xfatbin -compress-all"
@@ -54,10 +53,6 @@ RUN --mount=type=ssh git clone --branch $CHATBOT_BRANCH $CHATBOT_REPO . && \
 
 WORKDIR /app/ralph_chatbot
 
-# Create model directories
-RUN mkdir -p chatbot/model/adapters && \
-    chmod -R 755 chatbot/model
-
 # Install Python dependencies in the correct order
 RUN pip3 install --no-cache-dir --upgrade pip setuptools wheel && \
     # Install base dependencies
@@ -90,9 +85,8 @@ ENV LORA_PATH=/app/ralph_chatbot/chatbot/model/adapters
 RUN python3 manage.py collectstatic --noinput
 RUN chmod +x init_chatbot.sh || true
 
-# Add volumes
+# Add volume for static files only
 VOLUME ["/app/ralph_chatbot/staticfiles"]
-VOLUME ["/app/ralph_chatbot/chatbot/model"]
 
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
