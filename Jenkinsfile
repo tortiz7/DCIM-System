@@ -120,17 +120,12 @@ pipeline {
                     mkdir -p /home/ubuntu/trivy-archives
                     mkdir -p /home/ubuntu/trivy-cache
                     
-                    # Update Trivy DB once (optional but recommended for speed)
-                    docker run --rm \
-                        -v /home/ubuntu/trivy-cache:/root/.cache/ \
-                        aquasec/trivy:latest db update
-                    
                     # Run the vulnerability scan with caching and vuln-only scanners
                     docker run --rm \
                         -v /var/run/docker.sock:/var/run/docker.sock \
                         -v /home/ubuntu/trivy-cache:/root/.cache/ \
                         aquasec/trivy:latest image --scanners vuln --severity HIGH,CRITICAL shafeekuralabs/ralph:latest > trivy-report.txt
-                    
+
                     cp trivy-report.txt /home/ubuntu/trivy-archives/
                 """
                 archiveArtifacts artifacts: 'trivy-report.txt', fingerprint: true
@@ -138,7 +133,6 @@ pipeline {
             }
         }
 
-        // TODO: This is a test, delete this after.
         stage('Deploy Ralph') {
             steps {
                 script {
