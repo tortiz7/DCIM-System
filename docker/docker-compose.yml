@@ -1,7 +1,7 @@
 services:
   web:
     platform: linux/amd64
-    image: allegro/ralph:latest
+    image: shafeekuralabs/ralph:latest
     restart: always
     ports:
       - "8000:8000"

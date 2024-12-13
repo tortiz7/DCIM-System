@@ -118,14 +118,26 @@ pipeline {
                 echo "🔒 Scanning Docker image for vulnerabilities..."
                 sh """
                     mkdir -p /home/ubuntu/trivy-archives
-                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                    aquasec/trivy:latest image --severity HIGH,CRITICAL shafeekuralabs/ralph:latest > trivy-report.txt
+                    mkdir -p /home/ubuntu/trivy-cache
+                    
+                    # Update Trivy DB once (optional but recommended for speed)
+                    docker run --rm \
+                        -v /home/ubuntu/trivy-cache:/root/.cache/ \
+                        aquasec/trivy:latest db update
+                    
+                    # Run the vulnerability scan with caching and vuln-only scanners
+                    docker run --rm \
+                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        -v /home/ubuntu/trivy-cache:/root/.cache/ \
+                        aquasec/trivy:latest image --scanners vuln --severity HIGH,CRITICAL shafeekuralabs/ralph:latest > trivy-report.txt
+                    
                     cp trivy-report.txt /home/ubuntu/trivy-archives/
                 """
                 archiveArtifacts artifacts: 'trivy-report.txt', fingerprint: true
                 echo "✅ Security scan report saved in both the build artifacts and /home/ubuntu/trivy-archives/"
             }
         }
+
         // TODO: This is a test, delete this after.
         stage('Deploy Ralph') {
             steps {
