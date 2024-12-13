@@ -204,6 +204,7 @@ pipeline {
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu
+                                        docker compose down
 
                                         # Pull latest image and update containers
                                         docker compose pull
