@@ -27,12 +27,11 @@ pipeline {
                         string(credentialsId: 'TF_VAR_db_password', variable: 'TF_VAR_db_password'),
                         string(credentialsId: 'TF_VAR_dockerhub_user', variable: 'TF_VAR_dockerhub_user'),
                         string(credentialsId: 'TF_VAR_dockerhub_pass', variable: 'TF_VAR_dockerhub_pass'),
-                        string(credentialsId: 'TF_VAR_region', variable: 'TF_VAR_region'),
-                        usernamePassword(credentialsId: 'aws-credentials', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')
+                        string(credentialsId: 'TF_VAR_region', variable: 'TF_VAR_region')
                     ]) {
                         sh """
                             cd terraform
-                            terraform init -input=false -reconfigure
+                            terraform init
                             terraform plan -out=tfplan
                             terraform apply -auto-approve tfplan
                         """
@@ -60,21 +59,21 @@ pipeline {
                         timeout(time: 5, unit: 'MINUTES') {
                             waitUntil {
                                 def setupComplete = sh(
-                                    script: """
-                                        set -x
-                                        echo "Verifying setup on ${ip} through bastion ${bastionIp}..."
-                                        ssh ${sshOptions} ubuntu@${ip} '
-                                            test -f /home/ubuntu/.setup_complete &&
-                                            systemctl is-active --quiet docker &&
-                                            systemctl is-active --quiet node_exporter
-                                        '
-                                        echo "Verification completed successfully"
-                                    """,
-                                    returnStatus: true
-                                ) == 0
-
+                                        script: """
+                                            set -x  # Enable debug mode
+                                            echo "Attempting to connect to ${ip} through bastion ${bastionIp}..."
+                                            ssh ${sshOptions} ubuntu@${ip} '
+                                                test -f /home/ubuntu/.setup_complete && 
+                                                systemctl is-active --quiet docker && 
+                                                systemctl is-active --quiet node_exporter
+                                            '
+                                            echo "Connection and verification completed successfully"
+                                        """,
+                                        returnStatus: true
+                                    ) == 0
+                                
                                 if (!setupComplete) {
-                                    sleep 15
+                                    sleep(15)
                                 }
                                 return setupComplete
                             }
@@ -84,56 +83,12 @@ pipeline {
             }
         }
 
-        stage('Test') {
-            steps {
-                script {
-                    echo "🔧 Running placeholder tests..."
-                    sh 'echo "No real tests yet. Passing by default."'
-                }
-            }
-        }
-
-        stage('Build and Push Docker Image') {
-            steps {
-                script {
-                    withCredentials([
-                        string(credentialsId: 'TF_VAR_dockerhub_user', variable: 'DOCKERHUB_USER'),
-                        string(credentialsId: 'TF_VAR_dockerhub_pass', variable: 'DOCKERHUB_PASS')
-                    ]) {
-                        echo "🔨 Building Docker image for Ralph..."
-
-                        sh """
-                            docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
-                            docker build -t shafeekuralabs/ralph:latest -f docker/Dockerfile-prod .
-                            docker push shafeekuralabs/ralph:latest
-                        """
-                        echo "✅ Docker image pushed to DockerHub as shafeekuralabs/ralph:latest"
-                    }
-                }
-            }
-        }
-        
-        stage('Security Scan') {
-            steps {
-                echo "🔒 Scanning Docker image for vulnerabilities..."
-                sh """
-                    mkdir -p /home/ubuntu/trivy-archives
-                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
-                    aquasec/trivy:latest image --severity HIGH,CRITICAL shafeekuralabs/ralph:latest > trivy-report.txt
-                    cp trivy-report.txt /home/ubuntu/trivy-archives/
-                """
-                archiveArtifacts artifacts: 'trivy-report.txt', fingerprint: true
-                echo "✅ Security scan report saved in both the build artifacts and /home/ubuntu/trivy-archives/"
-            }
-        }
-        // TODO: This is a test, delete this after.
         stage('Deploy Ralph') {
             steps {
                 script {
                     withCredentials([
                         string(credentialsId: 'RALPH_SUPERUSER_USERNAME', variable: 'SUPERUSER_NAME'),
-                        string(credentialsId: 'RALPH_SUPERUSER_PASSWORD', variable: 'SUPERUSER_PASSWORD'),
-                        string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')
+                        string(credentialsId: 'RALPH_SUPERUSER_PASSWORD', variable: 'SUPERUSER_PASSWORD')
                     ]) {
                         def ec2_ips = sh(
                             script: "cd terraform && terraform output -json private_instance_ips | jq -r '.[]'",
@@ -162,44 +117,36 @@ pipeline {
                             ).trim()
 
                             if (isRalphRunning == 'false') {
-                                echo "📦 Time to deploy Ralph on ${ip}!"
+                                echo "📦 Time to welcome Ralph to its new home on ${ip}!"
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu
-                                        rm -rf ralph-pipeline-test
-                                        # Clone using GitHub token
-                                        git clone https://shafeeshafee:${GITHUB_TOKEN}@github.com/shafeeshafee/ralph-pipeline-test.git
-                                        cd ralph-pipeline-test/docker
-
-                                        # Pull and run the image
-                                        docker compose pull
-                                        docker compose up -d
+                                        git clone https://github.com/allegro/ralph.git
+                                        cd ralph/docker
+                                        
+                                        docker compose -f /home/ubuntu/docker-compose.yml up -d
+                                        
                                         sleep 30
-
-                                        # Run migrations
-                                        docker compose exec -T web ralphctl migrate
-
-                                        # Create or update superuser (all in one line)
-                                        docker compose exec -T web ralphctl shell -c "from django.contrib.auth import get_user_model; User=get_user_model(); user,created=User.objects.get_or_create(username=\\"${SUPERUSER_NAME}\\", defaults={\\"email\\":\\"team@cloudega.com\\"}); user.is_staff=True; user.is_superuser=True; user.set_password(\\"${SUPERUSER_PASSWORD}\\"); user.save(); print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_superuser}\\")"
-
-                                        # Load demo data
-                                        docker compose exec -T web ralphctl demodata
-                                        docker compose exec -T web ralphctl sitetree_resync_apps
-
-                                        # Adjust permissions for /etc/ralph/conf.d/settings.conf
-                                        docker compose exec -T -u root web bash -c "mkdir -p /etc/ralph/conf.d && touch /etc/ralph/conf.d/settings.conf && chown root:root /etc/ralph/conf.d/settings.conf && chmod 644 /etc/ralph/conf.d/settings.conf"
+                                        
+                                        docker compose -f /home/ubuntu/docker-compose.yml exec -T web ralphctl migrate
+                                        
+                                        echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('\\"$SUPERUSER_NAME\\"', '\\"team@cloudega.com\\"', '\\"$SUPERUSER_PASSWORD\\"') if not User.objects.filter(username='\\"$SUPERUSER_NAME\\"').exists() else None" | docker compose -f /home/ubuntu/docker-compose.yml exec -T web python ralphctl shell
+                                        
+                                        docker compose -f /home/ubuntu/docker-compose.yml exec -T web ralphctl demodata
+                                        
+                                        docker compose -f /home/ubuntu/docker-compose.yml exec -T web ralphctl sitetree_resync_apps
                                     '
                                 """
-                                echo "🌟 Ralph is now configured and ready on ${ip}!"
+                                echo "🌟 Ralph is now ready to rock on ${ip}!"
                             } else {
-                                echo "🔄 Ralph is already running on ${ip}, updating it..."
+                                echo "🔄 Just giving Ralph a quick refresh on ${ip}"
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
-                                        cd /home/ubuntu/ralph-pipeline-test/docker
+                                        cd /home/ubuntu/ralph/docker
                                         git pull
-                                        docker compose pull
-                                        docker compose up -d
-                                        docker compose exec -T web ralphctl migrate
+                                        docker compose -f /home/ubuntu/docker-compose.yml pull
+                                        docker compose -f /home/ubuntu/docker-compose.yml up -d
+                                        docker compose -f /home/ubuntu/docker-compose.yml exec -T web ralphctl migrate
                                     '
                                 """
                             }
@@ -212,7 +159,7 @@ pipeline {
 
     post {
         success {
-            echo "🎉 Pipeline completed successfully! Ralph should be ready to roll!"
+            echo "🎉 Pipeline completed successfully! Ralph is ready to roll!"
         }
         failure {
             echo "⚠️ Something went wrong. Check the logs above for details."
