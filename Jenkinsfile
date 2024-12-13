@@ -199,9 +199,12 @@ pipeline {
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu/DCIM-System/docker
                                         git pull
-                                        docker compose down
-                                        # Remove any leftover cadvisor container if it still exists
-                                        docker rm -f cadvisor || true
+                                        # Stop and remove all containers, volumes, networks just to be sure
+                                        docker kill $(docker ps -q) || true
+                                        docker rm $(docker ps -aq) || true
+                                        docker system prune -af || true
+
+                                        # Now start fresh
                                         docker compose pull
                                         docker compose up -d
                                         docker compose exec -T web ralphctl migrate
