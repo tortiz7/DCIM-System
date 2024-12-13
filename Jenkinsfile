@@ -156,7 +156,7 @@ pipeline {
                         ec2_ips.each { ip ->
                             def isRalphRunning = sh(
                                 script: """
-                                    ssh \${sshOptions} ubuntu@\${ip} '
+                                    ssh ${sshOptions} ubuntu@${ip} '
                                         if docker ps | grep -q ralph; then
                                             echo "true"
                                         else
@@ -170,7 +170,7 @@ pipeline {
                             if (isRalphRunning == 'false') {
                                 echo "📦 Time to deploy Ralph on ${ip}!"
                                 sh """
-                                    ssh \${sshOptions} ubuntu@\${ip} '
+                                    ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu
 
                                         # Pull and run the image
@@ -181,7 +181,7 @@ pipeline {
                                         # Run migrations
                                         docker compose exec -T web ralphctl migrate
 
-                                        # Create or update superuser (all in one line)
+                                        # Create or update superuser (idempotent)
                                         docker compose exec -T web ralphctl shell -c "from django.contrib.auth import get_user_model; User=get_user_model(); user,created=User.objects.get_or_create(username=\\"${SUPERUSER_NAME}\\", defaults={\\"email\\":\\"team@cloudega.com\\"}); user.is_staff=True; user.is_superuser=True; user.set_password(\\"${SUPERUSER_PASSWORD}\\"); user.save(); print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_superuser}\\")"
 
                                         # Load demo data
@@ -196,17 +196,15 @@ pipeline {
                             } else {
                                 echo "🔄 Ralph is already running on ${ip}, updating it..."
                                 sh """
-                                    ssh \${sshOptions} ubuntu@\${ip} '
-                                        cd /home/ubuntu/DCIM-System/docker
-                                        git pull
-                                        # Stop and remove all containers, volumes, networks just to be sure
-                                        docker kill \$(docker ps -q) || true
-                                        docker rm \$(docker ps -aq) || true
-                                        docker system prune -af || true
+                                    ssh ${sshOptions} ubuntu@${ip} '
+                                        cd /home/ubuntu
 
-                                        # Now start fresh
+                                        # Pull latest image and update containers
                                         docker compose pull
                                         docker compose up -d
+                                        sleep 30
+
+                                        # Run migrations
                                         docker compose exec -T web ralphctl migrate
                                     '
                                 """
