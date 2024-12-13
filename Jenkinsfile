@@ -199,6 +199,7 @@ pipeline {
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu/DCIM-System/docker
                                         git pull
+                                        docker compose down
                                         docker compose pull
                                         docker compose up -d
                                         docker compose exec -T web ralphctl migrate
