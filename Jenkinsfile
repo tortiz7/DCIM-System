@@ -200,6 +200,8 @@ pipeline {
                                         cd /home/ubuntu/DCIM-System/docker
                                         git pull
                                         docker compose down
+                                        # Remove any leftover cadvisor container if it still exists
+                                        docker rm -f cadvisor || true
                                         docker compose pull
                                         docker compose up -d
                                         docker compose exec -T web ralphctl migrate
