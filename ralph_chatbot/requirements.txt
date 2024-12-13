@@ -16,11 +16,10 @@ websockets==12.0
 asgiref==3.7.2
 uvicorn==0.27.0
 
-# Model dependencies - removing duplicates that are handled in Dockerfile
+# Base dependencies
 packaging
 einops
 ninja
-transformers==4.36.0
-peft==0.3.0
-bitsandbytes==0.41.1
-flash-attn==1.0.9
+scipy
+
+# Remove ML dependencies as they're handled in Dockerfile to ensure CUDA compatibility
