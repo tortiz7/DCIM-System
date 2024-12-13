@@ -105,7 +105,6 @@ resource "aws_lb_target_group" "cAdvisor_tg" {
   }
 }
 
-# nodex Target Group from ke/terraform
 resource "aws_lb_target_group" "nodex_tg" {
   name     = "nodex-target-group"
   port     = 9100
@@ -127,25 +126,20 @@ resource "aws_lb_target_group" "nodex_tg" {
   }
 }
 
-# App Target Group Attachment
-resource "aws_lb_target_group_attachment" "app_tg_attachment" {
-  count            = var.app_count  
-  target_group_arn = aws_lb_target_group.app_tg.arn
-  target_id        = var.app_server_ids[count.index]  
-  port             = 80 
-}
-
-# cAdvisor Target Group Attachment
-resource "aws_lb_target_group_attachment" "cAdvisor_tg_attachment" {
-  count            = var.app_count  
-  target_group_arn = aws_lb_target_group.cAdvisor_tg.arn
-  target_id        = var.app_server_ids[count.index]  
-  port             = 8080 
-}
-
-# nodex Target Group Attachment
 resource "aws_lb_target_group_attachment" "nodex_tg_attachment" {
   count            = var.app_count  
   target_group_arn = aws_lb_target_group.nodex_tg.arn
   target_id        = var.app_server_ids[count.index]  
-  port         
+  port             = 9100 
+}
+
+resource "aws_lb_listener" "nodex_http_listener" {
+  load_balancer_arn = aws_lb.app_alb.arn
+  port              = 9100
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.nodex_tg.arn
+  }
+}
