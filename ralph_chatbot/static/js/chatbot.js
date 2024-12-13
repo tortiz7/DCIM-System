@@ -7,14 +7,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const assetCountElem = document.getElementById('asset-count');
     const assetStatusElem = document.getElementById('asset-status');
 
-    // Load metrics on page load
-    async function loadMetrics() {
+    // Dummy metrics data
+    const dummyMetrics = {
+        assets: {
+            total: 500,
+            in_use: 320,
+            free: 180,
+        },
+    };
+
+    // Load dummy metrics on page load
+    function loadMetrics() {
         try {
-            const response = await fetch('/metrics/');
-            const data = await response.json();
-            assetCountElem.textContent = data.assets.total;
+            assetCountElem.textContent = dummyMetrics.assets.total;
             assetStatusElem.textContent =
-                `In Use: ${data.status.in_use} | Free: ${data.status.free}`;
+                `In Use: ${dummyMetrics.assets.in_use} | Free: ${dummyMetrics.assets.free}`;
         } catch (error) {
             console.error('Error loading metrics:', error);
         }
@@ -38,12 +45,13 @@ document.addEventListener('DOMContentLoaded', () => {
         input.value = '';
 
         try {
+            // Simulate a real API call
             const response = await fetch('/chat/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ question: message })
+                body: JSON.stringify({ question: message }),
             });
 
             const data = await response.json();

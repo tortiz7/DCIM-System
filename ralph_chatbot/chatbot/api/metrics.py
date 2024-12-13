@@ -23,18 +23,16 @@ class MetricsCollector:
             'deployment_metrics': ['deployment', 'provision', 'install', 'setup']
         }
 
-        # If question matches any keywords, fetch that category's metrics
+        # Match question with keywords
         for metric_type, keywords in keyword_mapping.items():
             if any(word in question.lower() for word in keywords):
                 metrics.update(getattr(self, f'get_{metric_type}')())
 
-        # If no keywords matched, return a subset of all metrics
+        # Return all metrics if no specific match found
         if not metrics:
-            # Return a portion of the overall metrics if no keywords matched
-            overall = self.client.fetch_metrics()
-            metrics.update(overall)
+            metrics = self.client.fetch_metrics()
 
-        return metrics
+        return metrics or {"message": "No metrics available"}
 
     def get_asset_metrics(self) -> Dict[str, Any]:
         try:
@@ -46,61 +44,48 @@ class MetricsCollector:
                 'assets/metrics/backoffice/',
                 cache_key='bo_asset_metrics'
             )
-
-            # Combine data in a single dict
-            return {
-                "assets": {
-                    "datacenter": dc_metrics,
-                    "backoffice": bo_metrics
-                }
-            }
+            return {"assets": {"datacenter": dc_metrics, "backoffice": bo_metrics}}
         except Exception as e:
             logger.error(f"Error fetching asset metrics: {e}")
-            return {}
+            return {"assets": "Error fetching asset metrics"}
 
     def get_network_metrics(self) -> Dict[str, Any]:
         try:
-            data = self.client._get_cached('metrics/network_metrics/', cache_key='network_metrics')
-            return {"networks": data}
+            return {"networks": self.client._get_cached('metrics/network_metrics/', cache_key='network_metrics')}
         except Exception as e:
             logger.error(f"Error fetching network metrics: {e}")
-            return {}
+            return {"networks": "Error fetching network metrics"}
 
     def get_power_metrics(self) -> Dict[str, Any]:
         try:
-            data = self.client._get_cached('metrics/power_metrics/', cache_key='power_metrics')
-            return {"power": data}
+            return {"power": self.client._get_cached('metrics/power_metrics/', cache_key='power_metrics')}
         except Exception as e:
             logger.error(f"Error fetching power metrics: {e}")
-            return {}
+            return {"power": "Error fetching power metrics"}
 
     def get_rack_metrics(self) -> Dict[str, Any]:
         try:
-            data = self.client._get_cached('metrics/rack_metrics/', cache_key='rack_metrics')
-            return {"racks": data}
+            return {"racks": self.client._get_cached('metrics/rack_metrics/', cache_key='rack_metrics')}
         except Exception as e:
             logger.error(f"Error fetching rack metrics: {e}")
-            return {}
+            return {"racks": "Error fetching rack metrics"}
 
     def get_deployment_metrics(self) -> Dict[str, Any]:
         try:
-            data = self.client._get_cached('metrics/deployment_metrics/', cache_key='deployment_metrics')
-            return {"deployments": data}
+            return {"deployments": self.client._get_cached('metrics/deployment_metrics/', cache_key='deployment_metrics')}
         except Exception as e:
             logger.error(f"Error fetching deployment metrics: {e}")
-            return {}
+            return {"deployments": "Error fetching deployment metrics"}
 
     def get_all_metrics(self) -> Dict[str, Any]:
-        # Return all mocked metrics from 'metrics' endpoint
         try:
             return self.client.fetch_metrics()
         except Exception as e:
             logger.error(f"Error fetching all metrics: {e}")
-            return {}
+            return {"message": "Error fetching all metrics"}
 
     def refresh_cache(self) -> None:
         try:
-            # Just call each metric fetch method to refresh cache
             self.get_asset_metrics()
             self.get_network_metrics()
             self.get_power_metrics()

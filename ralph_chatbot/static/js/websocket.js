@@ -2,67 +2,73 @@ class RalphWebSocket {
     constructor() {
         this.socket = null;
         this.metricsCallback = null;
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 10;
     }
 
     connect() {
-        // Use relative path for WebSocket - will work with NGINX
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${wsProtocol}//${window.location.host}/ws/metrics/`;
+        console.log('Simulating WebSocket connection with dummy data');
 
-        this.socket = new WebSocket(wsUrl);
-
-        this.socket.onopen = () => {
-            console.log('WebSocket connected');
-            this.requestMetrics('all');
-        };
-
-        this.socket.onmessage = (event) => {
-            const data = JSON.parse(event.data);
+        // Simulate initial metrics update
+        setTimeout(() => {
+            const dummyData = this.getDummyMetrics();
+            this.updateDashboard(dummyData);
             if (this.metricsCallback) {
-                this.metricsCallback(data);
+                this.metricsCallback(dummyData);
             }
-            this.updateDashboard(data);
-        };
+        }, 1000); // Simulate a short delay for connection
 
-        this.socket.onclose = () => {
-            console.log('WebSocket disconnected');
-            // Attempt to reconnect after 5 seconds
-            setTimeout(() => this.connect(), 5000);
-        };
+        // Simulate periodic metrics updates
+        setInterval(() => {
+            const dummyData = this.getDummyMetrics();
+            this.updateDashboard(dummyData);
+            if (this.metricsCallback) {
+                this.metricsCallback(dummyData);
+            }
+        }, 30000); // Update every 30 seconds
     }
 
-    requestMetrics(category) {
-        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-            this.socket.send(JSON.stringify({
-                type: 'request_metrics',
-                category: category
-            }));
-        }
+    getDummyMetrics() {
+        return {
+            type: 'metrics_update',
+            data: {
+                assets: {
+                    total_count: Math.floor(Math.random() * 1000),
+                    status_summary: 'All systems operational',
+                },
+                networks: {
+                    status: 'Stable',
+                },
+                power: {
+                    total_consumption: (Math.random() * 100).toFixed(2),
+                },
+            },
+        };
     }
 
     updateDashboard(data) {
         // Update metrics in the chat widget
         if (data.type === 'metrics_update') {
             const metrics = data.data;
-            
+
             // Update asset metrics
             if (metrics.assets) {
-                document.getElementById('asset-count').textContent = 
-                    metrics.assets.total_count;
-                document.getElementById('asset-status').textContent = 
-                    metrics.assets.status_summary;
+                const assetCount = document.getElementById('asset-count');
+                const assetStatus = document.getElementById('asset-status');
+                if (assetCount) assetCount.textContent = metrics.assets.total_count;
+                if (assetStatus) assetStatus.textContent = metrics.assets.status_summary;
             }
 
             // Update network metrics
             if (metrics.networks) {
-                document.getElementById('network-status').textContent = 
-                    metrics.networks.status;
+                const networkStatus = document.getElementById('network-status');
+                if (networkStatus) networkStatus.textContent = metrics.networks.status;
             }
 
             // Update power metrics
             if (metrics.power) {
-                document.getElementById('power-usage').textContent = 
-                    `${metrics.power.total_consumption} kW`;
+                const powerUsage = document.getElementById('power-usage');
+                if (powerUsage) powerUsage.textContent = `${metrics.power.total_consumption} kW`;
             }
         }
     }
