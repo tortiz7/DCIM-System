@@ -1,49 +1,98 @@
-# Ralph
+# Ralph Asset Management Deployment (DRAFT)
 
-Effective January 1, 2024, all development and maintenance activities associated with the Ralph project on Allegro's GitHub will be discontinued. This means that no further updates or modifications will be applied to the codebase. However, the current version of the code available in the repository will remain the property of the community, allowing individuals to continue contributing to and developing Ralph as they deem appropriate.
-
-Allegro intends to continue the development of Ralph through its internal processes. However, this development will not be publicly accessible, and any updates or modifications made by Allegro will not reflect in the community version of the code. Nevertheless, Allegro may opt to release new versions of Ralph based on its internal development endeavors at a later date.
-
-We express our heartfelt gratitude to everyone who has contributed to Ralph's development thus far. Without the dedicated efforts of the community, Ralph would not have evolved into the powerful tool it is today. Although our active development of Ralph will cease, we encourage the community to persist in utilizing and expanding upon the codebase in the years ahead.
+**Status:** This README is currently in draft mode and subject to change.
 
 ## Overview
 
-Ralph is full-featured Asset Management, DCIM and CMDB system for data centers and back offices.
+This repository contains our DevOps bootcamp capstone project, focusing on the deployment and configuration of **Ralph**, an open-source asset management, DCIM, and CMDB tool. Our team has worked together to showcase a fully functional, end-to-end DevOps pipeline, from infrastructure provisioning to continuous integration and continuous delivery.
 
-Features:
+Ralph provides a comprehensive solution for tracking IT assets, including hardware, software, and network infrastructure. It integrates with a variety of workflows and tools, offering robust lifecycle management and flexible customization to fit an organization’s unique needs.
 
-* keep track of assets purchases and their life cycle
-* flexible flow system for assets life cycle
-* data center and back office support
-* dc visualization built-in
+[ insert team logo or image here ]
 
-It is an Open Source project provided on Apache v2.0 License.
+## Project Scope
 
-[![Gitter](https://img.shields.io/gitter/room/gitterHQ/gitter.svg)](https://gitter.im/allegro/ralph?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![packagecloud](https://img.shields.io/badge/deb-packagecloud.io-844fec.svg)](https://packagecloud.io/allegro/ralph)
-[![Build Status](https://github.com/allegro/ralph/actions/workflows/main.yml/badge.svg)](https://github.com/allegro/ralph/actions/workflows/main.yml)
-[![Coverage Status](https://coveralls.io/repos/allegro/ralph/badge.svg?branch=ng&service=github)](https://coveralls.io/github/allegro/ralph?branch=ng)
-[![Code Health](https://landscape.io/github/allegro/ralph/ng/landscape.svg?style=flat)](https://landscape.io/github/allegro/ralph/ng)
+Our deployment covers a wide range of operational components, including:
+- **IT Hardware & Software Management**: Laptops, monitors, servers, racks, network devices.
+- **Configuration & Lifecycle Tracking**: Domains, IP addresses, DHCP/DNS setups, and more.
+- **Licensing & Compliance**: Managing software licenses, operational documentation, and compliance reporting.
+- **Security & Automation**: Integrating security scans, automated asset transitions, and workflows.
 
-## Live demo:
+[ insert here details about errors you faced or lessons learned ]
 
-http://ralph-demo.allegro.tech/
+## Infrastructure Layout
 
-* login: ralph
-* password: ralph
+We leverage Terraform to provision and manage our cloud resources. The infrastructure includes:
 
-## Screenshots
+### Networking (VPC Module)
+- Custom VPC with `10.0.0.0/16` CIDR.
+- Multiple Availability Zones for high availability.
+- Public and Private subnets, plus NAT and Internet Gateways.
+- VPC Peering with the default VPC for extended network reach.
 
-![img](https://github.com/allegro/ralph/blob/ng/docs/img/welcome-screen-1.png?raw=true)
+### Compute (EC2 Module)
+- Private EC2 instances running the Ralph application.
+- Public-facing bastion hosts for secure management access.
+- Security groups strictly controlling traffic flow.
+- Ubuntu-based images with automated Docker and monitoring setup.
+- `t3.medium` instances chosen for cost-effectiveness and performance balance.
 
-![img](https://github.com/allegro/ralph/blob/ng/docs/img/welcome-screen-2.png?raw=true)
+### Database (RDS Module)
+- MySQL 5.7 RDS instance for the Ralph database.
+- Multi-AZ Redis deployment for caching.
+- Private subnet placement for enhanced security.
+- Automated backups and routine maintenance.
+- `db.t3.micro` instance type to maintain budget constraints.
 
-![img](https://github.com/allegro/ralph/blob/ng/docs/img/welcome-screen-3.png?raw=true)
+### Load Balancing (ALB Module)
+- Application Load Balancer distributing traffic to application instances.
+- Health checks configured against the `/login/` endpoint (Ralph).
+- Health checks configured against the `/metrics/` endpoint (cAdvisor and Node exporter).
+- HTTP listener on port `80` `8080`, `9100`.
+- Target groups for clean traffic segmentation and stickiness.
 
+## Docker Setup
 
-## Documentation
-Visit our documentation on [readthedocs.org](https://ralph-ng.readthedocs.org)
+Our Docker-based deployment integrates all essential services:
 
-## Getting help
+- **web**: Ralph’s Django application on port `8000`.
+- **nginx**: Reverse proxy and static file server on port `80`.
+- **db**: Amazon RDS endpoint.
+- **redis**: Amazon Redis endpoint.
+- **cAdvisor**: Container level monitoring tool.
+We have persistent volumes for data, media, and static assets, along with robust health checks for service reliability.
 
-* Online forum for Ralph community: https://ralph.discourse.group
+[ insert image here of x..y..z, e.g., architectural diagram ]
+
+## CI/CD & Automation
+
+We are leveraging Jenkins for our CI/CD pipeline:
+- **Jenkins Manager EC2**: Orchestrates build and deployment jobs.
+- **Jenkins Node EC2**: Builds, tests, and deploys our application changes.
+
+Changes are currently tested in a personal forked repository before being merged into the main repository to reduce disruption to the team’s workflow. 
+
+[ insert here more details about current testing procedures or pipeline steps ]
+
+## Budget & Resource Constraints
+
+We are committed to operating within a $200 AWS budget for this project. Thus far, we’ve utilized approximately $120. Careful resource planning and instance sizing have helped keep costs in check.
+
+## Team Contributors
+
+Our team’s roles:
+- **Release Manager**: Overseeing deployment pipelines and risk management.
+- **AI Chatbot Developer**: Integrating chat functionalities into Ralph.
+- **IaC/Infrastructure Specialist**: Terraform scripting, AWS provisioning.
+- **System Administrator**: Monitoring, logging, and alerting mechanisms.
+
+[ insert team member names or acknowledgments ]
+
+## Next Steps
+
+- Add a finalized diagram of our environment.
+- Document common troubleshooting steps.
+- Finalize CI/CD pipeline details and link to Jenkins job examples.
+- Include instructions for running and testing Ralph locally.
+
+**This README is a work-in-progress.** As we iterate, we’ll add more details, visuals, and clarifications to ensure this resource becomes an informative guide for both our team and future stakeholders.

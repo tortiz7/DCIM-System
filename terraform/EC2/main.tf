@@ -19,14 +19,23 @@ resource "aws_instance" "app_server" {
   key_name = "shafee-jenkins-keypair"
   subnet_id = var.private_subnet[count.index % length(var.private_subnet)]
   
-  user_data = base64encode(file("${path.module}/deploy.sh"))
+user_data = base64encode(
+  templatefile("${path.module}/deploy.sh", {
+    rds_endpoint   = split(":", var.rds_endpoint)[0],
+    redis_endpoint = var.redis_endpoint,
+    docker_compose = templatefile("${path.root}/../docker/docker-compose.yml", {
+      rds_endpoint   = split(":", var.rds_endpoint)[0],
+      redis_endpoint = var.redis_endpoint
+    })
+  })
+)
 
   tags = {
     Name = "ralph_app_az${count.index + 1}"
   }
 
   depends_on = [
-    var.postgres_db,
+    var.mysql_db,
     var.nat_gw
   ]
 }
@@ -50,7 +59,7 @@ resource "aws_instance" "bastion_host" {
    }
 
    depends_on = [
-    var.postgres_db,
+    var.mysql_db,
     var.nat_gw
   ]
 }

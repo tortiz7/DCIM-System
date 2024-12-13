@@ -114,8 +114,3 @@ output "redis_primary_endpoint" {
 output "redis_reader_endpoint" {
   description = "Reader endpoint for the Redis Replication Group"
   value       = aws_elasticache_replication_group.redis.reader_endpoint_address
-}
-
-
-
-

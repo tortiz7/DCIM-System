@@ -10,6 +10,24 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # cAdvisor ingress from ke/terraform
+  ingress {
+    description = "Allow cAdvisor HTTP traffic"
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # nodex ingress from ke/terraform
+  ingress {
+    description = "Allow nodex HTTP traffic"
+    from_port   = 9100
+    to_port     = 9100
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     description = "Allow all outbound traffic"
     from_port   = 0
@@ -37,6 +55,7 @@ resource "aws_lb" "app_alb" {
   }
 }
 
+# App Target Group with both sets of changes merged
 resource "aws_lb_target_group" "app_tg" {
   name     = "app-target-group"
   port     = 80
@@ -53,7 +72,7 @@ resource "aws_lb_target_group" "app_tg" {
     matcher             = "200,302"
   }
 
-  # Enable stickiness:
+  # Stickiness block from main
   stickiness {
     type            = "lb_cookie"
     cookie_duration = 604800
@@ -64,6 +83,51 @@ resource "aws_lb_target_group" "app_tg" {
   }
 }
 
+# cAdvisor Target Group from ke/terraform
+resource "aws_lb_target_group" "cAdvisor_tg" {
+  name     = "cAdvisor-target-group"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+
+  health_check {
+    protocol            = "HTTP"
+    path                = "/metrics"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2 
+    unhealthy_threshold = 2
+    matcher             = "200,302"
+  }
+
+  tags = {
+    Name = "cAdvisor Target Group"
+  }
+}
+
+# nodex Target Group from ke/terraform
+resource "aws_lb_target_group" "nodex_tg" {
+  name     = "nodex-target-group"
+  port     = 9100
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+
+  health_check {
+    protocol            = "HTTP"
+    path                = "/metrics"
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2 
+    unhealthy_threshold = 2
+    matcher             = "200,302"
+  }
+
+  tags = {
+    Name = "nodex Target Group"
+  }
+}
+
+# App Target Group Attachment
 resource "aws_lb_target_group_attachment" "app_tg_attachment" {
   count            = var.app_count  
   target_group_arn = aws_lb_target_group.app_tg.arn
@@ -71,13 +135,17 @@ resource "aws_lb_target_group_attachment" "app_tg_attachment" {
   port             = 80 
 }
 
-resource "aws_lb_listener" "http_listener" {
-  load_balancer_arn = aws_lb.app_alb.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.app_tg.arn
-  }
+# cAdvisor Target Group Attachment
+resource "aws_lb_target_group_attachment" "cAdvisor_tg_attachment" {
+  count            = var.app_count  
+  target_group_arn = aws_lb_target_group.cAdvisor_tg.arn
+  target_id        = var.app_server_ids[count.index]  
+  port             = 8080 
 }
+
+# nodex Target Group Attachment
+resource "aws_lb_target_group_attachment" "nodex_tg_attachment" {
+  count            = var.app_count  
+  target_group_arn = aws_lb_target_group.nodex_tg.arn
+  target_id        = var.app_server_ids[count.index]  
+  port         

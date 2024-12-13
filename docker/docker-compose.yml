@@ -3,17 +3,19 @@ services:
     platform: linux/amd64
     image: allegro/ralph:latest
     restart: always
-    expose:
-      - "8000"
+    ports:
+      - "8000:8000"
     volumes:
       - ralph_media:/var/local/ralph/media
       - ralph_static:/usr/share/ralph/static
     environment:
+      # Use Terraform-endpoints if provided, else fallback to local services
       DATABASE_NAME: ralph_ng
-      DATABASE_USER: ralph_ng
-      DATABASE_PASSWORD: ralph_ng
-      DATABASE_HOST: db
-      REDIS_HOST: redis
+      DATABASE_USER: "${DATABASE_USER:-ralph_ng}"
+      DATABASE_PASSWORD: "${DATABASE_PASSWORD:-ralph_ng}"
+      DATABASE_HOST: "${rds_endpoint:-db}"
+      DATABASE_PORT: 3306
+      REDIS_HOST: "${redis_endpoint:-redis}"
       REDIS_PASSWORD: ""
       REDIS_PORT: 6379
       REDIS_DB: 0
@@ -39,6 +41,17 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
 
   db:
     platform: linux/amd64
@@ -76,7 +89,7 @@ services:
     depends_on:
       - redis
     environment:
-      REDIS_HOST: redis
+      REDIS_HOST: "${redis_endpoint:-redis}"
       REDIS_PASSWORD: ""
       REDIS_PORT: 6379
       REDIS_DB: 0
