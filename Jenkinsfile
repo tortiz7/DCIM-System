@@ -166,10 +166,6 @@ pipeline {
                                 sh """
                                     ssh ${sshOptions} ubuntu@${ip} '
                                         cd /home/ubuntu
-                                        rm -rf ralph-pipeline-test
-                                        # Clone using GitHub token
-                                        git clone https://shafeeshafee:${GITHUB_TOKEN}@github.com/shafeeshafee/ralph-pipeline-test.git
-                                        cd ralph-pipeline-test/docker
 
                                         # Pull and run the image
                                         docker compose pull
