@@ -94,3 +94,19 @@ class MetricsCollector:
             logger.info("Successfully refreshed all metrics caches")
         except Exception as e:
             logger.error(f"Error refreshing metrics cache: {e}")
+
+    def _get_cached(self, endpoint, cache_key=None, timeout=300):
+        try:
+            # Simulate fetching data
+            if cache_key and self.redis_client.exists(cache_key):
+                return json.loads(self.redis_client.get(cache_key))
+
+            # Return dummy data
+            data = MOCK_METRICS if endpoint == "metrics" else ENDPOINT_DATA.get(endpoint, {"message": "No data available"})
+            if cache_key:
+                self.redis_client.setex(cache_key, timeout, json.dumps(data))
+            return data
+        except Exception as e:
+            logger.error(f"Error fetching cached data for {endpoint}: {e}")
+            return {"message": f"Error fetching data for endpoint {endpoint}"}
+

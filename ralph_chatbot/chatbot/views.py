@@ -23,7 +23,6 @@ class ChatbotView(APIView):
                 bnb_4bit_use_double_quant=True,
             )
 
-            # Create a clean config without loading from pretrained
             from transformers import LlamaConfig
             model_config = LlamaConfig(
                 vocab_size=32000,
@@ -32,38 +31,39 @@ class ChatbotView(APIView):
                 num_attention_heads=24,
                 num_hidden_layers=28,
                 num_key_value_heads=8,
-                rope_scaling={"type": "dynamic", "factor": 32.0},  # Clean RoPE config
+                rope_scaling={"type": "dynamic", "factor": 32.0},
                 torch_dtype=torch.float16,
                 use_cache=True
             )
 
-            # Load base model with our clean config
+            # Load base model
             self.model = LlamaForCausalLM.from_pretrained(
                 "unsloth/Llama-3.2-3B-bnb-4bit",
                 config=model_config,
                 device_map="auto",
                 torch_dtype=torch.float16,
                 quantization_config=bnb_config,
-                trust_remote_code=False  # Force it to use our config
-            )
-
-            adapters_path = settings.MODEL_PATH['adapters_path']
+                trust_remote_code=False
+            ).to_empty().to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
             # Load tokenizer
             self.tokenizer = LlamaTokenizer.from_pretrained(
                 "hf-internal-testing/llama-tokenizer",
-                use_fast=False,
-                local_files_only=False
+                use_fast=False
             )
 
-            # Apply your custom adapter
+            # Apply adapter if available
+            adapters_path = settings.MODEL_PATH['adapters_path']
             if os.path.exists(os.path.join(adapters_path, 'adapter_config.json')):
-                self.model = PeftModel.from_pretrained(
-                    self.model,
-                    adapters_path,  # This points to your adapter files
-                    torch_dtype=torch.float16
-                )
-                logger.info("LoRA adapter loaded successfully")
+                try:
+                    self.model = PeftModel.from_pretrained(
+                        self.model,
+                        adapters_path,
+                        torch_dtype=torch.float16
+                    )
+                    logger.info("LoRA adapter loaded successfully")
+                except Exception as e:
+                    logger.warning(f"Skipping adapter loading due to error: {e}")
 
             logger.info("Model and tokenizer loaded successfully.")
         except Exception as e:
