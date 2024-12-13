@@ -1,118 +1,115 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.conf import settings
-from django.http import HttpResponse
+from django.views import View
+from django.http import JsonResponse
+from django.shortcuts import render
 import torch
-from transformers import LlamaTokenizer, LlamaForCausalLM, BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
-from transformers import AutoConfig
 import logging
-import os
+from .api.client import RalphAPIClient
 
 logger = logging.getLogger(__name__)
 
-class ChatbotView(APIView):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class ChatbotView(View):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.client = RalphAPIClient()
+        self.initialize_model()
+
+    def initialize_model(self):
         try:
-            bnb_config = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=torch.float16,
-                bnb_4bit_use_double_quant=True,
-            )
-
-            from transformers import LlamaConfig
-            model_config = LlamaConfig(
-                vocab_size=32000,
-                hidden_size=3072,
-                intermediate_size=8192,
-                num_attention_heads=24,
-                num_hidden_layers=28,
-                num_key_value_heads=8,
-                rope_scaling={"type": "dynamic", "factor": 32.0},
-                torch_dtype=torch.float16,
-                use_cache=True
-            )
-
-            # Load base model
-            self.model = LlamaForCausalLM.from_pretrained(
+            # Initialize tokenizer
+            self.tokenizer = AutoTokenizer.from_pretrained(
                 "unsloth/Llama-3.2-3B-bnb-4bit",
-                config=model_config,
-                device_map="auto",
+                trust_remote_code=True
+            )
+            
+            # Initialize base model with proper device placement
+            base_model = AutoModelForCausalLM.from_pretrained(
+                "unsloth/Llama-3.2-3B-bnb-4bit",
                 torch_dtype=torch.float16,
-                quantization_config=bnb_config,
-                trust_remote_code=False
-            ).to_empty().to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-
-            # Load tokenizer
-            self.tokenizer = LlamaTokenizer.from_pretrained(
-                "hf-internal-testing/llama-tokenizer",
-                use_fast=False
+                device_map="auto",
+                trust_remote_code=True
             )
 
-            # Apply adapter if available
-            adapters_path = settings.MODEL_PATH['adapters_path']
-            if os.path.exists(os.path.join(adapters_path, 'adapter_config.json')):
-                try:
-                    self.model = PeftModel.from_pretrained(
-                        self.model,
-                        adapters_path,
-                        torch_dtype=torch.float16
-                    )
-                    logger.info("LoRA adapter loaded successfully")
-                except Exception as e:
-                    logger.warning(f"Skipping adapter loading due to error: {e}")
-
-            logger.info("Model and tokenizer loaded successfully.")
+            # Load the trained LoRA adapter
+            self.model = PeftModel.from_pretrained(
+                base_model,
+                "ralph_lora_adapters",
+                torch_dtype=torch.float16,
+                device_map="auto"
+            )
+            
+            # Ensure model is in evaluation mode
+            self.model.eval()
+            logger.info("Model loaded successfully")
+            
         except Exception as e:
-            logger.error(f"Error initializing ChatbotView: {e}", exc_info=True)
-            self.model = None
-            self.tokenizer = None
+            logger.error(f"Error initializing model: {e}")
+            raise
 
-    def get(self, request):
-        return Response({
-            'status': 'ready',
-            'model_loaded': self.model is not None and self.tokenizer is not None
-        })
-
-    def post(self, request):
-        if self.model is None or self.tokenizer is None:
-            return Response(
-                {'error': 'Model not initialized properly'},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE
-            )
-
-        question = request.data.get('question')
-        if not question:
-            return Response({'error': 'Question is required'}, status=status.HTTP_400_BAD_REQUEST)
-
+    def generate_response(self, question, metrics=None):
         try:
+            # Enhance prompt with metrics context if available
+            if metrics:
+                context = f"""Current System Status:
+                Assets: {metrics['assets']['total_count']} total
+                Network: {metrics['networks']['status']}
+                Power Usage: {metrics['power']['total_consumption']}kW
+                
+                Question: {question}
+                """
+            else:
+                context = question
+
+            # Prepare input
             inputs = self.tokenizer(
-                question,
+                context,
                 return_tensors="pt",
                 padding=True,
                 truncation=True,
                 max_length=512
             ).to(self.model.device)
 
+            # Generate response
             with torch.no_grad():
                 outputs = self.model.generate(
                     **inputs,
-                    max_length=200,
-                    num_return_sequences=1,
+                    max_new_tokens=256,
                     temperature=0.7,
                     do_sample=True,
-                    top_p=0.95,
-                    repetition_penalty=1.2
+                    pad_token_id=self.tokenizer.pad_token_id
                 )
 
-            response_text = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-            return Response({'response': response_text, 'metrics': {'status': 'success'}})
+            response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            return response.split("Question: ")[-1].split("Answer: ")[-1].strip()
+
         except Exception as e:
-            logger.error(f"Error generating response: {e}", exc_info=True)
-            return Response({'error': 'Error generating response'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error(f"Error generating response: {e}")
+            return "I apologize, but I encountered an error generating a response. Please try again."
+
+    def get(self, request):
+        return render(request, 'chatbot/chat_widget.html')
+
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            question = data.get('question', '')
+            
+            # Get mock metrics
+            metrics = self.client.fetch_metrics()
+            
+            # Generate AI response with metrics context
+            response = self.generate_response(question, metrics)
+            
+            return JsonResponse({
+                'response': response,
+                'metrics': metrics
+            })
+        except Exception as e:
+            logger.error(f"Error in post request: {e}")
+            return JsonResponse({
+                'error': str(e)
+            }, status=500)
 
 
 class MetricsView(APIView):

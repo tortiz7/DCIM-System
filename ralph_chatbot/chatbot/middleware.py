@@ -27,12 +27,6 @@ class ChatbotMiddleware:
         self.get_response = get_response
         self.metrics_collector = MetricsCollector()
 
-        if getattr(settings, 'CHATBOT_PORT', 8001) != 8001:
-            logger.warning(
-                "Chatbot port is not configured to 8001. Current port: %s",
-                getattr(settings, 'CHATBOT_PORT', 8001)
-            )
-
     def __call__(self, request):
         start_time = time.time()
 
@@ -41,8 +35,15 @@ class ChatbotMiddleware:
             return self.get_response(request)
 
         try:
-            request.ai_context = self.get_ai_context(request)
-            request.metrics = self.get_metrics_context()
+            # Add mock metrics to request context
+            request.metrics = self.metrics_collector.get_all_metrics()
+            
+            # Add AI context with mock data
+            request.ai_context = {
+                'system_metrics': request.metrics,
+                'session_id': request.session.session_key or 'mock_session',
+                'previous_interactions': []  # Could be enhanced with mock interactions
+            }
 
             response = self.get_response(request)
 
@@ -56,10 +57,10 @@ class ChatbotMiddleware:
             ).observe(time.time() - start_time)
 
             return response
+
         except Exception as e:
             logger.error(f"Middleware error: {str(e)}", exc_info=True)
-            AI_CONTEXT_ERRORS.inc()
-            return HttpResponseServerError("Internal server error in chatbot middleware")
+            return HttpResponseServerError("Internal server error")
 
     def get_ai_context(self, request):
         try:
