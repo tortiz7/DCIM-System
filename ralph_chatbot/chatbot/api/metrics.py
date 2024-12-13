@@ -7,7 +7,6 @@ logger = logging.getLogger(__name__)
 
 class MetricsCollector:
     def __init__(self):
-        # Use mocked RalphAPIClient
         self.client = RalphAPIClient(
             base_url=settings.RALPH_API_URL,
             token=settings.RALPH_API_TOKEN
@@ -23,12 +22,10 @@ class MetricsCollector:
             'deployment_metrics': ['deployment', 'provision', 'install', 'setup']
         }
 
-        # Match question with keywords
         for metric_type, keywords in keyword_mapping.items():
             if any(word in question.lower() for word in keywords):
                 metrics.update(getattr(self, f'get_{metric_type}')())
 
-        # Return all metrics if no specific match found
         if not metrics:
             metrics = self.client.fetch_metrics()
 
@@ -36,14 +33,8 @@ class MetricsCollector:
 
     def get_asset_metrics(self) -> Dict[str, Any]:
         try:
-            dc_metrics = self.client._get_cached(
-                'assets/metrics/datacenter/',
-                cache_key='dc_asset_metrics'
-            )
-            bo_metrics = self.client._get_cached(
-                'assets/metrics/backoffice/',
-                cache_key='bo_asset_metrics'
-            )
+            dc_metrics = self.client._get_cached('assets/metrics/datacenter/', 'dc_asset_metrics')
+            bo_metrics = self.client._get_cached('assets/metrics/backoffice/', 'bo_asset_metrics')
             return {"assets": {"datacenter": dc_metrics, "backoffice": bo_metrics}}
         except Exception as e:
             logger.error(f"Error fetching asset metrics: {e}")
@@ -51,28 +42,28 @@ class MetricsCollector:
 
     def get_network_metrics(self) -> Dict[str, Any]:
         try:
-            return {"networks": self.client._get_cached('metrics/network_metrics/', cache_key='network_metrics')}
+            return {"networks": self.client._get_cached('metrics/network_metrics/', 'network_metrics')}
         except Exception as e:
             logger.error(f"Error fetching network metrics: {e}")
             return {"networks": "Error fetching network metrics"}
 
     def get_power_metrics(self) -> Dict[str, Any]:
         try:
-            return {"power": self.client._get_cached('metrics/power_metrics/', cache_key='power_metrics')}
+            return {"power": self.client._get_cached('metrics/power_metrics/', 'power_metrics')}
         except Exception as e:
             logger.error(f"Error fetching power metrics: {e}")
             return {"power": "Error fetching power metrics"}
 
     def get_rack_metrics(self) -> Dict[str, Any]:
         try:
-            return {"racks": self.client._get_cached('metrics/rack_metrics/', cache_key='rack_metrics')}
+            return {"racks": self.client._get_cached('metrics/rack_metrics/', 'rack_metrics')}
         except Exception as e:
             logger.error(f"Error fetching rack metrics: {e}")
             return {"racks": "Error fetching rack metrics"}
 
     def get_deployment_metrics(self) -> Dict[str, Any]:
         try:
-            return {"deployments": self.client._get_cached('metrics/deployment_metrics/', cache_key='deployment_metrics')}
+            return {"deployments": self.client._get_cached('metrics/deployment_metrics/', 'deployment_metrics')}
         except Exception as e:
             logger.error(f"Error fetching deployment metrics: {e}")
             return {"deployments": "Error fetching deployment metrics"}
@@ -94,19 +85,3 @@ class MetricsCollector:
             logger.info("Successfully refreshed all metrics caches")
         except Exception as e:
             logger.error(f"Error refreshing metrics cache: {e}")
-
-    def _get_cached(self, endpoint, cache_key=None, timeout=300):
-        try:
-            # Simulate fetching data
-            if cache_key and self.redis_client.exists(cache_key):
-                return json.loads(self.redis_client.get(cache_key))
-
-            # Return dummy data
-            data = MOCK_METRICS if endpoint == "metrics" else ENDPOINT_DATA.get(endpoint, {"message": "No data available"})
-            if cache_key:
-                self.redis_client.setex(cache_key, timeout, json.dumps(data))
-            return data
-        except Exception as e:
-            logger.error(f"Error fetching cached data for {endpoint}: {e}")
-            return {"message": f"Error fetching data for endpoint {endpoint}"}
-
