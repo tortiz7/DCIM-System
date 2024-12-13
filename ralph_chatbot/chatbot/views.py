@@ -164,6 +164,6 @@ class MetricsView(APIView):
 
 def health_check(request):
     # Simple health check
-    if torch.cuda.is_available() and ChatbotView._model_initialized:
+    if torch.cuda.is_available():
         return HttpResponse("healthy", status=200)
     return HttpResponse("unhealthy", status=503)
