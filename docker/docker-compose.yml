@@ -10,8 +10,8 @@ services:
       - ralph_static:/usr/share/ralph/static
     environment:
       DATABASE_NAME: ralph_ng
-      DATABASE_USER: "${DATABASE_USER}"
-      DATABASE_PASSWORD: "${DATABASE_PASSWORD}"
+      DATABASE_USER: "cloudega2024"
+      DATABASE_PASSWORD: "cloudega2024!"
       DATABASE_HOST: ${rds_endpoint}
       DATABASE_PORT: 3306
       REDIS_HOST: ${redis_endpoint}
