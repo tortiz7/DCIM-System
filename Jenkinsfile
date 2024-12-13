@@ -89,7 +89,6 @@ pipeline {
             }
         }
 
-
         stage('Test') {
             steps {
                 script {
@@ -194,7 +193,7 @@ pipeline {
                                         # Create or update superuser (idempotent)
                                         docker compose exec -T web ralphctl shell -c "from django.contrib.auth import get_user_model; User=get_user_model(); user,created=User.objects.get_or_create(username=\\"${SUPERUSER_NAME}\\", defaults={\\"email\\":\\"team@cloudega.com\\"}); user.is_staff=True; user.is_superuser=True; user.set_password(\\"${SUPERUSER_PASSWORD}\\"); user.save(); print(f\\"User: {user.username}, Staff: {user.is_staff}, Superuser: {user.is_superuser}\\")"
 
-                                        # Load demo data
+                                        # Load demo data once, now that it's a fresh deployment
                                         docker compose exec -T web ralphctl demodata
                                         docker compose exec -T web ralphctl sitetree_resync_apps
 
@@ -220,7 +219,7 @@ pipeline {
                                         docker compose up -d
                                         sleep 30
 
-                                        # Run migrations
+                                        # Run migrations (no demodata this time)
                                         docker compose exec -T web ralphctl migrate
                                     '
                                 """
