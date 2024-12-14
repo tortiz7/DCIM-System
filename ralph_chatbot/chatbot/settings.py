@@ -80,6 +80,14 @@ MODEL_PATH = {
     'adapters_path': MODEL_ADAPTERS_PATH
 }
 
+# Mock asset metrics (used for demo purposes instead of Ralph API)
+MOCK_ASSET_METRICS = {
+    'assets': {
+        'total_count': 120,  # Example number of assets
+        'status_summary': 'All systems operational'
+    }
+}
+
 # Static files Configuration
 STATIC_URL = '/static/'
 STATIC_ROOT = '/var/www/static'

@@ -41,26 +41,26 @@ class ChatbotView(View):
     def verify_model_files(self):
         base_path = settings.MODEL_PATH['base_path']
         adapters_path = settings.MODEL_PATH['adapters_path']
-        
+
         required_files = {
             'base': ['tokenizer.json', 'tokenizer_config.json', 'special_tokens_map.json'],
             'adapters': ['adapter_config.json', 'adapter_model.safetensors']
         }
-        
+
         logger.info(f"Verifying model files in {base_path}")
         for file in required_files['base']:
             file_path = Path(base_path) / file
             if not file_path.exists():
                 logger.error(f"Missing required file: {file_path}")
                 return False
-                
+
         logger.info(f"Verifying adapter files in {adapters_path}")
         for file in required_files['adapters']:
             file_path = Path(adapters_path) / file
             if not file_path.exists():
                 logger.error(f"Missing required file: {file_path}")
                 return False
-            
+
         return True
 
     def initialize_model(self):
@@ -73,11 +73,11 @@ class ChatbotView(View):
 
             try:
                 logger.info("Starting model initialization...")
-                
+
                 # Verify all required files exist
                 if not self.verify_model_files():
                     raise ValueError("Missing required model files")
-                    
+
                 base_path = settings.MODEL_PATH['base_path']
                 adapters_path = settings.MODEL_PATH['adapters_path']
 
@@ -132,8 +132,16 @@ class ChatbotView(View):
         if not ChatbotView._model_initialized or ChatbotView._model is None or ChatbotView._tokenizer is None:
             return "Model initialization in progress. Please try again in a moment."
 
+        generation_config = {
+            'max_new_tokens': 200,
+            'temperature': 0.7,
+            'do_sample': True,
+            'top_p': 0.95,
+            'repetition_penalty': 1.2
+        }
+
         prompt = ("You are Ralph Assistant, an expert in Ralph DCIM and asset management.\n"
-                 "Please answer the user's questions using the given system metrics when relevant.\n\n")
+                  "Please answer the user's questions using the given system metrics when relevant.\n\n")
         if metrics:
             prompt += f"System Metrics:\nAssets: {metrics.get('assets', {}).get('total_count', 'N/A')}\n"
         prompt += f"Question: {question}\nAnswer:"
@@ -150,11 +158,11 @@ class ChatbotView(View):
             with torch.no_grad():
                 outputs = ChatbotView._model.generate(
                     **inputs,
-                    max_new_tokens=200,
-                    temperature=0.7,
-                    do_sample=True,
-                    top_p=0.95,
-                    repetition_penalty=1.2,
+                    max_new_tokens=generation_config.get('max_new_tokens', 200),
+                    temperature=generation_config.get('temperature', 0.7),
+                    do_sample=generation_config.get('do_sample', True),
+                    top_p=generation_config.get('top_p', 0.95),
+                    repetition_penalty=generation_config.get('repetition_penalty', 1.2),
                     pad_token_id=ChatbotView._tokenizer.eos_token_id
                 )
 
@@ -173,13 +181,13 @@ class ChatbotView(View):
         try:
             data = json.loads(request.body.decode('utf-8'))
             question = data.get('question', '').strip()
-            
+
             if not question:
                 return JsonResponse({'error': 'No question provided'}, status=400)
 
             metrics = self.metrics_collector.get_all_metrics()
             response = self.generate_response(question, metrics)
-            
+
             return JsonResponse({
                 'response': response,
                 'status': 'success'
