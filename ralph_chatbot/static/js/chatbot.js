@@ -6,44 +6,41 @@ document.addEventListener('DOMContentLoaded', () => {
     const assetCountElem = document.getElementById('asset-count');
     const assetStatusElem = document.getElementById('asset-status');
 
+    // Helper function to append messages to the chat window
     function appendMessage(sender, text) {
         const messageDiv = document.createElement('div');
         messageDiv.className = `message ${sender === 'user' ? 'user-message' : 'assistant-message'}`;
         messageDiv.textContent = text;
         messagesDiv.appendChild(messageDiv);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to the latest message
     }
 
-    function updateMetrics(metrics) {
-        try {
-            if (metrics.assets) {
-                assetCountElem.textContent = metrics.assets.total_count;
-                assetStatusElem.textContent = metrics.assets.status_summary;
-            }
-        } catch (error) {
-            console.error('Error updating metrics:', error);
-        }
-    }
-
+    // Function to send a message to the backend
     async function sendMessage() {
         const message = input.value.trim();
-        if (!message) return;
+        if (!message) return; // Do nothing if input is empty
 
         appendMessage('user', message);
-        input.value = '';
-        
+        input.value = ''; // Clear input field after sending
+
         try {
-            // Get CSRF token
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-            
+            // Get CSRF token from the DOM
+            const csrfToken = getCSRFToken();
+            if (!csrfToken) {
+                throw new Error('CSRF token not found.');
+            }
+
             const response = await fetch('/chat/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRFToken': csrfToken,
                 },
-                body: JSON.stringify({ question: message }),
-                credentials: 'same-origin'
+                body: JSON.stringify({ 
+                    question: message,
+                    timestamp: new Date().toISOString()
+                }),
+                credentials: 'include' // Include cookies in the request
             });
 
             if (!response.ok) {
@@ -53,24 +50,42 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             
             if (data.error) {
-                appendMessage('assistant', 'Sorry, I encountered an error. Please try again.');
-                console.error('Error:', data.error);
-            } else {
-                appendMessage('assistant', data.response);
-                if (data.metrics) {
-                    updateMetrics(data.metrics);
-                }
+                throw new Error(data.error);
             }
+
+            // Append the assistant's response
+            appendMessage('assistant', data.response);
         } catch (error) {
-            console.error('Error sending message:', error);
+            console.error('Error:', error);
             appendMessage('assistant', 'Sorry, I encountered an error. Please try again.');
         }
     }
 
-    // Event listeners
+    // Function to get the CSRF token
+    function getCSRFToken() {
+        const csrfTokenElem = document.querySelector('[name=csrfmiddlewaretoken]');
+        return csrfTokenElem ? csrfTokenElem.value : null;
+    }
+
+    // Function to update metrics in the UI
+    function updateMetrics(metrics) {
+        try {
+            if (metrics.assets) {
+                assetCountElem.textContent = metrics.assets.total_count || 'N/A';
+                assetStatusElem.textContent = metrics.assets.status_summary || 'N/A';
+            }
+        } catch (error) {
+            console.error('Error updating metrics:', error);
+        }
+    }
+
+    // Event listeners for user interactions
     sendButton.addEventListener('click', sendMessage);
     input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
     });
 
     // Initialize WebSocket connection
@@ -78,27 +93,25 @@ document.addEventListener('DOMContentLoaded', () => {
         `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/chat/`
     );
 
-    ralphSocket.onopen = () => {
-        console.log('WebSocket connection established.');
+    // Handle WebSocket messages
+    ralphSocket.onmessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'metrics_update' || data.type === 'initial_metrics') {
+                updateMetrics(data.data);
+            }
+        } catch (error) {
+            console.error('Error parsing WebSocket message:', error);
+        }
     };
 
-    ralphSocket.onclose = () => {
-        console.error('WebSocket connection closed. Retrying...');
-        setTimeout(() => {
-            ralphSocket = new WebSocket(
-                `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/chat/`
-            );
-        }, 5000);
-    };
-
+    // Handle WebSocket errors
     ralphSocket.onerror = (error) => {
         console.error('WebSocket error:', error);
     };
 
-    ralphSocket.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.type === 'metrics_update' || data.type === 'initial_metrics') {
-            updateMetrics(data.data);
-        }
+    // Handle WebSocket closure
+    ralphSocket.onclose = (event) => {
+        console.warn('WebSocket connection closed:', event);
     };
 });
