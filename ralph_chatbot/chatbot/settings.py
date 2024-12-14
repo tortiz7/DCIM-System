@@ -90,6 +90,9 @@ CHANNEL_LAYERS = {
     },
 }
 
+WEBSOCKET_TIMEOUT = 60  # seconds
+WEBSOCKET_MAX_RECONNECT_ATTEMPTS = 3
+
 
 # Cache Configuration
 CACHES = {
