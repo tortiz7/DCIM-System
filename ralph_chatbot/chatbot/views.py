@@ -10,6 +10,8 @@ from peft import PeftModel
 import logging
 import json
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from .api.client import RalphAPIClient
 from .api.metrics import MetricsCollector
 import threading
@@ -17,6 +19,7 @@ import os
 
 logger = logging.getLogger(__name__)
 
+@method_decorator(csrf_exempt, name='dispatch')  # Disable CSRF for the entire ChatbotView class
 class ChatbotView(View):
     _model_initialized = False
     _model_lock = threading.Lock()
@@ -34,7 +37,6 @@ class ChatbotView(View):
             # Start model initialization in a background thread
             init_thread = threading.Thread(target=self.initialize_model, daemon=True)
             init_thread.start()
-
 
     def initialize_model(self):
         if ChatbotView._model_initialized:
@@ -142,16 +144,21 @@ class ChatbotView(View):
     def post(self, request):
         try:
             data = json.loads(request.body.decode('utf-8'))
-            question = data.get('question', '')
+            question = data.get('question', '').strip()
+            
+            if not question:
+                return JsonResponse({'error': 'No question provided'}, status=400)
+
             metrics = self.metrics_collector.get_all_metrics()
             response = self.generate_response(question, metrics)
             return JsonResponse({
                 'response': response,
-                'metrics': metrics
+                'metrics': metrics,
+                'status': 'success'
             })
         except Exception as e:
             logger.error(f"Error in POST request: {e}", exc_info=True)
-            return JsonResponse({'error': str(e)}, status=500)
+            return JsonResponse({'error': 'Internal server error'}, status=500)
 
 
 class MetricsView(APIView):

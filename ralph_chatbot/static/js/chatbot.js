@@ -63,18 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function to get the CSRF token
     function getCSRFToken() {
-        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-        if (csrfMeta) {
-            return csrfMeta.getAttribute('content');
-        }
-
-        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-        if (csrfInput) {
-            return csrfInput.value;
-        }
-
-        console.error('CSRF token not found!');
-        return null;
+        const csrfTokenElem = document.querySelector('[name=csrfmiddlewaretoken]');
+        return csrfTokenElem ? csrfTokenElem.value : null;
     }
 
     // Function to update metrics in the UI
