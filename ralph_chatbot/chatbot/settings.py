@@ -81,12 +81,15 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(REDIS_HOST, REDIS_PORT)],
-            "capacity": 1500,  # Default channel layer message capacity
-            "expiry": 60,  # Message expiry in seconds
+            "hosts": [(settings.REDIS_HOST, settings.REDIS_PORT)],
+            "capacity": 1500,
+            "expiry": 60,
+            "retry_on_timeout": True,
+            "symmetric_encryption_keys": [settings.SECRET_KEY],
         },
     },
 }
+
 
 # Cache Configuration
 CACHES = {
