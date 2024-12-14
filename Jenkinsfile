@@ -19,7 +19,6 @@ pipeline {
             }
         }
 
-        // TEST
         stage('Deploy Infrastructure') {
             steps {
                 script {
