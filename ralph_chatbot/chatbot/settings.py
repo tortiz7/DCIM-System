@@ -81,11 +81,9 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(settings.REDIS_HOST, settings.REDIS_PORT)],
+            "hosts": [(REDIS_HOST, REDIS_PORT)],  # Using the variables we defined earlier
             "capacity": 1500,
             "expiry": 60,
-            "retry_on_timeout": True,
-            "symmetric_encryption_keys": [settings.SECRET_KEY],
         },
     },
 }

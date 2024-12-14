@@ -36,11 +36,11 @@
 
         <div class="chat-input">
             <div class="input-container">
+                {% csrf_token %}  <!-- Add this line -->
                 <input type="text" id="chat-input" placeholder="Ask Ralph anything..." />
                 <button id="send-message">Send</button>
             </div>
         </div>
-    </div>
 
     <script src="{% static 'js/websocket.js' %}"></script>
     <script src="{% static 'js/chatbot.js' %}"></script>

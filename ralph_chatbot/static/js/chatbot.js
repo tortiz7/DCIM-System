@@ -33,23 +33,28 @@ document.addEventListener('DOMContentLoaded', () => {
         input.value = '';
         
         try {
+            // Get CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+            
             const response = await fetch('/chat/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
                 },
                 body: JSON.stringify({ question: message }),
+                credentials: 'same-origin'
             });
 
             if (!response.ok) {
-                appendMessage('assistant', 'Sorry, I encountered an error. Please try again.');
-                return;
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
             
             if (data.error) {
                 appendMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+                console.error('Error:', data.error);
             } else {
                 appendMessage('assistant', data.response);
                 if (data.metrics) {
