@@ -5,22 +5,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const assetCountElem = document.getElementById('asset-count');
     const assetStatusElem = document.getElementById('asset-status');
 
+  
     function appendMessage(sender, text) {
         const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${sender === 'user' ? 'user-message' : 'assistant-message'}`;
+        messageDiv.className = sender === 'user' ? 'user-message' : 'assistant-message';
         messageDiv.textContent = text;
         messagesDiv.appendChild(messageDiv);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
     function updateMetrics(metrics) {
-        try {
-            if (metrics.assets) {
-                assetCountElem.textContent = metrics.assets.total_count;
-                assetStatusElem.textContent = metrics.assets.status_summary;
-            }
-        } catch (error) {
-            console.error('Error updating metrics:', error);
+        if (metrics.assets) {
+            assetCountElem.textContent = metrics.assets.total_count || 'N/A';
+            assetStatusElem.textContent = metrics.assets.status_summary || 'N/A';
         }
     }
 
@@ -30,13 +27,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         appendMessage('user', message);
         input.value = '';
-        
+
         try {
             const response = await fetch('/chat/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ question: message })
             });
 
@@ -46,10 +41,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = await response.json();
             appendMessage('assistant', data.response);
-            
         } catch (error) {
             console.error('Error sending message:', error);
-            appendMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+            appendMessage('assistant', 'Sorry, I encountered an error.');
         }
     }
 
@@ -64,7 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     ralphSocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (data.type === 'metrics_update' || data.type === 'initial_metrics') {
+        if (data.type === 'metrics_update') {
             updateMetrics(data.data);
         }
     };

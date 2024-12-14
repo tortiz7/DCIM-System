@@ -3,52 +3,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ralph Assistant</title>
-    <link rel="stylesheet" href="{% static 'chatbot/css/chat_widget.css' %}">
+    <link rel="stylesheet" href="{% static 'css/chat_widget.css' %}">
 </head>
 <body>
     <div id="ralph-assistant" class="chat-widget-container">
+        <div class="chat-header">
+            <h2>Ralph Assistant</h2>
+        </div>
+
         <div class="metrics-dashboard">
             <div class="metric-card">
                 <h3>Assets</h3>
-                <div id="asset-count">Loading...</div>
+                <div id="asset-count" class="metric-value">Loading...</div>
                 <div id="asset-status">Loading...</div>
             </div>
-            
-            <div class="metric-card">
-                <h3>Network</h3>
-                <div id="network-status">Loading...</div>
-            </div>
-            
-            <div class="metric-card">
-                <h3>Power Usage</h3>
-                <div id="power-usage">Loading...</div>
-            </div>
         </div>
 
-        <div class="chat-window">
-            <div id="chat-messages"></div>
-        </div>
+        <div class="chat-window" id="chat-messages"></div>
 
         <div class="chat-input">
-            <input type="text" id="chat-input" placeholder="Type your message..."/>
-            <button id="send-message">Send</button>
+            <div class="input-container">
+                <input type="text" id="chat-input" placeholder="Ask Ralph anything..." />
+                <button id="send-message">Send</button>
+            </div>
         </div>
     </div>
 
-    <script src="{% static 'chatbot/js/websocket.js' %}"></script>
-    <script src="{% static 'chatbot/js/chatbot.js' %}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const ralphSocket = new RalphWebSocket();
-            ralphSocket.connect();
-            
-            // Update metrics every 30 seconds
-            setInterval(() => {
-                ralphSocket.requestMetrics('all');
-            }, 30000);
-        });
-    </script>
+    <script src="{% static 'js/chatbot.js' %}"></script>
 </body>
 </html>
