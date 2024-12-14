@@ -41,6 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ question: message }),
             });
 
+            if (!response.ok) {
+                appendMessage('assistant', 'Sorry, I encountered an error. Please try again.');
+                return;
+            }
+
             const data = await response.json();
             
             if (data.error) {
@@ -67,6 +72,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const ralphSocket = new WebSocket(
         `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/chat/`
     );
+
+    ralphSocket.onopen = () => {
+        console.log('WebSocket connection established.');
+    };
+
+    ralphSocket.onclose = () => {
+        console.error('WebSocket connection closed. Retrying...');
+        setTimeout(() => {
+            ralphSocket = new WebSocket(
+                `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/chat/`
+            );
+        }, 5000);
+    };
+
+    ralphSocket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+    };
 
     ralphSocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
