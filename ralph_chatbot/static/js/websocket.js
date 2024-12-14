@@ -7,28 +7,49 @@ class RalphWebSocket {
     }
 
     connect() {
-        console.log('Simulating WebSocket connection with dummy data');
+        try {
+            // Establish WebSocket connection
+            this.socket = new WebSocket(`ws://${window.location.host}/ws/chat/`);
 
-        // Simulate initial metrics update
-        setTimeout(() => {
-            const dummyData = this.getDummyMetrics();
-            this.updateDashboard(dummyData);
-            if (this.metricsCallback) {
-                this.metricsCallback(dummyData);
-            }
-        }, 1000); // Simulate a short delay for connection
+            // Handle WebSocket open event
+            this.socket.onopen = () => {
+                console.log('WebSocket connected');
+                this.reconnectAttempts = 0; // Reset reconnect attempts
+            };
 
-        // Simulate periodic metrics updates
-        setInterval(() => {
-            const dummyData = this.getDummyMetrics();
-            this.updateDashboard(dummyData);
-            if (this.metricsCallback) {
-                this.metricsCallback(dummyData);
-            }
-        }, 30000); // Update every 30 seconds
+            // Handle WebSocket close event
+            this.socket.onclose = () => {
+                console.log('WebSocket closed, attempting reconnect...');
+                if (this.reconnectAttempts < this.maxReconnectAttempts) {
+                    setTimeout(() => this.connect(), 5000); // Retry connection
+                    this.reconnectAttempts++;
+                } else {
+                    console.error('Max reconnect attempts reached');
+                }
+            };
+
+            // Handle incoming messages
+            this.socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'metrics_update' || data.type === 'initial_metrics') {
+                    this.updateDashboard(data.data);
+                    if (this.metricsCallback) {
+                        this.metricsCallback(data.data);
+                    }
+                }
+            };
+
+            // Handle errors
+            this.socket.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        } catch (error) {
+            console.error('WebSocket connection error:', error);
+        }
     }
 
     getDummyMetrics() {
+        // Simulate metrics for development purposes
         return {
             type: 'metrics_update',
             data: {
@@ -47,7 +68,7 @@ class RalphWebSocket {
     }
 
     updateDashboard(data) {
-        // Update metrics in the chat widget
+        // Update the metrics on the dashboard
         if (data.type === 'metrics_update') {
             const metrics = data.data;
 
@@ -77,3 +98,9 @@ class RalphWebSocket {
         this.metricsCallback = callback;
     }
 }
+
+// Initialize and connect WebSocket when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    const ralphSocket = new RalphWebSocket();
+    ralphSocket.connect();
+});

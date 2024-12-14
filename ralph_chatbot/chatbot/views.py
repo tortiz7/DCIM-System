@@ -32,9 +32,9 @@ class ChatbotView(View):
     def _ensure_model_initialized(self):
         if not ChatbotView._model_initialized:
             # Start model initialization in a background thread
-            init_thread = threading.Thread(target=self.initialize_model)
+            init_thread = threading.Thread(target=self.initialize_model, daemon=True)
             init_thread.start()
-            init_thread.join()  # Wait for the model to finish loading
+
 
     def initialize_model(self):
         if ChatbotView._model_initialized:
