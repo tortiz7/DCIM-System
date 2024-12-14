@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Ralph Assistant</title>
     <link rel="stylesheet" href="{% static 'chatbot/css/chat_widget.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}"> <!-- CSRF token for JavaScript -->
 </head>
 <body>
     <div id="ralph-assistant" class="chat-widget-container">
@@ -39,16 +40,5 @@
 
     <script src="{% static 'chatbot/js/websocket.js' %}"></script>
     <script src="{% static 'chatbot/js/chatbot.js' %}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const ralphSocket = new RalphWebSocket();
-            ralphSocket.connect();
-            
-            // Update metrics every 30 seconds
-            setInterval(() => {
-                ralphSocket.requestMetrics('all');
-            }, 30000);
-        });
-    </script>
 </body>
 </html>
