@@ -103,4 +103,7 @@ PROMETHEUS_METRICS_EXPORT_PORT = 9100
 PROMETHEUS_METRICS_EXPORT_ADDRESS = ''
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/var/www/static/'
+STATIC_ROOT = '/var/www/static'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static')
+]
