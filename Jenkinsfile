@@ -88,7 +88,7 @@ pipeline {
                 }
             }
         }
-
+        // TODO: Remove this comment after presentation.
         stage('Test') {
             steps {
                 script {
