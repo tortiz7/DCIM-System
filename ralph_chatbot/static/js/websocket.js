@@ -65,30 +65,27 @@ class RalphWebSocket {
     }
 
     updateDashboard(data) {
-    // Add null checks for safety
-    if (!data) return;
+        // Update asset metrics
+        const assetCount = document.getElementById('asset-count');
+        const assetStatus = document.getElementById('asset-status');
+        if (data.assets) {
+            if (assetCount) assetCount.textContent = data.assets.total_count || 'N/A';
+            if (assetStatus) assetStatus.textContent = data.assets.status_summary || 'No status available';
+        }
 
-    // Update asset metrics
-    const assetCount = document.getElementById('asset-count');
-    const assetStatus = document.getElementById('asset-status');
-    if (data.assets) {
-        if (assetCount) assetCount.textContent = data.assets.total_count || 'N/A';
-        if (assetStatus) assetStatus.textContent = data.assets.status_summary || 'No status available';
-    }
+        // Update network metrics
+        const networkStatus = document.getElementById('network-status');
+        if (data.networks && networkStatus) {
+            networkStatus.textContent = data.networks.status || 'N/A';
+        }
 
-    // Update network metrics
-    const networkStatus = document.getElementById('network-status');
-    if (data.networks && networkStatus) {
-        networkStatus.textContent = data.networks.status || 'N/A';
+        // Update power metrics
+        const powerUsage = document.getElementById('power-usage');
+        if (data.power && powerUsage) {
+            powerUsage.textContent = data.power.total_consumption ? 
+                `${data.power.total_consumption} kW` : 'N/A';
+        }
     }
-
-    // Update power metrics
-    const powerUsage = document.getElementById('power-usage');
-    if (data.power && powerUsage) {
-        powerUsage.textContent = data.power.total_consumption ? 
-            `${data.power.total_consumption} kW` : 'N/A';
-    }
-}
 
     setMetricsCallback(callback) {
         this.metricsCallback = callback;
