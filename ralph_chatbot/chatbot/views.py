@@ -16,6 +16,7 @@ from .api.client import RalphAPIClient
 from .api.metrics import MetricsCollector
 import threading
 import os
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,31 @@ class ChatbotView(View):
             # Initialize synchronously instead of in a thread to ensure it's ready
             self.initialize_model()
 
+    def verify_model_files(self):
+        base_path = settings.MODEL_PATH['base_path']
+        adapters_path = settings.MODEL_PATH['adapters_path']
+        
+        required_files = {
+            'base': ['tokenizer.json', 'tokenizer_config.json', 'special_tokens_map.json'],
+            'adapters': ['adapter_config.json', 'adapter_model.safetensors']
+        }
+        
+        logger.info(f"Verifying model files in {base_path}")
+        for file in required_files['base']:
+            file_path = Path(base_path) / file
+            if not file_path.exists():
+                logger.error(f"Missing required file: {file_path}")
+                return False
+                
+        logger.info(f"Verifying adapter files in {adapters_path}")
+        for file in required_files['adapters']:
+            file_path = Path(adapters_path) / file
+            if not file_path.exists():
+                logger.error(f"Missing required file: {file_path}")
+                return False
+            
+        return True
+
     def initialize_model(self):
         if ChatbotView._model_initialized:
             return
@@ -47,13 +73,18 @@ class ChatbotView(View):
 
             try:
                 logger.info("Starting model initialization...")
+                
+                # Verify all required files exist
+                if not self.verify_model_files():
+                    raise ValueError("Missing required model files")
+                    
                 base_path = settings.MODEL_PATH['base_path']
                 adapters_path = settings.MODEL_PATH['adapters_path']
 
-                if not os.path.exists(base_path):
-                    raise ValueError(f"Base model path not found: {base_path}")
-                if not os.path.exists(adapters_path):
-                    raise ValueError(f"Adapters path not found: {adapters_path}")
+                logger.info(f"Using paths: base={base_path}, adapters={adapters_path}")
+                logger.info(f"CUDA available: {torch.cuda.is_available()}")
+                if torch.cuda.is_available():
+                    logger.info(f"CUDA device: {torch.cuda.get_device_name(0)}")
 
                 # Configure 4-bit quantization
                 quantization_config = BitsAndBytesConfig(

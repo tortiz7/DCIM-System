@@ -4,7 +4,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'your-secret-key-here')
 DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 
@@ -13,9 +12,7 @@ ALB_DOMAIN = os.getenv('ALB_DOMAIN', '')
 if ALB_DOMAIN and ALB_DOMAIN not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(ALB_DOMAIN)
 
-# Application definition
 INSTALLED_APPS = [
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -30,9 +27,8 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',  # This must come before CSRF
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',  # After SessionMiddleware
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -59,70 +55,22 @@ TEMPLATES = [
 WSGI_APPLICATION = 'chatbot.wsgi.application'
 ASGI_APPLICATION = 'chatbot.asgi.application'
 
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME', ''),
-        'USER': os.getenv('DB_USER', ''),
-        'PASSWORD': os.getenv('DB_PASSWORD', ''),
-        'HOST': os.getenv('DB_HOST', ''),
-        'PORT': os.getenv('DB_PORT', '5432'),
-    }
-}
+# Redis Configuration for Docker
+REDIS_HOST = 'redis'  # This matches the service name in docker-compose
+REDIS_PORT = 6379
 
-# Redis Configuration
-REDIS_HOST = os.getenv('REDIS_HOST', 'redis')  # Default to 'redis' for Docker
-REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
-REDIS_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}"
-
-# Channel Layers for WebSocket
+# Channel Layers (for WebSocket)
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(REDIS_HOST, REDIS_PORT)],  # Using the variables we defined earlier
-            "capacity": 1500,
-            "expiry": 60,
+            "hosts": [("redis", 6379)],  # Docker service name
         },
     },
 }
 
-WEBSOCKET_TIMEOUT = 60  # seconds
-WEBSOCKET_MAX_RECONNECT_ATTEMPTS = 3
-
-
-CACHES = {
-    "default": {
-        "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": f"redis://{REDIS_HOST}:{REDIS_PORT}",
-    }
-}
-
-# Session Configuration
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "default"
-SESSION_COOKIE_NAME = 'chatbot_sessionid'
-SESSION_COOKIE_SECURE = not DEBUG
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
-
-# CSRF Configuration
-CSRF_COOKIE_NAME = 'chatbot_csrftoken'
-CSRF_COOKIE_SECURE = not DEBUG
-CSRF_COOKIE_HTTPONLY = True
-CSRF_TRUSTED_ORIGINS = ['http://*', 'https://*']  # Adjust in production
-CSRF_USE_SESSIONS = True
-
 # CORS Configuration
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:8001',
-    'http://127.0.0.1:8001',
-]
-if ALB_DOMAIN:
-    CORS_ALLOWED_ORIGINS.append(f'http://{ALB_DOMAIN}')
-    CORS_ALLOWED_ORIGINS.append(f'https://{ALB_DOMAIN}')
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Model Configuration
 MODEL_BASE_PATH = os.getenv('MODEL_PATH', str(BASE_DIR / 'chatbot/model'))
@@ -132,25 +80,12 @@ MODEL_PATH = {
     'adapters_path': MODEL_ADAPTERS_PATH
 }
 
-# Ralph API Configuration
-RALPH_API_URL = os.getenv('RALPH_API_URL', 'http://localhost:8000/api')
-RALPH_API_TOKEN = os.getenv('RALPH_API_TOKEN', '')
-
-# Prometheus Metrics Configuration
-PROMETHEUS_METRICS_EXPORT_PORT = 9100
-PROMETHEUS_METRICS_EXPORT_ADDRESS = ''
-
 # Static files Configuration
 STATIC_URL = '/static/'
 STATIC_ROOT = '/var/www/static'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
-
-# Security Headers
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
 
 # Logging Configuration
 LOGGING = {
@@ -186,5 +121,4 @@ LOGGING = {
     },
 }
 
-# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
