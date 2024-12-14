@@ -1,3 +1,13 @@
+import json
+import asyncio
+import logging
+from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.exceptions import StopConsumer
+from .api.metrics import MetricsCollector
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
 class RalphMetricsConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):  # Changed from async def to def
         super().__init__(*args, **kwargs)
