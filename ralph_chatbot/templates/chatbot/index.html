@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Ralph Assistant</title>
-    <link rel="stylesheet" href="{% static './css/chat_widget.css' %}">
+    <link rel="stylesheet" href="{% static 'chatbot/css/chat_widget.css' %}">
 </head>
 <body>
     <div id="ralph-assistant" class="chat-widget-container">
@@ -37,8 +37,8 @@
         </div>
     </div>
 
-    <script src="{% static './js/websocket.js' %}"></script>
-    <script src="{% static './js/chatbot.js' %}"></script>
+    <script src="{% static 'chatbot/js/websocket.js' %}"></script>
+    <script src="{% static 'chatbot/js/chatbot.js' %}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const ralphSocket = new RalphWebSocket();
