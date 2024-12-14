@@ -19,24 +19,23 @@ import os
 
 logger = logging.getLogger(__name__)
 
-@method_decorator(csrf_exempt, name='dispatch')  # Disable CSRF for the entire ChatbotView class
+@method_decorator(csrf_exempt, name='dispatch')  # Keep CSRF exempt since we removed CSRF
 class ChatbotView(View):
     _model_initialized = False
     _model_lock = threading.Lock()
+    _model = None
+    _tokenizer = None
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.client = RalphAPIClient()
         self.metrics_collector = MetricsCollector()
-        self.model = None
-        self.tokenizer = None
         self._ensure_model_initialized()
 
     def _ensure_model_initialized(self):
         if not ChatbotView._model_initialized:
-            # Start model initialization in a background thread
-            init_thread = threading.Thread(target=self.initialize_model, daemon=True)
-            init_thread.start()
+            # Initialize synchronously instead of in a thread to ensure it's ready
+            self.initialize_model()
 
     def initialize_model(self):
         if ChatbotView._model_initialized:
@@ -65,7 +64,7 @@ class ChatbotView(View):
                 )
 
                 logger.info(f"Loading tokenizer from {base_path}")
-                self.tokenizer = AutoTokenizer.from_pretrained(
+                ChatbotView._tokenizer = AutoTokenizer.from_pretrained(
                     base_path,
                     trust_remote_code=True,
                     use_fast=False
@@ -82,63 +81,61 @@ class ChatbotView(View):
                 )
 
                 logger.info(f"Loading LoRA adapters from {adapters_path}")
-                self.model = PeftModel.from_pretrained(
+                ChatbotView._model = PeftModel.from_pretrained(
                     base_model,
                     adapters_path,
                     torch_dtype=torch.float16,
                     device_map="auto"
                 )
 
-                self.model.eval()
+                ChatbotView._model.eval()
                 ChatbotView._model_initialized = True
                 logger.info("Model initialization completed successfully")
 
             except Exception as e:
                 logger.error(f"Error initializing model: {e}", exc_info=True)
-                self.model = None
-                self.tokenizer = None
+                ChatbotView._model = None
+                ChatbotView._tokenizer = None
 
     def generate_response(self, question, metrics=None):
-        if self.model is None or self.tokenizer is None:
-            return "Model not initialized properly."
+        if not ChatbotView._model_initialized or ChatbotView._model is None or ChatbotView._tokenizer is None:
+            return "Model initialization in progress. Please try again in a moment."
 
         prompt = ("You are Ralph Assistant, an expert in Ralph DCIM and asset management.\n"
-                  "Please answer the user's questions using the given system metrics when relevant.\n\n")
+                 "Please answer the user's questions using the given system metrics when relevant.\n\n")
         if metrics:
-            prompt += f"System Metrics:\nAssets: {metrics['assets']['total_count']} total, {metrics['assets']['status_summary']}\n"
-            prompt += f"Network: {metrics['networks']['status']}\nPower: {metrics['power']['total_consumption']} kW\n\n"
+            prompt += f"System Metrics:\nAssets: {metrics.get('assets', {}).get('total_count', 'N/A')}\n"
         prompt += f"Question: {question}\nAnswer:"
 
         try:
-            inputs = self.tokenizer(
+            inputs = ChatbotView._tokenizer(
                 prompt,
                 return_tensors="pt",
                 padding=True,
                 truncation=True,
                 max_length=512
-            ).to(self.model.device)
+            ).to(ChatbotView._model.device)
 
             with torch.no_grad():
-                outputs = self.model.generate(
+                outputs = ChatbotView._model.generate(
                     **inputs,
                     max_new_tokens=200,
                     temperature=0.7,
                     do_sample=True,
                     top_p=0.95,
                     repetition_penalty=1.2,
-                    pad_token_id=self.tokenizer.eos_token_id
+                    pad_token_id=ChatbotView._tokenizer.eos_token_id
                 )
 
-            response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+            response = ChatbotView._tokenizer.decode(outputs[0], skip_special_tokens=True)
             if "Answer:" in response:
                 response = response.split("Answer:")[-1].strip()
             return response
         except Exception as e:
             logger.error(f"Error generating response: {e}", exc_info=True)
-            return "I encountered an error generating the response."
+            return "I encountered an error generating the response. Please try again."
 
     def get(self, request):
-        # Render the chat widget template
         return render(request, 'chat_widget.html')
 
     def post(self, request):
@@ -151,14 +148,17 @@ class ChatbotView(View):
 
             metrics = self.metrics_collector.get_all_metrics()
             response = self.generate_response(question, metrics)
+            
             return JsonResponse({
                 'response': response,
-                'metrics': metrics,
                 'status': 'success'
             })
         except Exception as e:
             logger.error(f"Error in POST request: {e}", exc_info=True)
-            return JsonResponse({'error': 'Internal server error'}, status=500)
+            return JsonResponse({
+                'response': 'I apologize, but I am having trouble processing your request. Please try again.',
+                'status': 'error'
+            })
 
 
 class MetricsView(APIView):

@@ -1,57 +1,101 @@
 class RalphWebSocket {
     constructor() {
         this.socket = null;
-        this.metricsCallback = null;
         this.reconnectAttempts = 0;
-        this.maxReconnectAttempts = 10;
+        this.maxReconnectAttempts = 5;
+        this.reconnectDelay = 1000;
         this.isConnecting = false;
     }
 
     connect() {
         if (this.isConnecting) return;
+        
         this.isConnecting = true;
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${window.location.host}/ws/chat/`;
 
         try {
-            this.socket = new WebSocket(`${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/chat/`);
-
-            this.socket.onopen = () => {
-                console.log('WebSocket connected');
-                this.isConnecting = false;
-                this.reconnectAttempts = 0;
-                // Request initial metrics
-                this.requestMetrics('all');
-            };
-
-            this.socket.onclose = () => {
-                console.log('WebSocket closed, attempting reconnect...');
-                this.isConnecting = false;
-                if (this.reconnectAttempts < this.maxReconnectAttempts) {
-                    setTimeout(() => this.connect(), 5000 * Math.pow(2, this.reconnectAttempts));
-                    this.reconnectAttempts++;
-                }
-            };
-
-            this.socket.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.type === 'metrics_update' || data.type === 'initial_metrics') {
-                        this.updateDashboard(data.data);
-                        if (this.metricsCallback) {
-                            this.metricsCallback(data.data);
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error processing message:', error);
-                }
-            };
-
-            this.socket.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                this.isConnecting = false;
-            };
+            this.socket = new WebSocket(wsUrl);
+            this.setupEventHandlers();
         } catch (error) {
             console.error('WebSocket connection error:', error);
+            this.handleConnectionError();
+        }
+    }
+
+    setupEventHandlers() {
+        this.socket.onopen = () => {
+            console.log('WebSocket connected');
             this.isConnecting = false;
+            this.reconnectAttempts = 0;
+            this.requestMetrics('all');
+        };
+
+        this.socket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                this.handleMessage(data);
+            } catch (error) {
+                console.error('Error processing message:', error);
+            }
+        };
+
+        this.socket.onclose = (event) => {
+            console.log('WebSocket disconnected:', event.code, event.reason);
+            this.handleConnectionError();
+        };
+
+        this.socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            this.handleConnectionError();
+        };
+    }
+
+    handleMessage(data) {
+        switch (data.type) {
+            case 'initial_metrics':
+            case 'metrics_update':
+                this.updateMetrics(data.data);
+                break;
+            case 'error':
+                console.error('Received error:', data.message);
+                break;
+            default:
+                console.log('Unknown message type:', data.type);
+        }
+    }
+
+    updateMetrics(metrics) {
+        if (metrics.assets) {
+            document.getElementById('asset-count').textContent = 
+                metrics.assets.total_count || 'N/A';
+            document.getElementById('asset-status').textContent = 
+                metrics.assets.status_summary || 'No status available';
+        }
+
+        if (metrics.networks) {
+            document.getElementById('network-status').textContent = 
+                metrics.networks.status || 'N/A';
+            document.getElementById('network-detail').textContent = 
+                metrics.networks.bandwidth_usage || 'No details available';
+        }
+
+        if (metrics.power) {
+            document.getElementById('power-usage').textContent = 
+                `${metrics.power.total_consumption || 'N/A'} kW`;
+            document.getElementById('power-detail').textContent = 
+                metrics.power.efficiency || 'No details available';
+        }
+    }
+
+    handleConnectionError() {
+        this.isConnecting = false;
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+            this.reconnectAttempts++;
+            setTimeout(() => this.connect(), 
+                this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1));
+        } else {
+            console.error('Max reconnection attempts reached');
         }
     }
 
@@ -64,41 +108,12 @@ class RalphWebSocket {
         }
     }
 
-    updateDashboard(data) {
-        // Update asset metrics
-        const assetCount = document.getElementById('asset-count');
-        const assetStatus = document.getElementById('asset-status');
-        if (data.assets) {
-            if (assetCount) assetCount.textContent = data.assets.total_count || 'N/A';
-            if (assetStatus) assetStatus.textContent = data.assets.status_summary || 'No status available';
+    sendMessage(message) {
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(JSON.stringify({
+                type: 'chat_message',
+                message: message
+            }));
         }
-
-        // Update network metrics
-        const networkStatus = document.getElementById('network-status');
-        if (data.networks && networkStatus) {
-            networkStatus.textContent = data.networks.status || 'N/A';
-        }
-
-        // Update power metrics
-        const powerUsage = document.getElementById('power-usage');
-        if (data.power && powerUsage) {
-            powerUsage.textContent = data.power.total_consumption ? 
-                `${data.power.total_consumption} kW` : 'N/A';
-        }
-    }
-
-    setMetricsCallback(callback) {
-        this.metricsCallback = callback;
     }
 }
-
-// Initialize and connect WebSocket when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    const ralphSocket = new RalphWebSocket();
-    ralphSocket.connect();
-    
-    // Refresh metrics periodically
-    setInterval(() => {
-        ralphSocket.requestMetrics('all');
-    }, 30000);
-});
